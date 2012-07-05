@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[]]></title>
+  <link href="/atom.xml" rel="self"/>
+  <link href="/"/>
+  <updated>2012-07-05T17:18:25+08:00</updated>
+  <id>/</id>
+  <author>
+    <name><![CDATA[]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Drawing Message Sequence Chart in geek way]]></title>
+    <link href="/source/2012/07/05/drawing-message-sequence-chart-in-geek-way.html"/>
+    <updated>2012-07-05T00:00:00+08:00</updated>
+    <id>/source/2012/07/05/drawing-message-sequence-chart-in-geek-way</id>
+    <content type="html"><![CDATA[<p>相信很多人跟我一样，讨厌写文档，讨厌画图，所以喜欢 <a href='http://www.graphviz.org/'>graphviz</a>，<a href='www.doxygen.org/'>doxygen</a>这些 自动化工具来生成文档及图形。这两天要画一些很复杂的顺序图，找到合我心意的好工具，<a href='http://www.mcternan.me.uk/mscgen/'>Mscgen</a>，专为不爱画图， 追求效率的geek设计。</p>]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Blog with jekyll on github]]></title>
+    <link href="/source/2012/07/05/begin-to-use-jekyll.html"/>
+    <updated>2012-07-05T00:00:00+08:00</updated>
+    <id>/source/2012/07/05/begin-to-use-jekyll</id>
+    <content type="html"><![CDATA[<p>最近学习的动力大爆发，学了不少东西，应该记录并分享出来，把自己挂在 github上的静态页面换成了强大的jekyll，捣鼓下开始写东西了，用markdown写 blog的感觉应该很棒。</p>
+
+<p>接下来是开发环境，没错，是按写代码的方式写blog，我用的是emacs + mardown-mode + ibus-el,非常爽的组合。因为我是用archlinux，用yaourt怎么 一个方便了得。</p>
+
+<p><code>yaourt -S ibus-el</code> <code>add configuration in init.el</code></p>
+
+<p><code></code></p>]]></content>
+  </entry>
+  
+</feed>
