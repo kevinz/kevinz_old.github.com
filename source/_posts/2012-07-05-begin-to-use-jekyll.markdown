@@ -1,12 +1,11 @@
 ---
 layout: post
-title: "Blog with jekyll+octtpress+emacs on github"
+title: "Blog with jekyll octopress emacs on github"
 date: 2012-07-05 7:59
 comments: true
 categories: [tool]
 description: "使用jekyll octopress emacs写blog"
 keywords: "jekyll, octopress, emacs, github"
-
 ---
 最近学习的动力大爆发，学了不少东西，应该记录并分享出来，把自己挂在
 github上的静态页面换成了强大的jekyll+octopress，捣鼓下开始写东西了，用markdown写

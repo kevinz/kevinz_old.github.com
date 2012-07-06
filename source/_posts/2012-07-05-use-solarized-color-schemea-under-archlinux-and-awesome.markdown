@@ -15,6 +15,8 @@ keywords: "color schema, linux, emacs, solarized"
 
 {% imgpopup /images/post_img/emacs.png 50%  %}
 
+{% imgpopup /images/post_img/vim.png 50%  %}
+
 {% codeblock Put into .Xresources lang:bash https://raw.github.com/altercation/solarized/master/xresources-colors-solarized/Xresources Xresources %}
 !! drop in Solarized colorscheme for Xresources/Xdefaults
 
