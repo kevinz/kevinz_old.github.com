@@ -11,9 +11,9 @@ keywords: "color schema, linux, emacs, solarized"
 经多么想调整下awesome的focus配色，让它不那么黯然，发现很难，现在终于可以轻松搞定
 了。说实话，看不太懂官方网站上的说明，也没力气去了解，发挥下拿来主义吧。
 
-{% img http://github.com/kevinz/mscgen-script/raw/master/term.png  %}
+{% imgpopup /images/post_img/term.png 50%  %}
 
-{% img http://github.com/kevinz/mscgen-script/raw/master/emacs.png  %}
+{% imgpopup /images/post_img/emacs.png 50%  %}
 
 {% codeblock Put into .Xresources lang:bash https://raw.github.com/altercation/solarized/master/xresources-colors-solarized/Xresources Xresources %}
 !! drop in Solarized colorscheme for Xresources/Xdefaults
