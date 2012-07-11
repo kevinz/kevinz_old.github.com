@@ -1,0 +1,494 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Use Solarized Color Schemea under ArchLinux and Awesome - Code Mind</title>
+  <meta name="author" content="Kevin Zeng">
+
+  
+  <meta name="description" content="令人心情舒畅的color schema，可以提高工作效率">
+  <meta name="keywords" content="color schema, linux, emacs, solarized">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Code Mind" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Code Mind</a></h1>
+  
+    <h2>Geek ben's blog</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinz.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Use Solarized Color Schemea Under ArchLinux and Awesome</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-05T17:34:00+08:00" pubdate data-updated="true">Jul 5<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>貌似<a href="http://www.solarized.com/">solarized</a>已经火了很久，相见狠晚啊，曾
+经多么想调整下awesome的focus配色，让它不那么黯然，发现很难，现在终于可以轻松搞定
+了。说实话，看不太懂官方网站上的说明，也没力气去了解，发挥下拿来主义吧。</p>
+
+<!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-2">
+    <img src="/images/post_img/term.png"
+         width="840" height="525"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-2" style="display:none">
+    <img src="/images/post_img/term.png"
+         width="1680" height="1050"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-2").hide();
+    jQuery("#image-dialog-2").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1720,
+      minHeight: 1090,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-2").click(function() {
+      jQuery("#image-dialog-2").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/term.png" width="1680" height="1050"/>
+</div>
+
+
+
+<!-- more -->
+
+
+<!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-3">
+    <img src="/images/post_img/emacs.png"
+         width="840" height="525"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-3" style="display:none">
+    <img src="/images/post_img/emacs.png"
+         width="1680" height="1050"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-3").hide();
+    jQuery("#image-dialog-3").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1720,
+      minHeight: 1090,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-3").click(function() {
+      jQuery("#image-dialog-3").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/emacs.png" width="1680" height="1050"/>
+</div>
+
+
+
+
+
+<!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-4">
+    <img src="/images/post_img/vim.png"
+         width="840" height="525"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-4" style="display:none">
+    <img src="/images/post_img/vim.png"
+         width="1680" height="1050"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-4").hide();
+    jQuery("#image-dialog-4").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1720,
+      minHeight: 1090,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-4").click(function() {
+      jQuery("#image-dialog-4").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/vim.png" width="1680" height="1050"/>
+</div>
+
+
+
+
+
+<figure class='code'><figcaption><span>Put into .Xresources </span><a href='https://raw.github.com/altercation/solarized/master/xresources-colors-solarized/Xresources'>Xresources </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>!! drop in Solarized colorscheme <span class="k">for </span>Xresources/Xdefaults
+</span><span class='line'>
+</span><span class='line'>!!SOLARIZED HEX     16/8 TERMCOL  XTERM/HEX   L*A*B      RGB         HSB
+</span><span class='line'>!!--------- ------- ---- -------  ----------- ---------- ----------- -----------
+</span><span class='line'>!!base03    <span class="c">#002b36  8/4 brblack  234 #1c1c1c 15 -12 -12   0  43  54 193 100  21</span>
+</span><span class='line'>!!base02    <span class="c">#073642  0/4 black    235 #262626 20 -12 -12   7  54  66 192  90  26</span>
+</span><span class='line'>!!base01    <span class="c">#586e75 10/7 brgreen  240 #585858 45 -07 -07  88 110 117 194  25  46</span>
+</span><span class='line'>!!base00    <span class="c">#657b83 11/7 bryellow 241 #626262 50 -07 -07 101 123 131 195  23  51</span>
+</span><span class='line'>!!base0     <span class="c">#839496 12/6 brblue   244 #808080 60 -06 -03 131 148 150 186  13  59</span>
+</span><span class='line'>!!base1     <span class="c">#93a1a1 14/4 brcyan   245 #8a8a8a 65 -05 -02 147 161 161 180   9  63</span>
+</span><span class='line'>!!base2     <span class="c">#eee8d5  7/7 white    254 #e4e4e4 92 -00  10 238 232 213  44  11  93</span>
+</span><span class='line'>!!base3     <span class="c">#fdf6e3 15/7 brwhite  230 #ffffd7 97  00  10 253 246 227  44  10  99</span>
+</span><span class='line'>!!yellow    <span class="c">#b58900  3/3 yellow   136 #af8700 60  10  65 181 137   0  45 100  71</span>
+</span><span class='line'>!!orange    <span class="c">#cb4b16  9/3 brred    166 #d75f00 50  50  55 203  75  22  18  89  80</span>
+</span><span class='line'>!!red       <span class="c">#dc322f  1/1 red      160 #d70000 50  65  45 220  50  47   1  79  86</span>
+</span><span class='line'>!!magenta   <span class="c">#d33682  5/5 magenta  125 #af005f 50  65 -05 211  54 130 331  74  83</span>
+</span><span class='line'>!!violet    <span class="c">#6c71c4 13/5 brmagenta 61 #5f5faf 50  15 -45 108 113 196 237  45  77</span>
+</span><span class='line'>!!blue      <span class="c">#268bd2  4/4 blue      33 #0087ff 55 -10 -45  38 139 210 205  82  82</span>
+</span><span class='line'>!!cyan      <span class="c">#2aa198  6/6 cyan      37 #00afaf 60 -35 -05  42 161 152 175  74  63</span>
+</span><span class='line'>!!green     <span class="c">#859900  2/2 green     64 #5f8700 60 -20  65 133 153   0  68 100  60</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#define S_base03        #002b36</span>
+</span><span class='line'><span class="c">#define S_base02        #073642</span>
+</span><span class='line'><span class="c">#define S_base01        #586e75</span>
+</span><span class='line'><span class="c">#define S_base00        #657b83</span>
+</span><span class='line'><span class="c">#define S_base0         #839496</span>
+</span><span class='line'><span class="c">#define S_base1         #93a1a1</span>
+</span><span class='line'><span class="c">#define S_base2         #eee8d5</span>
+</span><span class='line'><span class="c">#define S_base3         #fdf6e3</span>
+</span><span class='line'><span class="c">#define S_yellow        #b58900</span>
+</span><span class='line'><span class="c">#define S_orange        #cb4b16</span>
+</span><span class='line'><span class="c">#define S_red           #dc322f</span>
+</span><span class='line'><span class="c">#define S_magenta       #d33682</span>
+</span><span class='line'><span class="c">#define S_violet        #6c71c4</span>
+</span><span class='line'><span class="c">#define S_blue          #268bd2</span>
+</span><span class='line'><span class="c">#define S_cyan          #2aa198</span>
+</span><span class='line'><span class="c">#define S_green         #859900</span>
+</span><span class='line'>
+</span><span class='line'>*background:            S_base03
+</span><span class='line'>...
+</span><span class='line'>URxvt.
+</span><span class='line'>...
+</span><span class='line'>Emacs.
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>Use solarized in emacs </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(require 'color-theme-solarized)
+</span><span class='line'>(color-theme-solarized-light)</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Zeng</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-05T17:34:00+08:00" pubdate data-updated="true">Jul 5<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/linux/'>linux</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/" data-via="keving_zz" data-counturl="http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/" title="Previous Post: Drawing Message Sequence Chart in geek way">&laquo; Drawing Message Sequence Chart in geek way</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2012/07/07/netfilter-hello-world-module/" title="Next Post: Netfilter hello world module">Netfilter hello world module &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/07/11/test/">test</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/07/11/new-post/">new-post</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/07/11/study-on-lvs-kernel-code/">Study on LVS kernel code - persistent</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/07/11/collection-of-network-performance-tuning-tools/">Collection of network performance tuning tools</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/07/07/netfilter-hello-world-module/">Netfilter hello world module</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinz">@kevinz</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinz',
+            count: 5,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("keving_zz", 0, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/keving_zz" class="twitter-follow-button" data-show-count="false">Follow @keving_zz</a>
+  
+</section>
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Kevin Zeng -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
