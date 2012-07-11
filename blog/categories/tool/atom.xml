@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: tool | Code Mind]]></title>
+  <link href="http://kevinz.github.com/blog/categories/tool/atom.xml" rel="self"/>
+  <link href="http://kevinz.github.com/"/>
+  <updated>2012-07-12T06:46:41+08:00</updated>
+  <id>http://kevinz.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Zeng]]></name>
+    <email><![CDATA[kevintech08@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Collection of network performance tuning tools]]></title>
+    <link href="http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools/"/>
+    <updated>2012-07-11T08:14:00+08:00</updated>
+    <id>http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools</id>
+    <content type="html"><![CDATA[<h2>Performance Testing</h2>
+
+<ul>
+<li><a href="https://github.com/wangbin579/tcpcopy/">Tcpcopy</a>
+
+<ul>
+<li><a href="https://code.google.com/p/tcpcopy">old version on googlecode</a></li>
+<li>It is an online TCP duplication tool and can be used for testing (using netlink and raw
+sockets).And the author claimed it's better than <a href="http://httpd.apache.org/docs/2.0/programs/ab.html">ab</a>.</li>
+</ul>
+</li>
+<li><a href="http://redmine.lighttpd.net/projects/weighttp/wiki">Weighhttp</a></li>
+</ul>
+
+
+<h2>System Inspecting</h2>
+
+<ul>
+<li><a href="https://www.linuxpowertop.org/powertop/">PowerTop</a></li>
+<li><a href="https://latencytop.org">LatencyTop</a>
+
+<ul>
+<li><a href="http://rdc.taobao.com/blog/cs/?p=893">Introduction</a></li>
+</ul>
+</li>
+<li><a href="http://sourceware.org/systemtap/">Systemtap</a>
+
+<ul>
+<li><a href="http://rdc.taobao.com/blog/cs/?p=477">Introduction</a></li>
+<li><a href="http://www.slideshare.net/mryufeng/systemtap">Slides</a></li>
+</ul>
+</li>
+</ul>
+
+
+<!-- more -->
+
+
+<h2>Network Inspecting</h2>
+
+<ul>
+<li><a href="http://www.percona.com/docs/wiki/tcprstat:start">tcprstat</a>
+
+<ul>
+<li><a href="http://rdc.taobao.com/blog/cs/?p=728">Introduction</a></li>
+</ul>
+</li>
+</ul>
+
+
+<h2>Hardware Inspecting</h2>
+
+<ul>
+<li><a href="http://software.intel.com/en-us/articles/intel-64-architecture-processor-topology-enumeration/">cpu-topology</a>
+
+<ul>
+<li><a href="http://rdc.taobao.com/blog/cs/?p=460">Introduction</a></li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Drawing Message Sequence Chart in geek way]]></title>
+    <link href="http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/"/>
+    <updated>2012-07-05T09:00:00+08:00</updated>
+    <id>http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way</id>
+    <content type="html"><![CDATA[<p>相信很多人跟我一样，讨厌写文档，讨厌画图，所以喜欢
+<a href="http://www.graphviz.org/">graphviz</a>，<a href="www.doxygen.org/">doxygen</a>这些
+自动化工具来生成文档及图形。这两天要画一些很复杂的顺序图，找到我<a href="https://wiki.archlinux.org/index.php/Lightweight_Applications_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29">喜欢</a>的
+工具，<a href="http://www.mcternan.me.uk/mscgen/">Mscgen</a>，专为不爱画图，
+追求效率的geek设计。</p>
+
+<p><div><script src='https://gist.github.com/3053976.js?file='></script>
+<noscript><pre><code>#MSC for lvs in DR transparent mode
+msc{
+        hscale = &quot;2&quot;;
+        Client,LB,RS,OS;
+
+        Client=&gt;Client [ label = &quot;req(oip:oport)&quot;];
+        Client=&gt;Client [ label = &quot;routeto(LB)&quot;];
+        Client-&gt;LB [ label = &quot;(cip:cport)-&gt;(oip:oport)&quot;];
+        LB=&gt;LB     [ label = &quot;iptable-&gt;fwmark(dst==oip,dst_port=oport)&quot;];
+        LB=&gt;LB     [ label = &quot;(cip:cport)-&gt;(oip:oport)+fwmark&quot;];
+        LB=&gt;LB     [ label = &quot;trick kernel to receive()&quot;];
+        LB=&gt;LB     [ label = &quot;is_match(LB-&gt;fwmark,packet-&gt;fwmark)&quot;];
+        LB=&gt;LB     [ label = &quot;belongs_to_an_active_conn?&quot;];
+        LB=&gt;LB     [ label = &quot;is_new_conn?&quot;];
+        LB=&gt;LB     [ label = &quot;is_persistent?&quot;];
+        LB=&gt;LB     [ label = &quot;do_schedule()&quot;];
+        LB=&gt;LB     [ label = &quot;decide_rs()&quot;];
+        LB=&gt;LB     [ label = &quot;modify-mac(vmac-&gt;rmac)&quot;];
+        
+        LB-&gt;RS     [ label = &quot;(cip:cport)-&gt;(oip:oport)&quot;];
+        --- [ label = &quot;Packet is delivered to real server&quot;];
+        ...;
+        RS=&gt;RS     [ label = &quot;nf_hook-&gt;dnat(oip-&gt;rip,oport-&gt;rport)&quot;];
+        RS=&gt;RS     [ label = &quot;receive()&quot;];
+        RS=&gt;RS     [ label = &quot;proxy_www(URI)&quot;];
+        RS-&gt;OS     [ label = &quot;(rip_www:rport_www)-&gt;(oip:oport)&quot;];
+        --- [ label = &quot;Packet is delivered to the original server&quot;];
+        OS-&gt;RS     [ label = &quot;(oip:oport)-&gt;(rip_www:rport_www)&quot;];
+        RS=&gt;RS     [ label = &quot;route_to(LB or GW)&quot;];
+        --- [ label = &quot;Packet goes back to real server&quot;];
+        RS-&gt;LB [ label = &quot;(oip:oport)-&gt;(cip:cport)&quot;];
+        RS&gt;&gt;Client [ label = &quot;possible path:(oip:oport)-&gt;(cip:cport)&quot;];
+        LB-&gt;Client [ label = &quot;(oip:oport)-&gt;(cip:cport)&quot;];
+        --- [ label = &quot;Packet goes back to the client&quot;];
+}
+
+
+</code></pre></noscript></div>
+</p>
+
+<!-- more -->
+
+
+<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-5">
+    <img src="/images/post_img/lvs_transp.png"
+         width="600" height="429"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-5" style="display:none">
+    <img src="/images/post_img/lvs_transp.png"
+         width="1200" height="857"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-5").hide();
+    jQuery("#image-dialog-5").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1240,
+      minHeight: 897,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-5").click(function() {
+      jQuery("#image-dialog-5").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/lvs_transp.png" width="1200" height="857"/>
+</div>
+</notextile></div></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Blog with jekyll octopress emacs on github]]></title>
+    <link href="http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll/"/>
+    <updated>2012-07-05T07:59:00+08:00</updated>
+    <id>http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll</id>
+    <content type="html"><![CDATA[<p>最近学习的动力大爆发，学了不少东西，应该记录并分享出来，把自己挂在
+github上的静态页面换成了强大的jekyll+octopress，捣鼓下开始写东西了，用markdown写
+blog的感觉应该很棒。</p>
+
+<p>接下来是开发环境，没错，是按写代码的方式写blog，我用的是emacs +
+mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
+一个方便了得。</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>install ibus-el  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>yaourt -S ibus-el
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<!-- more -->
+
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ibus-mode configuration </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(require 'ibus)
+</span><span class='line'>(add-hook 'after-init-hook 'ibus-mode-on)
+</span><span class='line'>(global-set-key (kbd "C-\") 'ibus-toggle)</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Enable markdown mode </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(autoload 'markdown-mode "markdown-mode.el"
+</span><span class='line'>   "Major mode for editing Markdown files" t)
+</span><span class='line'>(setq auto-mode-alist
+</span><span class='line'>   (cons '("\.text"  . markdown-mode) auto-mode-alist))&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>(setq auto-mode-alist&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>  (cons '("\\.md"  . markdown-mode) auto-mode-alist))
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+]]></content>
+  </entry>
+  
+</feed>
