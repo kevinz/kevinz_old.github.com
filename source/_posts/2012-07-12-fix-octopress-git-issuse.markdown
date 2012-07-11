@@ -16,7 +16,8 @@ keywords: "octopress, git, _deploy, rake"
 在github上自己的blog项目内，看到很多本来不属于blog的文件。当然使用
 `rake deploy`也会出现问题。之前瞎折腾了很久，浪费好多时间，结果还是读
 源码解决了问题，Rakefile里`setup_github_page`和`push`任务看看，就知道
-咋回事了。
+咋回事了。需要注意的是，除了_deploy的其它文件都在source branch里，因为
+`setup_github_page`初始化时把master重命名成了source。
 <!-- more -->
 {% codeblock my solution lang:bash %}
 $rm -rf _deploy
