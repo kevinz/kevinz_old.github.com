@@ -9,7 +9,7 @@ keywords: "linux, kernel, netfilter"
 ---
 对于linux网络的学习，学下写netfilter module更有利于理解，下面开始实战。
 {% gist 3066821 %}
-
+<!-- more -->
 {% gist 3066825 %}
 
 然后就是

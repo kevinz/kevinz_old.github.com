@@ -18,7 +18,7 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
 {% codeblock install ibus-el lang:bash %}
 $ yaourt -S ibus-el
 {% endcodeblock %}
-
+<!-- more -->
 {% codeblock ibus-mode configuration %}
 (require 'ibus)
 (add-hook 'after-init-hook 'ibus-mode-on)

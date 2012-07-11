@@ -12,7 +12,7 @@ keywords: "color schema, linux, emacs, solarized"
 了。说实话，看不太懂官方网站上的说明，也没力气去了解，发挥下拿来主义吧。
 
 {% imgpopup /images/post_img/term.png 50%  %}
-
+<!-- more -->
 {% imgpopup /images/post_img/emacs.png 50%  %}
 
 {% imgpopup /images/post_img/vim.png 50%  %}

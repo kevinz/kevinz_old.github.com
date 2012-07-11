@@ -14,5 +14,5 @@ keywords: "mscgen, uml, 顺序图, sequnce, github"
 追求效率的geek设计。
 
 {% gist 3053976 %}
-
+<!-- more -->
 {% imgpopup /images/post_img/lvs_transp.png 50%  %}
