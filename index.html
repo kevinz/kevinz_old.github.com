@@ -11,7 +11,7 @@
   
   <meta name="description" content="已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
 不怕麻烦了。昨天晚上为了解决octopress不能rake deploy的问题，搞了几个
-小时，搞完了对git的分支的理解得到了提升。 解决完了再回头看，其实我的问题很sb，master &hellip;">
+小时，搞完了对git的分支的理解得到了提升。 解决完了再回头看，其实我的问题很sb，master branch本来只应该包括deploy &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -101,12 +101,13 @@
 不怕麻烦了。昨天晚上为了解决octopress不能<code>rake deploy</code>的问题，搞了几个
 小时，搞完了对git的分支的理解得到了提升。</p>
 
-<p>解决完了再回头看，其实我的问题很sb，master branch本来只应该包括_deploy
+<p>解决完了再回头看，其实我的问题很sb，master branch本来只应该包括<em>deploy
 目录里的内容，但我因为误操作把上层目录都变成了master branch，这样就会
 在github上自己的blog项目内，看到很多本来不属于blog的文件。当然使用
 <code>rake deploy</code>也会出现问题。之前瞎折腾了很久，浪费好多时间，结果还是读
 源码解决了问题，Rakefile里<code>setup_github_page</code>和<code>push</code>任务看看，就知道
-咋回事了。</p>
+咋回事了。需要注意的是，除了</em>deploy的其它文件都在source branch里，因为
+<code>setup_github_page</code>初始化时把master重命名成了source。</p>
 
 </div>
   
@@ -660,6 +661,8 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
 </section>
 
 
+
+
   
 </aside>
 
@@ -673,9 +676,30 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
 </footer>
   
 
+<script type="text/javascript">
+      var disqus_shortname = 'codemind';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
 
 
 
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
 
 
 
