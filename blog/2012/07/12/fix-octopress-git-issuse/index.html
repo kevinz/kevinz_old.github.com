@@ -5,13 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>new-post - Code Mind</title>
+  <title>Fix octopress git deploy issuse - Code Mind</title>
   <meta name="author" content="Kevin Zeng">
 
   
-  <meta name="description" content="
-">
-  
+  <meta name="description" content="解决octopress的git自动deploy问题">
+  <meta name="keywords" content="octopress, git, _deploy, rake">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -19,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://kevinz.github.com/blog/2012/07/11/new-post/">
+  <link rel="canonical" href="http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -70,7 +69,7 @@
   
   <header>
     
-      <h1 class="entry-title">New-post</h1>
+      <h1 class="entry-title">Fix Octopress Git Deploy Issuse</h1>
     
     
       <p class="meta">
@@ -86,14 +85,52 @@
   
 
 
-<time datetime="2012-07-11T22:34:00+08:00" pubdate data-updated="true">Jul 11<span>th</span>, 2012</time>
+<time datetime="2012-07-12T07:05:00+08:00" pubdate data-updated="true">Jul 12<span>th</span>, 2012</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content">
+<div class="entry-content"><p>已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
+不怕麻烦了。昨天晚上为了解决octopress不能<code>rake deploy</code>的问题，搞了几个
+小时，搞完了对git的分支的理解得到了提升。</p>
+
+<p>解决完了再回头看，其实我的问题很sb，master branch本来只应该包括_deploy
+目录里的内容，但我因为误操作把上层目录都变成了master branch，这样就会
+在github上自己的blog项目内，看到很多本来不属于blog的文件。当然使用
+<code>rake deploy</code>也会出现问题。之前瞎折腾了很久，浪费好多时间，结果还是读
+源码解决了问题，Rakefile里<code>setup_github_page</code>和<code>push</code>任务看看，就知道
+咋回事了。</p>
+
+<!-- more -->
+
+
+
+
+<figure class='code'><figcaption><span>my solution  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$rm</span> -rf _deploy
+</span><span class='line'><span class="nv">$mkdir</span> _deploy
+</span><span class='line'><span class="nv">$cd</span> _deploy
+</span><span class='line'><span class="nv">$git</span> init
+</span><span class='line'><span class="nv">$echo</span> <span class="s2">&quot;test&quot;</span> &gt; index.html
+</span><span class='line'><span class="nv">$git</span> branch -m master
+</span><span class='line'><span class="nv">$git</span> commit -m <span class="s2">&quot;octopress init&quot;</span>
+</span><span class='line'><span class="nv">$git</span> remote add origin git@github.com:username/username.github.com.git
+</span><span class='line'><span class="nv">$git</span> push origin master
+</span></code></pre></td></tr></table></div></figure>
+
+
+
 </div>
 
 
@@ -116,15 +153,21 @@
   
 
 
-<time datetime="2012-07-11T22:34:00+08:00" pubdate data-updated="true">Jul 11<span>th</span>, 2012</time>
+<time datetime="2012-07-12T07:05:00+08:00" pubdate data-updated="true">Jul 12<span>th</span>, 2012</time>
       
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/tool/'>tool</a>
+  
+</span>
 
 
     </p>
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinz.github.com/blog/2012/07/11/new-post/" data-via="keving_zz" data-counturl="http://kevinz.github.com/blog/2012/07/11/new-post/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse/" data-via="keving_zz" data-counturl="http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse/" >Tweet</a>
   
   
   
@@ -135,8 +178,6 @@
       
         <a class="basic-alignment left" href="/blog/2012/07/11/study-on-lvs-kernel-code/" title="Previous Post: Study on LVS kernel code - persistent">&laquo; Study on LVS kernel code - persistent</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2012/07/11/test/" title="Next Post: test">test &raquo;</a>
       
     </p>
   </footer>
@@ -151,11 +192,7 @@
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2012/07/11/test/">test</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/07/11/new-post/">new-post</a>
+        <a href="/blog/2012/07/12/fix-octopress-git-issuse/">Fix octopress git deploy issuse</a>
       </li>
     
       <li class="post">
@@ -168,6 +205,10 @@
     
       <li class="post">
         <a href="/blog/2012/07/07/netfilter-hello-world-module/">Netfilter hello world module</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/">Use Solarized Color Schemea under ArchLinux and Awesome</a>
       </li>
     
   </ul>

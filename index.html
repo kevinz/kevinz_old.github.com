@@ -9,8 +9,9 @@
   <meta name="author" content="Kevin Zeng">
 
   
-  <meta name="description" content="
-">
+  <meta name="description" content="已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
+不怕麻烦了。昨天晚上为了解决octopress不能rake deploy的问题，搞了几个
+小时，搞完了对git的分支的理解得到了提升。 解决完了再回头看，其实我的问题很sb，master &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -73,7 +74,7 @@
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2012/07/11/test/">Test</a></h1>
+      <h1 class="entry-title"><a href="/blog/2012/07/12/fix-octopress-git-issuse/">Fix Octopress Git Deploy Issuse</a></h1>
     
     
       <p class="meta">
@@ -89,52 +90,30 @@
   
 
 
-<time datetime="2012-07-11T22:34:00+08:00" pubdate data-updated="true">Jul 11<span>th</span>, 2012</time>
+<time datetime="2012-07-12T07:05:00+08:00" pubdate data-updated="true">Jul 12<span>th</span>, 2012</time>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content">
+  <div class="entry-content"><p>已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
+不怕麻烦了。昨天晚上为了解决octopress不能<code>rake deploy</code>的问题，搞了几个
+小时，搞完了对git的分支的理解得到了提升。</p>
+
+<p>解决完了再回头看，其实我的问题很sb，master branch本来只应该包括_deploy
+目录里的内容，但我因为误操作把上层目录都变成了master branch，这样就会
+在github上自己的blog项目内，看到很多本来不属于blog的文件。当然使用
+<code>rake deploy</code>也会出现问题。之前瞎折腾了很久，浪费好多时间，结果还是读
+源码解决了问题，Rakefile里<code>setup_github_page</code>和<code>push</code>任务看看，就知道
+咋回事了。</p>
+
 </div>
   
   
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/07/11/new-post/">New-post</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-07-11T22:34:00+08:00" pubdate data-updated="true">Jul 11<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content">
-</div>
-  
+    <footer>
+      <a rel="full-article" href="/blog/2012/07/12/fix-octopress-git-issuse/">Read on &rarr;</a>
+    </footer>
   
 
 
@@ -612,11 +591,7 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2012/07/11/test/">test</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/07/11/new-post/">new-post</a>
+        <a href="/blog/2012/07/12/fix-octopress-git-issuse/">Fix octopress git deploy issuse</a>
       </li>
     
       <li class="post">
@@ -629,6 +604,10 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
     
       <li class="post">
         <a href="/blog/2012/07/07/netfilter-hello-world-module/">Netfilter hello world module</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/">Use Solarized Color Schemea under ArchLinux and Awesome</a>
       </li>
     
   </ul>
