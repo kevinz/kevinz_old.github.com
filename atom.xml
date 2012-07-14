@@ -4,7 +4,7 @@
   <title><![CDATA[Code Mind]]></title>
   <link href="http://kevinz.github.com/atom.xml" rel="self"/>
   <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-14T17:54:03+08:00</updated>
+  <updated>2012-07-14T17:56:29+08:00</updated>
   <id>http://kevinz.github.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -847,12 +847,12 @@ default:
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-26">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-2">
     <img src="http://kevinz.github.com/images/post_img/term.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-26" style="display:none">
+  <div id="image-dialog-2" style="display:none">
     <img src="http://kevinz.github.com/images/post_img/term.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -860,8 +860,8 @@ default:
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-26").hide();
-    jQuery("#image-dialog-26").dialog({
+    jQuery("#image-dialog-2").hide();
+    jQuery("#image-dialog-2").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -871,8 +871,8 @@ default:
       hide:      'scale'
     });
 
-    jQuery("#image-26").click(function() {
-      jQuery("#image-dialog-26").dialog('open');
+    jQuery("#image-2").click(function() {
+      jQuery("#image-dialog-2").dialog('open');
     });
 
   });
@@ -890,12 +890,12 @@ default:
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-27">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-3">
     <img src="http://kevinz.github.com/images/post_img/emacs.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-27" style="display:none">
+  <div id="image-dialog-3" style="display:none">
     <img src="http://kevinz.github.com/images/post_img/emacs.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -903,8 +903,8 @@ default:
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-27").hide();
-    jQuery("#image-dialog-27").dialog({
+    jQuery("#image-dialog-3").hide();
+    jQuery("#image-dialog-3").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -914,8 +914,8 @@ default:
       hide:      'scale'
     });
 
-    jQuery("#image-27").click(function() {
-      jQuery("#image-dialog-27").dialog('open');
+    jQuery("#image-3").click(function() {
+      jQuery("#image-dialog-3").dialog('open');
     });
 
   });
@@ -932,12 +932,12 @@ default:
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-28">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-4">
     <img src="http://kevinz.github.com/images/post_img/vim.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-28" style="display:none">
+  <div id="image-dialog-4" style="display:none">
     <img src="http://kevinz.github.com/images/post_img/vim.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -945,8 +945,8 @@ default:
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-28").hide();
-    jQuery("#image-dialog-28").dialog({
+    jQuery("#image-dialog-4").hide();
+    jQuery("#image-dialog-4").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -956,8 +956,8 @@ default:
       hide:      'scale'
     });
 
-    jQuery("#image-28").click(function() {
-      jQuery("#image-dialog-28").dialog('open');
+    jQuery("#image-4").click(function() {
+      jQuery("#image-dialog-4").dialog('open');
     });
 
   });
@@ -1135,12 +1135,12 @@ msc{
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-25">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-1">
     <img src="http://kevinz.github.com/images/post_img/lvs_transp.png"
          width="600" height="429"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-25" style="display:none">
+  <div id="image-dialog-1" style="display:none">
     <img src="http://kevinz.github.com/images/post_img/lvs_transp.png"
          width="1200" height="857"/>
     <br clear="all"/>
@@ -1148,8 +1148,8 @@ msc{
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-25").hide();
-    jQuery("#image-dialog-25").dialog({
+    jQuery("#image-dialog-1").hide();
+    jQuery("#image-dialog-1").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -1159,8 +1159,8 @@ msc{
       hide:      'scale'
     });
 
-    jQuery("#image-25").click(function() {
-      jQuery("#image-dialog-25").dialog('open');
+    jQuery("#image-1").click(function() {
+      jQuery("#image-dialog-1").dialog('open');
     });
 
   });
