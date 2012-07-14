@@ -149,12 +149,12 @@ msc{
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-1">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-25">
     <img src="/images/post_img/lvs_transp.png"
          width="600" height="429"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-1" style="display:none">
+  <div id="image-dialog-25" style="display:none">
     <img src="/images/post_img/lvs_transp.png"
          width="1200" height="857"/>
     <br clear="all"/>
@@ -162,8 +162,8 @@ msc{
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-1").hide();
-    jQuery("#image-dialog-1").dialog({
+    jQuery("#image-dialog-25").hide();
+    jQuery("#image-dialog-25").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -173,8 +173,8 @@ msc{
       hide:      'scale'
     });
 
-    jQuery("#image-1").click(function() {
-      jQuery("#image-dialog-1").dialog('open');
+    jQuery("#image-25").click(function() {
+      jQuery("#image-dialog-25").dialog('open');
     });
 
   });
@@ -249,6 +249,10 @@ msc{
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/07/14/customize-kernel-in-arch-linux/">customize-kernel-in-arch-linux</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/07/12/fix-octopress-git-issuse/">Fix octopress git deploy issuse</a>
       </li>
     
@@ -262,10 +266,6 @@ msc{
     
       <li class="post">
         <a href="/blog/2012/07/07/netfilter-hello-world-module/">Netfilter hello world module</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/">Use Solarized Color Schemea under ArchLinux and Awesome</a>
       </li>
     
   </ul>

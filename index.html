@@ -9,9 +9,13 @@
   <meta name="author" content="Kevin Zeng">
 
   
-  <meta name="description" content="已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
-不怕麻烦了。昨天晚上为了解决octopress不能rake deploy的问题，搞了几个
-小时，搞完了对git的分支的理解得到了提升。 解决完了再回头看，其实我的问题很sb，master branch本来只应该包括deploy &hellip;">
+  <meta name="description" content="心血来潮升级到
+linux-ck_3.4.4-4
+后，发现pm-suspend出问题了，可以suspend，但resume后显示屏亮不起
+来，其它部分都resume成功了，可以隐约看见一些窗口的黑影。于是我又开始
+折腾了，参考了
+这篇，插句题外话，
+不知道不是巧合， &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -69,6 +73,64 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/07/14/customize-kernel-in-arch-linux/">Customize-kernel-in-arch-linux</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-14T16:54:00+08:00" pubdate data-updated="true">Jul 14<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>心血来潮升级到
+<a href="http://repo-ck.com/x86_64/linux-ck-corex-3.4.4-4-x86_64.pkg.tar.xz">linux-ck_3.4.4-4</a>
+后，发现<code>pm-suspend</code>出问题了，可以<code>suspend</code>，但<code>resume</code>后显示屏亮不起
+来，其它部分都<code>resume</code>成功了，可以隐约看见一些窗口的黑影。于是我又开始
+折腾了，参考了
+<a href="https://bbs.archlinux.org/viewtopic.php?id=143545">这篇</a>，插句题外话，
+不知道不是巧合，好多问题都是在archlinux的相关论坛上找到了答案，都是一帮爱折腾的同好。</p>
+
+<p>不幸的是，<a href="https://bbs.archlinux.org/viewtopic.php?id=143545">这篇</a>把
+我引导向了错误的方向，决定把kernel降级到3.3.x。因为我用的不是官核，不
+好找old archive，必须重新编译3.3.x-ck的内核，官方的old archives可以在
+<a href="http://arm.konnichi.com/search/">这里</a>寻觅到。</p>
+
+<p>拜<a href="https://wiki.archlinux.org/index.php/Arch_Build_System">Arch Build System</a>
+所赐，编译、打包、patch的步骤都可以内置了，对于kernel也是一样。贴一部
+分PKGBUILD文件的内容，是从
+<a href="http://repo-ck.com/PKG_source/linux-ck/linux-ck-3.3.8-1.src.tar.gz">repo-ck的archive</a>
+里找到的。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/07/14/customize-kernel-in-arch-linux/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -390,12 +452,12 @@ void cleanup_module(void)
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-2">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-26">
     <img src="/images/post_img/term.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-2" style="display:none">
+  <div id="image-dialog-26" style="display:none">
     <img src="/images/post_img/term.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -403,8 +465,8 @@ void cleanup_module(void)
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-2").hide();
-    jQuery("#image-dialog-2").dialog({
+    jQuery("#image-dialog-26").hide();
+    jQuery("#image-dialog-26").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -414,8 +476,8 @@ void cleanup_module(void)
       hide:      'scale'
     });
 
-    jQuery("#image-2").click(function() {
-      jQuery("#image-dialog-2").dialog('open');
+    jQuery("#image-26").click(function() {
+      jQuery("#image-dialog-26").dialog('open');
     });
 
   });
@@ -593,6 +655,10 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/07/14/customize-kernel-in-arch-linux/">customize-kernel-in-arch-linux</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/07/12/fix-octopress-git-issuse/">Fix octopress git deploy issuse</a>
       </li>
     
@@ -606,10 +672,6 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
     
       <li class="post">
         <a href="/blog/2012/07/07/netfilter-hello-world-module/">Netfilter hello world module</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/">Use Solarized Color Schemea under ArchLinux and Awesome</a>
       </li>
     
   </ul>
