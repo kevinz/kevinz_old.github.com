@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "customize-kernel-in-arch-linux"
+description: "在archlinux里定制编译内核 customize and recompile kernel in arch linux"
 date: 2012-07-14 16:54
 comments: true
-categories: [linux]
+categories: [linux,arch,kernel]
 keywords: "arch linux, kernel, compile"
-description: "在archlinux里定制编译内核"
+title: "在archlinux里定制编译内核"
 ---
 心血来潮升级到
 [linux-ck_3.4.4-4](http://repo-ck.com/x86_64/linux-ck-corex-3.4.4-4-x86_64.pkg.tar.xz)

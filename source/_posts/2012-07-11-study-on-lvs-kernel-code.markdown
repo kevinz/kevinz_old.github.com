@@ -1,10 +1,10 @@
 ---
 layout: post
-title: "Study on LVS kernel code - persistent"
+description: "Study on LVS kernel code - persistent"
 date: 2012-07-11 12:24
 comments: true
-categories: [linux]
-description: "LVS peristent代码分析"
+categories: [linux,kernel,network,lvs,C]
+title: "LVS peristent代码分析"
 keywords: "LVS, ipvs, persistent, code, implementation"
 ---
 一直纠结于LVS使用persistent时，是以何为依据，决定一个新的连接请求的命运的：是被persistent管理，去到之前的real server，还是被调度算法重新调度，去到新的real server。

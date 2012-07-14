@@ -1,9 +1,9 @@
 ---
 layout: post
-title: "Drawing Message Sequence Chart in geek way"
-categories: [tool]
+description: "用Mscgen，以geek的方式画顺序图 Drawing Message Sequence Chart in geek way"
+categories: [tool,geek]
 date: 2012-07-05 9:00
-description: "用Mscgen，以geek的方式画顺序图"
+title: "用Mscgen，以geek的方式画顺序图"
 keywords: "mscgen, uml, 顺序图, sequnce, github"
 ---
 

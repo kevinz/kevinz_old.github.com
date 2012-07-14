@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "Collection of network performance tuning tools"
+description: "寻找揭示linux网络及系统性能的工具 Collection of network performance tuning tools"
 date: 2012-07-11 08:14
 comments: true
-categories: [tool]
+categories: [linux,tool,network,performance]
 keywords: "performance tuning, network, kernel, debug"
-description: "揭示linux网络及系统性能的工具"
+title: "寻找揭示linux网络及系统性能的工具"
 ---
 ##Performance Testing##
   * [Tcpcopy](https://github.com/wangbin579/tcpcopy/)

@@ -1,10 +1,10 @@
 ---
 layout: post
-title: "Use Solarized Color Schemea under ArchLinux and Awesome"
+description: "令人心情舒畅的color schema，可以提高工作效率 Use Solarized Color Schemea under ArchLinux and Awesome"
 date: 2012-07-05 17:34
 comments: true
-categories: [linux]
-description: "令人心情舒畅的color schema，可以提高工作效率"
+categories: [linux,emacs,tool]
+title: "用solarized color schema提升工作效率"
 keywords: "color schema, linux, emacs, solarized" 
 ---
 貌似[solarized](http://www.solarized.com/)已经火了很久，相见狠晚啊，曾

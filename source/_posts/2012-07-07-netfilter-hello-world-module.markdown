@@ -1,10 +1,10 @@
 ---
 layout: post
-title: "Netfilter hello world module"
+description: "Netfilter hello world module"
 date: 2012-07-07 23:16
 comments: true
-categories: [linux]
-description: "hello world之netfilter模块"
+categories: [linux,kernel,network,C]
+title: "学写hello world之netfilter模块"
 keywords: "linux, kernel, netfilter"
 ---
 对于linux网络的学习，学下写netfilter module更有利于理解，下面开始实战。

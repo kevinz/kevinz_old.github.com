@@ -1,10 +1,10 @@
 ---
 layout: post
-title: "Blog with jekyll octopress emacs on github"
+description: "写博客 Blog with jekyll octopress emacs on github"
 date: 2012-07-05 7:59
 comments: true
-categories: [tool]
-description: "使用jekyll octopress emacs写blog"
+categories: [tool,octopress,emacs]
+title: "用jekyll octopress emacs写blog"
 keywords: "jekyll, octopress, emacs, github"
 ---
 最近学习的动力大爆发，学了不少东西，应该记录并分享出来，把自己挂在
@@ -24,6 +24,14 @@ $ yaourt -S ibus-el
 (add-hook 'after-init-hook 'ibus-mode-on)
 (global-set-key (kbd "C-\\") 'ibus-toggle)
 {% endcodeblock %}
+备注：因为ibus-mode很恼人的context warning问题，已经抛弃它了，直接把
+emacs可执行文件包装一下，放在shell里:
+{% codeblock my emacs wrapper script lang:bash%}
+#!/bin/sh
+#emacs-real is the real original emacs executable
+LC_CTYPE=zh_CN.UTF-8 /usr/bin/emacs-real
+{% endcodeblock %}
+就可以直接使用系统的ibus了，低碳环保还不闹心。
 
 {% codeblock Enable markdown mode %}
 (autoload 'markdown-mode "markdown-mode.el"

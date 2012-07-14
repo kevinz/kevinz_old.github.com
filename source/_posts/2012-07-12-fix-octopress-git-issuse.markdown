@@ -1,10 +1,10 @@
 ---
 layout: post
-title: "Fix octopress git deploy issuse"
+description: "解决octopress的git自动deploy问题 Fix octopress git deploy issuse"
 date: 2012-07-12 07:05
 comments: true
-categories: [tool]
-description: "解决octopress的git自动deploy问题"
+categories: [tool,octopress,git]
+title: "解决octopress的git自动deploy问题"
 keywords: "octopress, git, _deploy, rake"
 ---
 已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
