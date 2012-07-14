@@ -4,7 +4,7 @@
   <title><![CDATA[Code Mind]]></title>
   <link href="http://kevinz.github.com/atom.xml" rel="self"/>
   <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-14T18:26:08+08:00</updated>
+  <updated>2012-07-14T22:03:24+08:00</updated>
   <id>http://kevinz.github.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[customize-kernel-in-arch-linux]]></title>
+    <title type="html"><![CDATA[在archlinux里定制编译内核]]></title>
     <link href="http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
     <updated>2012-07-14T16:54:00+08:00</updated>
     <id>http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
@@ -330,7 +330,7 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Fix octopress git deploy issuse]]></title>
+    <title type="html"><![CDATA[解决octopress的git自动deploy问题]]></title>
     <link href="http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse/"/>
     <updated>2012-07-12T07:05:00+08:00</updated>
     <id>http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse</id>
@@ -378,7 +378,7 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Study on LVS kernel code - persistent]]></title>
+    <title type="html"><![CDATA[LVS peristent代码分析]]></title>
     <link href="http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
     <updated>2012-07-11T12:24:00+08:00</updated>
     <id>http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
@@ -675,7 +675,7 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Collection of network performance tuning tools]]></title>
+    <title type="html"><![CDATA[寻找揭示linux网络及系统性能的工具]]></title>
     <link href="http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools/"/>
     <updated>2012-07-11T08:14:00+08:00</updated>
     <id>http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools</id>
@@ -744,7 +744,7 @@ sockets).And the author claimed it&#8217;s better than <a href="http://httpd.apa
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Netfilter hello world module]]></title>
+    <title type="html"><![CDATA[学写hello world之netfilter模块]]></title>
     <link href="http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/"/>
     <updated>2012-07-07T23:16:00+08:00</updated>
     <id>http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module</id>
@@ -835,7 +835,7 @@ default:
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Use Solarized Color Schemea under ArchLinux and Awesome]]></title>
+    <title type="html"><![CDATA[用solarized color schema提升工作效率]]></title>
     <link href="http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/"/>
     <updated>2012-07-05T17:34:00+08:00</updated>
     <id>http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome</id>
@@ -1075,7 +1075,7 @@ default:
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Drawing Message Sequence Chart in geek way]]></title>
+    <title type="html"><![CDATA[用Mscgen，以geek的方式画顺序图]]></title>
     <link href="http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/"/>
     <updated>2012-07-05T09:00:00+08:00</updated>
     <id>http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way</id>
@@ -1174,7 +1174,7 @@ msc{
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Blog with jekyll octopress emacs on github]]></title>
+    <title type="html"><![CDATA[用jekyll octopress emacs写blog]]></title>
     <link href="http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll/"/>
     <updated>2012-07-05T07:59:00+08:00</updated>
     <id>http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll</id>
@@ -1208,7 +1208,20 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
 </span><span class='line'>(global-set-key (kbd "C-\\") 'ibus-toggle)</span></code></pre></td></tr></table></div></figure>
 
 
+<p>备注：因为ibus-mode很恼人的context warning问题，已经抛弃它了，直接把
+emacs可执行文件包装一下，放在shell里:</p>
 
+<figure class='code'><figcaption><span>my emacs wrapper script </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/sh</span>
+</span><span class='line'><span class="c">#emacs-real is the real original emacs executable</span>
+</span><span class='line'><span class="nv">LC_CTYPE</span><span class="o">=</span>zh_CN.UTF-8 /usr/bin/emacs-real
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>就可以直接使用系统的ibus了，低碳环保还不闹心。</p>
 
 <figure class='code'><figcaption><span>Enable markdown mode </span></figcaption>
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>

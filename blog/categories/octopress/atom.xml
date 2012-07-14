@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: octopress | Code Mind]]></title>
+  <link href="http://kevinz.github.com/blog/categories/octopress/atom.xml" rel="self"/>
+  <link href="http://kevinz.github.com/"/>
+  <updated>2012-07-14T22:03:24+08:00</updated>
+  <id>http://kevinz.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Zeng]]></name>
+    <email><![CDATA[kevintech08@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[解决octopress的git自动deploy问题]]></title>
+    <link href="http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse/"/>
+    <updated>2012-07-12T07:05:00+08:00</updated>
+    <id>http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse</id>
+    <content type="html"><![CDATA[<p>已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
+不怕麻烦了。昨天晚上为了解决octopress不能<code>rake deploy</code>的问题，搞了几个
+小时，搞完了对git的分支的理解得到了提升。</p>
+
+<p>解决完了再回头看，其实我的问题很sb，master branch本来只应该包括<em>deploy
+目录里的内容，但我因为误操作把上层目录都变成了master branch，这样就会
+在github上自己的blog项目内，看到很多本来不属于blog的文件。当然使用
+<code>rake deploy</code>也会出现问题。之前瞎折腾了很久，浪费好多时间，结果还是读
+源码解决了问题，Rakefile里<code>setup_github_page</code>和<code>push</code>任务看看，就知道
+咋回事了。需要注意的是，除了</em>deploy的其它文件都在source branch里，因为
+<code>setup_github_page</code>初始化时把master重命名成了source。</p>
+
+<!-- more -->
+
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>my solution  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$rm</span> -rf &lt;em&gt;deploy
+</span><span class='line'><span class="nv">$mkdir</span> &lt;/em&gt;deploy
+</span><span class='line'><span class="nv">$cd</span> _deploy
+</span><span class='line'><span class="nv">$git</span> init
+</span><span class='line'><span class="nv">$echo</span> <span class="s2">&quot;test&quot;</span> &gt; index.html
+</span><span class='line'><span class="nv">$git</span> branch -m master
+</span><span class='line'><span class="nv">$git</span> commit -m <span class="s2">&quot;octopress init&quot;</span>
+</span><span class='line'><span class="nv">$git</span> remote add origin git@github.com:username/username.github.com.git
+</span><span class='line'><span class="nv">$git</span> push origin master
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[用jekyll octopress emacs写blog]]></title>
+    <link href="http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll/"/>
+    <updated>2012-07-05T07:59:00+08:00</updated>
+    <id>http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll</id>
+    <content type="html"><![CDATA[<p>最近学习的动力大爆发，学了不少东西，应该记录并分享出来，把自己挂在
+github上的静态页面换成了强大的jekyll+octopress，捣鼓下开始写东西了，用markdown写
+blog的感觉应该很棒。</p>
+
+<p>接下来是开发环境，没错，是按写代码的方式写blog，我用的是emacs +
+mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
+一个方便了得。</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>install ibus-el  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>yaourt -S ibus-el
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<!-- more -->
+
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ibus-mode configuration </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(require 'ibus)
+</span><span class='line'>(add-hook 'after-init-hook 'ibus-mode-on)
+</span><span class='line'>(global-set-key (kbd "C-\") 'ibus-toggle)</span></code></pre></td></tr></table></div></figure></notextile></div>
+备注：因为ibus-mode很恼人的context warning问题，已经抛弃它了，直接把
+emacs可执行文件包装一下，放在shell里:
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>my emacs wrapper script </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;!/bin/sh&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;emacs-real is the real original emacs executable&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;LC_CTYPE<span class="o">=</span>zh_CN.UTF-8 /usr/bin/emacs-real
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+就可以直接使用系统的ibus了，低碳环保还不闹心。</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Enable markdown mode </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(autoload 'markdown-mode "markdown-mode.el"
+</span><span class='line'>   "Major mode for editing Markdown files" t)
+</span><span class='line'>(setq auto-mode-alist
+</span><span class='line'>   (cons '("\.text"  . markdown-mode) auto-mode-alist))&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>(setq auto-mode-alist&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>  (cons '("\\.md"  . markdown-mode) auto-mode-alist))
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+]]></content>
+  </entry>
+  
+</feed>
