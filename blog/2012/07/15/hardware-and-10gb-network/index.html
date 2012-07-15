@@ -5,12 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Category: C - Code Mind</title>
+  <title>学习万兆以太网，硬件和优化方法 - Code Mind</title>
   <meta name="author" content="Kevin Zeng">
 
   
-  <meta name="description" content="Category: C">
-  <meta name="keywords" content="clojure , linux , archlinux , tools ,programming , tcp/ip ,web development , performance">
+  <meta name="description" content="学习万兆网络 服务器平台 硬件 hardware and 10Gb network">
+  <meta name="keywords" content="10GbE, linux, 优化">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://kevinz.github.comblog/categories/c/">
+  <link rel="canonical" href="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -66,58 +66,157 @@
   <div id="main">
     <div id="content">
       <div>
-<article role="article">
+<article class="hentry" role="article">
   
   <header>
-    <h1 class="entry-title">Category: C</h1>
+    
+      <h1 class="entry-title">学习万兆以太网，硬件和优化方法</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-15T11:34:00+08:00" pubdate data-updated="true">Jul 15<span>th</span>, 2012</time>
+        
+      </p>
     
   </header>
-  
-  <div id="blog-archives" class="category">
 
 
+<div class="entry-content"><p>上周末去杭州参加了<a href="http://adc.taobao.com/">ADC</a>，收获不小，关注的几个
+topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能的要求非常高，
+于是开始关注起10Gbe，记录一些资料和心得。</p>
 
-  
-  <h2>2012</h2>
+<h2>个人关注点</h2>
 
-<article>
-  
+<ul>
+<li><a href="https://speakerdeck.com/u/gekben/p/by-intel">拥抱万兆以太网时代 - 探索英特尔® 至强® 处理器平台上的应用性能优化</a>
 
-<h1><a href="/blog/2012/07/11/study-on-lvs-kernel-code/">LVS peristent代码分析</a></h1>
-<time datetime="2012-07-11T12:24:00+08:00" pubdate><span class='month'>Jul</span> <span class='day'>11</span> <span class='year'>2012</span></time>
+<ul>
+<li>图片缩放及gzip的增强</li>
+<li>E5-2600 DDIO这个绝对是重点，对网络收发性能提升明显</li>
+<li>性价比高的10G BASE-T会逐渐成为主流</li>
+</ul>
+</li>
+<li><a href="https://speakerdeck.com/u/gekben/p/lvs-used-in-taobao">LVS在淘宝环境中的应用</a>
 
-<footer>
-
-  <span class="categories">posted in <a class='category' href='/blog/categories/c/'>C</a>, <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/lvs/'>lvs</a>, <a class='category' href='/blog/categories/network/'>network</a></span>
-
-
-</footer>
-
-
-</article>
-
-
-
-<article>
-  
-
-<h1><a href="/blog/2012/07/07/netfilter-hello-world-module/">学写hello world之netfilter模块</a></h1>
-<time datetime="2012-07-07T23:16:00+08:00" pubdate><span class='month'>Jul</span> <span class='day'>07</span> <span class='year'>2012</span></time>
-
-<footer>
-
-  <span class="categories">posted in <a class='category' href='/blog/categories/c/'>C</a>, <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/network/'>network</a></span>
+<ul>
+<li>FULLNAT模式，对大型网络降低运维难度非常好，但对LVS的改造很大，增加了复杂性</li>
+<li>SynProxy，在lvs上实现syn cookie防御机制，不明白为什么要做在这里</li>
+<li>taobao也没用上sandy bridge，还是E5640+intel 82599万兆卡</li>
+<li>多队列网卡，每个core绑定网卡的一个队列</li>
+<li>KeepAlived增强，select->epoll,localaddr</li>
+<li>Cluster，因为real server本身无状态，水平扩容好做，OSPF</li>
+<li>4/7层结合，lvs+nginx，nginx做7层业务负载</li>
+</ul>
+</li>
+</ul>
 
 
-</footer>
+<h2>硬件</h2>
+
+<ul>
+<li><a href="http://storage.chinabyte.com/447/12275447.shtml">介绍</a>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Sandy_Bridge_%28microarchitecture%29">sandy bridge</a> cpu列表</li>
+<li><a href="http://www.intel.com/content/www/us/en/network-adapters/gigabit-network-adapters/ethernet-x520.html">x520</a></li>
+<li><a href="http://ark.intel.com/products/58954/Intel-Ethernet-Converged-Network-Adapter-X540-T2">x540</a></li>
+<li><a href="http://www.emulex.com/products/10gbe-network-adapters-nic/emulex-branded/oce11102-nt/overview.html">emulex 手头正好有这块卡</a></li>
+</ul>
+</li>
+</ul>
 
 
-</article>
+<h2>优化</h2>
 
+<ul>
+<li>intel那个slides里有几个建议
+
+<ul>
+<li>Process affinity - socket</li>
+<li>Interrupts affinity - socket</li>
+<li>Disable LLDPAD,IPTABLES,IP6TABLES,SELINUX,IRQBALANCE</li>
+</ul>
+</li>
+<li><a href="http://timetobleed.com/useful-kernel-and-driver-performance-tweaks-for-your-linux-server/">Linux kernel and driver</a></li>
+<li><a href="http://www.linuxfoundation.org/collaborate/workgroups/networking">GRO,GSO,TSO&#8230;</a></li>
+</ul>
+
+
+<p>先记录到这里，边实践边补充。</p>
 </div>
 
+
+  <footer>
+    <p class="meta">
+      
   
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Zeng</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-15T11:34:00+08:00" pubdate data-updated="true">Jul 15<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/network/'>network</a>, <a class='category' href='/blog/categories/performance/'>performance</a>
+  
+</span>
+
+
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/" data-via="keving_zz" data-counturl="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/07/14/customize-kernel-in-arch-linux/" title="Previous Post: 在archlinux里定制编译内核">&laquo; 在archlinux里定制编译内核</a>
+      
+      
+    </p>
+  </footer>
 </article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
 
 </div>
 
@@ -209,7 +308,10 @@
       var disqus_shortname = 'codemind';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/';
+        var disqus_url = 'http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

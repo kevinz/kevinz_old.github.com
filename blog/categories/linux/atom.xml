@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Code Mind]]></title>
   <link href="http://kevinz.github.com/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-15T00:04:31+08:00</updated>
+  <updated>2012-07-15T14:43:56+08:00</updated>
   <id>http://kevinz.github.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -12,6 +12,76 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[学习万兆以太网，硬件和优化方法]]></title>
+    <link href="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/"/>
+    <updated>2012-07-15T11:34:00+08:00</updated>
+    <id>http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network</id>
+    <content type="html"><![CDATA[<p>上周末去杭州参加了<a href="http://adc.taobao.com/">ADC</a>，收获不小，关注的几个
+topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能的要求非常高，
+于是开始关注起10Gbe，记录一些资料和心得。</p>
+
+<h2>个人关注点</h2>
+
+<ul>
+<li><a href="https://speakerdeck.com/u/gekben/p/by-intel">拥抱万兆以太网时代 - 探索英特尔® 至强® 处理器平台上的应用性能优化</a>
+
+<ul>
+<li>图片缩放及gzip的增强</li>
+<li>E5-2600 DDIO这个绝对是重点，对网络收发性能提升明显</li>
+<li>性价比高的10G BASE-T会逐渐成为主流</li>
+</ul>
+</li>
+<li><a href="https://speakerdeck.com/u/gekben/p/lvs-used-in-taobao">LVS在淘宝环境中的应用</a>
+
+<ul>
+<li>FULLNAT模式，对大型网络降低运维难度非常好，但对LVS的改造很大，增加了复杂性</li>
+<li>SynProxy，在lvs上实现syn cookie防御机制，不明白为什么要做在这里</li>
+<li>taobao也没用上sandy bridge，还是E5640+intel 82599万兆卡</li>
+<li>多队列网卡，每个core绑定网卡的一个队列</li>
+<li>KeepAlived增强，select->epoll,localaddr</li>
+<li>Cluster，因为real server本身无状态，水平扩容好做，OSPF</li>
+<li>4/7层结合，lvs+nginx，nginx做7层业务负载</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>硬件</h2>
+
+<ul>
+<li><a href="http://storage.chinabyte.com/447/12275447.shtml">介绍</a>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Sandy_Bridge_%28microarchitecture%29">sandy bridge</a> cpu列表</li>
+<li><a href="http://www.intel.com/content/www/us/en/network-adapters/gigabit-network-adapters/ethernet-x520.html">x520</a></li>
+<li><a href="http://ark.intel.com/products/58954/Intel-Ethernet-Converged-Network-Adapter-X540-T2">x540</a></li>
+<li><a href="http://www.emulex.com/products/10gbe-network-adapters-nic/emulex-branded/oce11102-nt/overview.html">emulex 手头正好有这块卡</a></li>
+</ul>
+</li>
+</ul>
+
+
+<h2>优化</h2>
+
+<ul>
+<li>intel那个slides里有几个建议
+
+<ul>
+<li>Process affinity - socket</li>
+<li>Interrupts affinity - socket</li>
+<li>Disable LLDPAD,IPTABLES,IP6TABLES,SELINUX,IRQBALANCE</li>
+</ul>
+</li>
+<li><a href="http://timetobleed.com/useful-kernel-and-driver-performance-tweaks-for-your-linux-server/">Linux kernel and driver</a></li>
+<li><a href="http://www.linuxfoundation.org/collaborate/workgroups/networking">GRO,GSO,TSO...</a></li>
+</ul>
+
+
+<p>先记录到这里，边实践边补充。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[在archlinux里定制编译内核]]></title>
@@ -652,6 +722,13 @@ ABS会自动按照PKGBUILD的步骤开始执行，可以在编译真正开始时
     <content type="html"><![CDATA[<h2>Performance Testing</h2>
 
 <ul>
+<li><a href="http://www.netperf.org/netperf/">Netperf</a>
+
+<ul>
+<li><a href="http://www.ibm.com/developerworks/cn/linux/l-netperf/">Introduction</a></li>
+</ul>
+</li>
+<li><a href="http://blog.yufeng.info/archives/2234">qperf</a></li>
 <li><a href="https://github.com/wangbin579/tcpcopy/">Tcpcopy</a>
 
 <ul>
@@ -806,263 +883,6 @@ default:
 
 <p>我的环境(archlinux64 3.31-ck)编译加载成功，但貌似会导致kernel crash，
 哈哈，后面再解决吧，have fun。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[用solarized color schema提升工作效率]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/"/>
-    <updated>2012-07-05T17:34:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome</id>
-    <content type="html"><![CDATA[<p>貌似<a href="http://www.solarized.com/">solarized</a>已经火了很久，相见狠晚啊，曾
-经多么想调整下awesome的focus配色，让它不那么黯然，发现很难，现在终于可以轻松搞定
-了。说实话，看不太懂官方网站上的说明，也没力气去了解，发挥下拿来主义吧。</p>
-
-<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
-
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-10">
-    <img src="/images/post_img/term.png"
-         width="840" height="525"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-10" style="display:none">
-    <img src="/images/post_img/term.png"
-         width="1680" height="1050"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-10").hide();
-    jQuery("#image-dialog-10").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1720,
-      minHeight: 1090,
-      show:      'scale',
-      hide:      'scale'
-    });
-
-    jQuery("#image-10").click(function() {
-      jQuery("#image-dialog-10").dialog('open');
-    });
-
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/term.png" width="1680" height="1050"/>
-</div>
-</notextile></div></p>
-
-<!-- more -->
-
-
-<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
-
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-11">
-    <img src="/images/post_img/emacs.png"
-         width="840" height="525"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-11" style="display:none">
-    <img src="/images/post_img/emacs.png"
-         width="1680" height="1050"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-11").hide();
-    jQuery("#image-dialog-11").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1720,
-      minHeight: 1090,
-      show:      'scale',
-      hide:      'scale'
-    });
-
-    jQuery("#image-11").click(function() {
-      jQuery("#image-dialog-11").dialog('open');
-    });
-
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/emacs.png" width="1680" height="1050"/>
-</div>
-</notextile></div></p>
-
-<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
-
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-12">
-    <img src="/images/post_img/vim.png"
-         width="840" height="525"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-12" style="display:none">
-    <img src="/images/post_img/vim.png"
-         width="1680" height="1050"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-12").hide();
-    jQuery("#image-dialog-12").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1720,
-      minHeight: 1090,
-      show:      'scale',
-      hide:      'scale'
-    });
-
-    jQuery("#image-12").click(function() {
-      jQuery("#image-dialog-12").dialog('open');
-    });
-
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/vim.png" width="1680" height="1050"/>
-</div>
-</notextile></div></p>
-
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Put into .Xresources </span><a href='https://raw.github.com/altercation/solarized/master/xresources-colors-solarized/Xresources'>Xresources </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>!! drop in Solarized colorscheme <span class="k">for </span>Xresources/Xdefaults&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;!!SOLARIZED HEX     16/8 TERMCOL  XTERM/HEX   L&lt;em&gt;A&lt;/em&gt;B      RGB         HSB
-</span><span class='line'>!!--------- ------- ---- -------  ----------- ---------- ----------- -----------
-</span><span class='line'>!!base03    <span class="c">#002b36  8/4 brblack  234 #1c1c1c 15 -12 -12   0  43  54 193 100  21</span>
-</span><span class='line'>!!base02    <span class="c">#073642  0/4 black    235 #262626 20 -12 -12   7  54  66 192  90  26</span>
-</span><span class='line'>!!base01    <span class="c">#586e75 10/7 brgreen  240 #585858 45 -07 -07  88 110 117 194  25  46</span>
-</span><span class='line'>!!base00    <span class="c">#657b83 11/7 bryellow 241 #626262 50 -07 -07 101 123 131 195  23  51</span>
-</span><span class='line'>!!base0     <span class="c">#839496 12/6 brblue   244 #808080 60 -06 -03 131 148 150 186  13  59</span>
-</span><span class='line'>!!base1     <span class="c">#93a1a1 14/4 brcyan   245 #8a8a8a 65 -05 -02 147 161 161 180   9  63</span>
-</span><span class='line'>!!base2     <span class="c">#eee8d5  7/7 white    254 #e4e4e4 92 -00  10 238 232 213  44  11  93</span>
-</span><span class='line'>!!base3     <span class="c">#fdf6e3 15/7 brwhite  230 #ffffd7 97  00  10 253 246 227  44  10  99</span>
-</span><span class='line'>!!yellow    <span class="c">#b58900  3/3 yellow   136 #af8700 60  10  65 181 137   0  45 100  71</span>
-</span><span class='line'>!!orange    <span class="c">#cb4b16  9/3 brred    166 #d75f00 50  50  55 203  75  22  18  89  80</span>
-</span><span class='line'>!!red       <span class="c">#dc322f  1/1 red      160 #d70000 50  65  45 220  50  47   1  79  86</span>
-</span><span class='line'>!!magenta   <span class="c">#d33682  5/5 magenta  125 #af005f 50  65 -05 211  54 130 331  74  83</span>
-</span><span class='line'>!!violet    <span class="c">#6c71c4 13/5 brmagenta 61 #5f5faf 50  15 -45 108 113 196 237  45  77</span>
-</span><span class='line'>!!blue      <span class="c">#268bd2  4/4 blue      33 #0087ff 55 -10 -45  38 139 210 205  82  82</span>
-</span><span class='line'>!!cyan      <span class="c">#2aa198  6/6 cyan      37 #00afaf 60 -35 -05  42 161 152 175  74  63</span>
-</span><span class='line'>!!green     <span class="c">#859900  2/2 green     64 #5f8700 60 -20  65 133 153   0  68 100  60&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base03        <span class="c">#002b36&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base02        <span class="c">#073642&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base01        <span class="c">#586e75&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base00        <span class="c">#657b83&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base0         <span class="c">#839496&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base1         <span class="c">#93a1a1&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base2         <span class="c">#eee8d5&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base3         <span class="c">#fdf6e3&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_yellow        <span class="c">#b58900&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_orange        <span class="c">#cb4b16&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_red           <span class="c">#dc322f&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_magenta       <span class="c">#d33682&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_violet        <span class="c">#6c71c4&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_blue          <span class="c">#268bd2&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_cyan          <span class="c">#2aa198&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_green         <span class="c">#859900&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;*background:            S_base03
-</span><span class='line'>...
-</span><span class='line'>URxvt.
-</span><span class='line'>...
-</span><span class='line'>Emacs.
-</span><span class='line'>...
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
-
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Use solarized in emacs </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>(require 'color-theme-solarized)
-</span><span class='line'>(color-theme-solarized-light)</span></code></pre></td></tr></table></div></figure></notextile></div></p>
 ]]></content>
   </entry>
   

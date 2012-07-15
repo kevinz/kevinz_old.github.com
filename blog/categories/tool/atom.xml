@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tool | Code Mind]]></title>
   <link href="http://kevinz.github.com/blog/categories/tool/atom.xml" rel="self"/>
   <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-15T00:04:31+08:00</updated>
+  <updated>2012-07-15T14:43:56+08:00</updated>
   <id>http://kevinz.github.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -64,6 +64,13 @@
     <content type="html"><![CDATA[<h2>Performance Testing</h2>
 
 <ul>
+<li><a href="http://www.netperf.org/netperf/">Netperf</a>
+
+<ul>
+<li><a href="http://www.ibm.com/developerworks/cn/linux/l-netperf/">Introduction</a></li>
+</ul>
+</li>
+<li><a href="http://blog.yufeng.info/archives/2234">qperf</a></li>
 <li><a href="https://github.com/wangbin579/tcpcopy/">Tcpcopy</a>
 
 <ul>

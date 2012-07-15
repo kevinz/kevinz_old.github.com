@@ -73,6 +73,103 @@
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2012/07/15/hardware-and-10gb-network/">学习万兆以太网，硬件和优化方法</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-15T11:34:00+08:00" pubdate data-updated="true">Jul 15<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>上周末去杭州参加了<a href="http://adc.taobao.com/">ADC</a>，收获不小，关注的几个
+topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能的要求非常高，
+于是开始关注起10Gbe，记录一些资料和心得。</p>
+
+<h2>个人关注点</h2>
+
+<ul>
+<li><a href="https://speakerdeck.com/u/gekben/p/by-intel">拥抱万兆以太网时代 - 探索英特尔® 至强® 处理器平台上的应用性能优化</a>
+
+<ul>
+<li>图片缩放及gzip的增强</li>
+<li>E5-2600 DDIO这个绝对是重点，对网络收发性能提升明显</li>
+<li>性价比高的10G BASE-T会逐渐成为主流</li>
+</ul>
+</li>
+<li><a href="https://speakerdeck.com/u/gekben/p/lvs-used-in-taobao">LVS在淘宝环境中的应用</a>
+
+<ul>
+<li>FULLNAT模式，对大型网络降低运维难度非常好，但对LVS的改造很大，增加了复杂性</li>
+<li>SynProxy，在lvs上实现syn cookie防御机制，不明白为什么要做在这里</li>
+<li>taobao也没用上sandy bridge，还是E5640+intel 82599万兆卡</li>
+<li>多队列网卡，每个core绑定网卡的一个队列</li>
+<li>KeepAlived增强，select->epoll,localaddr</li>
+<li>Cluster，因为real server本身无状态，水平扩容好做，OSPF</li>
+<li>4/7层结合，lvs+nginx，nginx做7层业务负载</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>硬件</h2>
+
+<ul>
+<li><a href="http://storage.chinabyte.com/447/12275447.shtml">介绍</a>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Sandy_Bridge_%28microarchitecture%29">sandy bridge</a> cpu列表</li>
+<li><a href="http://www.intel.com/content/www/us/en/network-adapters/gigabit-network-adapters/ethernet-x520.html">x520</a></li>
+<li><a href="http://ark.intel.com/products/58954/Intel-Ethernet-Converged-Network-Adapter-X540-T2">x540</a></li>
+<li><a href="http://www.emulex.com/products/10gbe-network-adapters-nic/emulex-branded/oce11102-nt/overview.html">emulex 手头正好有这块卡</a></li>
+</ul>
+</li>
+</ul>
+
+
+<h2>优化</h2>
+
+<ul>
+<li>intel那个slides里有几个建议
+
+<ul>
+<li>Process affinity - socket</li>
+<li>Interrupts affinity - socket</li>
+<li>Disable LLDPAD,IPTABLES,IP6TABLES,SELINUX,IRQBALANCE</li>
+</ul>
+</li>
+<li><a href="http://timetobleed.com/useful-kernel-and-driver-performance-tweaks-for-your-linux-server/">Linux kernel and driver</a></li>
+<li><a href="http://www.linuxfoundation.org/collaborate/workgroups/networking">GRO,GSO,TSO&#8230;</a></li>
+</ul>
+
+
+<p>先记录到这里，边实践边补充。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2012/07/14/customize-kernel-in-arch-linux/">在archlinux里定制编译内核</a></h1>
     
     
@@ -270,6 +367,13 @@
   <div class="entry-content"><h2>Performance Testing</h2>
 
 <ul>
+<li><a href="http://www.netperf.org/netperf/">Netperf</a>
+
+<ul>
+<li><a href="http://www.ibm.com/developerworks/cn/linux/l-netperf/">Introduction</a></li>
+</ul>
+</li>
+<li><a href="http://blog.yufeng.info/archives/2234">qperf</a></li>
 <li><a href="https://github.com/wangbin579/tcpcopy/">Tcpcopy</a>
 
 <ul>
@@ -649,6 +753,10 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/07/15/hardware-and-10gb-network/">学习万兆以太网，硬件和优化方法</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/07/14/customize-kernel-in-arch-linux/">在archlinux里定制编译内核</a>
       </li>
     
@@ -664,15 +772,11 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
         <a href="/blog/2012/07/11/collection-of-network-performance-tuning-tools/">寻找揭示linux网络及系统性能的工具</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2012/07/07/netfilter-hello-world-module/">学写hello world之netfilter模块</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 112.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 124.0%'>C(2)</a> <a href='/blog/categories/emacs' style='font-size: 124.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 112.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 112.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 136.0%'>Kernel(3)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(5)</a> <a href='/blog/categories/lvs' style='font-size: 112.0%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 136.0%'>Network(3)</a> <a href='/blog/categories/octopress' style='font-size: 124.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 112.0%'>Performance(1)</a> <a href='/blog/categories/tool' style='font-size: 160.0%'>Tool(5)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 110.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 120.0%'>C(2)</a> <a href='/blog/categories/emacs' style='font-size: 120.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 110.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 110.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 140.0%'>Kernel(4)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(6)</a> <a href='/blog/categories/lvs' style='font-size: 110.0%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 140.0%'>Network(4)</a> <a href='/blog/categories/octopress' style='font-size: 120.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 120.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 150.0%'>Tool(5)</a> </span>
 </section>
 
 <section>
