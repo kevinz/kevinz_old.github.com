@@ -8,6 +8,9 @@ keywords: "performance tuning, network, kernel, debug"
 title: "寻找揭示linux网络及系统性能的工具"
 ---
 ##Performance Testing##
+  * [Netperf](http://www.netperf.org/netperf/)
+      - [Introduction](http://www.ibm.com/developerworks/cn/linux/l-netperf/)
+  * [qperf](http://blog.yufeng.info/archives/2234)
   * [Tcpcopy](https://github.com/wangbin579/tcpcopy/)
       - [old version on googlecode](https://code.google.com/p/tcpcopy)
       - It is an online TCP duplication tool and can be used for testing (using netlink and raw
