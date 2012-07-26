@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: linux | Code Mind]]></title>
-  <link href="http://kevinz.github.com/blog/categories/linux/atom.xml" rel="self"/>
+  <title><![CDATA[Category: kernel | Code Mind]]></title>
+  <link href="http://kevinz.github.com/blog/categories/kernel/atom.xml" rel="self"/>
   <link href="http://kevinz.github.com/"/>
   <updated>2012-07-15T14:43:56+08:00</updated>
   <id>http://kevinz.github.com/</id>
@@ -711,82 +711,6 @@ ABS会自动按照PKGBUILD的步骤开始执行，可以在编译真正开始时
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[寻找揭示linux网络及系统性能的工具]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools/"/>
-    <updated>2012-07-11T08:14:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools</id>
-    <content type="html"><![CDATA[<h2>Performance Testing</h2>
-
-<ul>
-<li><a href="http://www.netperf.org/netperf/">Netperf</a>
-
-<ul>
-<li><a href="http://www.ibm.com/developerworks/cn/linux/l-netperf/">Introduction</a></li>
-</ul>
-</li>
-<li><a href="http://blog.yufeng.info/archives/2234">qperf</a></li>
-<li><a href="https://github.com/wangbin579/tcpcopy/">Tcpcopy</a>
-
-<ul>
-<li><a href="https://code.google.com/p/tcpcopy">old version on googlecode</a></li>
-<li>It is an online TCP duplication tool and can be used for testing (using netlink and raw
-sockets).And the author claimed it's better than <a href="http://httpd.apache.org/docs/2.0/programs/ab.html">ab</a>.</li>
-</ul>
-</li>
-<li><a href="http://redmine.lighttpd.net/projects/weighttp/wiki">Weighhttp</a></li>
-</ul>
-
-
-<h2>System Inspecting</h2>
-
-<ul>
-<li><a href="https://www.linuxpowertop.org/powertop/">PowerTop</a></li>
-<li><a href="https://latencytop.org">LatencyTop</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=893">Introduction</a></li>
-</ul>
-</li>
-<li><a href="http://sourceware.org/systemtap/">Systemtap</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=477">Introduction</a></li>
-<li><a href="http://www.slideshare.net/mryufeng/systemtap">Slides</a></li>
-</ul>
-</li>
-</ul>
-
-
-<!-- more -->
-
-
-<h2>Network Inspecting</h2>
-
-<ul>
-<li><a href="http://www.percona.com/docs/wiki/tcprstat:start">tcprstat</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=728">Introduction</a></li>
-</ul>
-</li>
-</ul>
-
-
-<h2>Hardware Inspecting</h2>
-
-<ul>
-<li><a href="http://software.intel.com/en-us/articles/intel-64-architecture-processor-topology-enumeration/">cpu-topology</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=460">Introduction</a></li>
-</ul>
-</li>
-</ul>
-
 ]]></content>
   </entry>
   

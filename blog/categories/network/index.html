@@ -5,12 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>学写hello world之netfilter模块 - Code Mind</title>
+  <title>Category: network - Code Mind</title>
   <meta name="author" content="Kevin Zeng">
 
   
-  <meta name="description" content="Netfilter hello world module">
-  <meta name="keywords" content="linux, kernel, netfilter">
+  <meta name="description" content="Category: network">
+  <meta name="keywords" content="clojure , linux , archlinux , tools ,programming , tcp/ip ,web development , performance">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/">
+  <link rel="canonical" href="http://kevinz.github.comblog/categories/network/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -66,180 +66,94 @@
   <div id="main">
     <div id="content">
       <div>
-<article class="hentry" role="article">
+<article role="article">
   
   <header>
-    
-      <h1 class="entry-title">学写hello World之netfilter模块</h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-07-07T23:16:00+08:00" pubdate data-updated="true">Jul 7<span>th</span>, 2012</time>
-        
-      </p>
+    <h1 class="entry-title">Category: Network</h1>
     
   </header>
-
-
-<div class="entry-content"><p>对于linux网络的学习，学下写netfilter module更有利于理解，下面开始实战。</p>
-
-<div><script src='https://gist.github.com/3066821.js?file='></script>
-<noscript><pre><code>#define __KERNEL__
-#define MODULE
-
-#include &lt;linux/module.h&gt;
-#include &lt;linux/kernel.h&gt;
-#include &lt;linux/netfilter_ipv4.h&gt;
-#include &lt;linux/skbuff.h&gt;
-#include &lt;linux/udp.h&gt;
-#include &lt;linux/ip.h&gt;
-
-
-static struct nf_hook_ops nfho;      //struct holding set of hook function options
-static struct sk_buff *sock_buff;
-static struct udphdr *udp_header;
-static struct iphdr *ip_header;
-
-//function to be called by hook
-unsigned int hook_func(unsigned int hooknum,struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *))
-{
-    sock_buff = *skb; 
-    ip_header = (struct iphdr *)skb_network_header(sock_buff);    
-    if(!sock_buff){
-        return NF_ACCEPT;
-    }
-    if(ip_header-&gt;protocol == 17) {
-        udp_header = (struct udphdr *)skb_transport_header(sock_buff);
-        printk(KERN_INFO &quot;got udp packet.\n&quot;);
-        return NF_DROP;
-    }else{
-        printk(KERN_INFO &quot;packet accept.\n&quot;);
-        return NF_ACCEPT;
-    }
-}
-
-int init_module(void)
-{
-    printk(KERN_INFO &quot;register hello netfilter module.\n&quot;);
-    nfho.hook = hook_func;
-    nfho.hooknum = 0 ; // NF_IP_PRE_ROUTING
-    nfho.pf = PF_INET;
-    nfho.priority = NF_IP_PRI_FIRST;
-    nf_register_hook(&amp;nfho);
-    return 0;
-}
-
-void cleanup_module(void)
-{
-    printk(KERN_INFO &quot;cleanup hello netfilter module.\n&quot;);
-    nf_unregister_hook(&amp;nfho); 
-}
-</code></pre></noscript></div>
-
-
-
-
-<!-- more -->
-
-
-<div><script src='https://gist.github.com/3066825.js?file='></script>
-<noscript><pre><code>obj-m := hello.o
-KDIR := /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
-default:
-    $(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
-
-</code></pre></noscript></div>
-
-
-<p>然后就是</p>
-
-<figure class='code'><figcaption><span>install the module  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#make</span>
-</span><span class='line'><span class="c">#insmod hello.ko </span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>我的环境(archlinux64 3.31-ck)编译加载成功，但貌似会导致kernel crash，
-哈哈，后面再解决吧，have fun。</p>
-</div>
-
-
-  <footer>
-    <p class="meta">
-      
   
-
-<span class="byline author vcard">Posted by <span class="fn">Kevin Zeng</span></span>
-
-      
-
-
-
-
-
+  <div id="blog-archives" class="category">
 
 
 
   
+  <h2>2012</h2>
 
-
-<time datetime="2012-07-07T23:16:00+08:00" pubdate data-updated="true">Jul 7<span>th</span>, 2012</time>
-      
-
-<span class="categories">
+<article>
   
-    <a class='category' href='/blog/categories/c/'>C</a>, <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/network/'>network</a>
-  
-</span>
+
+<h1><a href="/blog/2012/07/15/hardware-and-10gb-network/">学习万兆以太网，硬件和优化方法</a></h1>
+<time datetime="2012-07-15T11:34:00+08:00" pubdate><span class='month'>Jul</span> <span class='day'>15</span> <span class='year'>2012</span></time>
+
+<footer>
+
+  <span class="categories">posted in <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/network/'>network</a>, <a class='category' href='/blog/categories/performance/'>performance</a></span>
 
 
-      
+</footer>
 
 
-    </p>
-    
-      <div class="sharing">
-  
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/" data-via="keving_zz" data-counturl="http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/" >Tweet</a>
-  
-  
-  <div class="g-plusone" data-size="medium"></div>
-  
-  
-</div>
-
-    
-    <p class="meta">
-      
-        <a class="basic-alignment left" href="/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/" title="Previous Post: 用solarized color schema提升工作效率">&laquo; 用solarized color schema提升工作效率</a>
-      
-      
-        <a class="basic-alignment right" href="/blog/2012/07/11/collection-of-network-performance-tuning-tools/" title="Next Post: 寻找揭示linux网络及系统性能的工具">寻找揭示linux网络及系统性能的工具 &raquo;</a>
-      
-    </p>
-  </footer>
 </article>
 
-  <section>
-    <h1>Comments</h1>
-    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+<article>
+  
+
+<h1><a href="/blog/2012/07/11/study-on-lvs-kernel-code/">LVS peristent代码分析</a></h1>
+<time datetime="2012-07-11T12:24:00+08:00" pubdate><span class='month'>Jul</span> <span class='day'>11</span> <span class='year'>2012</span></time>
+
+<footer>
+
+  <span class="categories">posted in <a class='category' href='/blog/categories/c/'>C</a>, <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/lvs/'>lvs</a>, <a class='category' href='/blog/categories/network/'>network</a></span>
+
+
+</footer>
+
+
+</article>
+
+
+
+<article>
+  
+
+<h1><a href="/blog/2012/07/11/collection-of-network-performance-tuning-tools/">寻找揭示linux网络及系统性能的工具</a></h1>
+<time datetime="2012-07-11T08:14:00+08:00" pubdate><span class='month'>Jul</span> <span class='day'>11</span> <span class='year'>2012</span></time>
+
+<footer>
+
+  <span class="categories">posted in <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/network/'>network</a>, <a class='category' href='/blog/categories/performance/'>performance</a>, <a class='category' href='/blog/categories/tool/'>tool</a></span>
+
+
+</footer>
+
+
+</article>
+
+
+
+<article>
+  
+
+<h1><a href="/blog/2012/07/07/netfilter-hello-world-module/">学写hello world之netfilter模块</a></h1>
+<time datetime="2012-07-07T23:16:00+08:00" pubdate><span class='month'>Jul</span> <span class='day'>07</span> <span class='year'>2012</span></time>
+
+<footer>
+
+  <span class="categories">posted in <a class='category' href='/blog/categories/c/'>C</a>, <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/network/'>network</a></span>
+
+
+</footer>
+
+
+</article>
+
 </div>
-  </section>
+
+  
+</article>
 
 </div>
 
@@ -331,10 +245,7 @@ default:
       var disqus_shortname = 'codemind';
       
         
-        // var disqus_developer = 1;
-        var disqus_identifier = 'http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/';
-        var disqus_url = 'http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/';
-        var disqus_script = 'embed.js';
+        var disqus_script = 'count.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

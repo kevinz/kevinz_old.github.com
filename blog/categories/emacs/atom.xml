@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: tool | Code Mind]]></title>
-  <link href="http://kevinz.github.com/blog/categories/tool/atom.xml" rel="self"/>
+  <title><![CDATA[Category: emacs | Code Mind]]></title>
+  <link href="http://kevinz.github.com/blog/categories/emacs/atom.xml" rel="self"/>
   <link href="http://kevinz.github.com/"/>
   <updated>2012-07-15T14:43:56+08:00</updated>
   <id>http://kevinz.github.com/</id>
@@ -12,125 +12,6 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
-  
-  <entry>
-    <title type="html"><![CDATA[解决octopress的git自动deploy问题]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse/"/>
-    <updated>2012-07-12T07:05:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse</id>
-    <content type="html"><![CDATA[<p>已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
-不怕麻烦了。昨天晚上为了解决octopress不能<code>rake deploy</code>的问题，搞了几个
-小时，搞完了对git的分支的理解得到了提升。</p>
-
-<p>解决完了再回头看，其实我的问题很sb，master branch本来只应该包括<em>deploy
-目录里的内容，但我因为误操作把上层目录都变成了master branch，这样就会
-在github上自己的blog项目内，看到很多本来不属于blog的文件。当然使用
-<code>rake deploy</code>也会出现问题。之前瞎折腾了很久，浪费好多时间，结果还是读
-源码解决了问题，Rakefile里<code>setup_github_page</code>和<code>push</code>任务看看，就知道
-咋回事了。需要注意的是，除了</em>deploy的其它文件都在source branch里，因为
-<code>setup_github_page</code>初始化时把master重命名成了source。</p>
-
-<!-- more -->
-
-
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>my solution  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$rm</span> -rf &lt;em&gt;deploy
-</span><span class='line'><span class="nv">$mkdir</span> &lt;/em&gt;deploy
-</span><span class='line'><span class="nv">$cd</span> _deploy
-</span><span class='line'><span class="nv">$git</span> init
-</span><span class='line'><span class="nv">$echo</span> <span class="s2">&quot;test&quot;</span> &gt; index.html
-</span><span class='line'><span class="nv">$git</span> branch -m master
-</span><span class='line'><span class="nv">$git</span> commit -m <span class="s2">&quot;octopress init&quot;</span>
-</span><span class='line'><span class="nv">$git</span> remote add origin git@github.com:username/username.github.com.git
-</span><span class='line'><span class="nv">$git</span> push origin master
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[寻找揭示linux网络及系统性能的工具]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools/"/>
-    <updated>2012-07-11T08:14:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools</id>
-    <content type="html"><![CDATA[<h2>Performance Testing</h2>
-
-<ul>
-<li><a href="http://www.netperf.org/netperf/">Netperf</a>
-
-<ul>
-<li><a href="http://www.ibm.com/developerworks/cn/linux/l-netperf/">Introduction</a></li>
-</ul>
-</li>
-<li><a href="http://blog.yufeng.info/archives/2234">qperf</a></li>
-<li><a href="https://github.com/wangbin579/tcpcopy/">Tcpcopy</a>
-
-<ul>
-<li><a href="https://code.google.com/p/tcpcopy">old version on googlecode</a></li>
-<li>It is an online TCP duplication tool and can be used for testing (using netlink and raw
-sockets).And the author claimed it's better than <a href="http://httpd.apache.org/docs/2.0/programs/ab.html">ab</a>.</li>
-</ul>
-</li>
-<li><a href="http://redmine.lighttpd.net/projects/weighttp/wiki">Weighhttp</a></li>
-</ul>
-
-
-<h2>System Inspecting</h2>
-
-<ul>
-<li><a href="https://www.linuxpowertop.org/powertop/">PowerTop</a></li>
-<li><a href="https://latencytop.org">LatencyTop</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=893">Introduction</a></li>
-</ul>
-</li>
-<li><a href="http://sourceware.org/systemtap/">Systemtap</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=477">Introduction</a></li>
-<li><a href="http://www.slideshare.net/mryufeng/systemtap">Slides</a></li>
-</ul>
-</li>
-</ul>
-
-
-<!-- more -->
-
-
-<h2>Network Inspecting</h2>
-
-<ul>
-<li><a href="http://www.percona.com/docs/wiki/tcprstat:start">tcprstat</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=728">Introduction</a></li>
-</ul>
-</li>
-</ul>
-
-
-<h2>Hardware Inspecting</h2>
-
-<ul>
-<li><a href="http://software.intel.com/en-us/articles/intel-64-architecture-processor-topology-enumeration/">cpu-topology</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=460">Introduction</a></li>
-</ul>
-</li>
-</ul>
-
-]]></content>
-  </entry>
   
   <entry>
     <title type="html"><![CDATA[用solarized color schema提升工作效率]]></title>
@@ -145,12 +26,12 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-5">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-10">
     <img src="/images/post_img/term.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-5" style="display:none">
+  <div id="image-dialog-10" style="display:none">
     <img src="/images/post_img/term.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -158,8 +39,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-5").hide();
-    jQuery("#image-dialog-5").dialog({
+    jQuery("#image-dialog-10").hide();
+    jQuery("#image-dialog-10").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -169,8 +50,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
       hide:      'scale'
     });
 
-    jQuery("#image-5").click(function() {
-      jQuery("#image-dialog-5").dialog('open');
+    jQuery("#image-10").click(function() {
+      jQuery("#image-dialog-10").dialog('open');
     });
 
   });
@@ -187,12 +68,12 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-6">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-11">
     <img src="/images/post_img/emacs.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-6" style="display:none">
+  <div id="image-dialog-11" style="display:none">
     <img src="/images/post_img/emacs.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -200,8 +81,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-6").hide();
-    jQuery("#image-dialog-6").dialog({
+    jQuery("#image-dialog-11").hide();
+    jQuery("#image-dialog-11").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -211,8 +92,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
       hide:      'scale'
     });
 
-    jQuery("#image-6").click(function() {
-      jQuery("#image-dialog-6").dialog('open');
+    jQuery("#image-11").click(function() {
+      jQuery("#image-dialog-11").dialog('open');
     });
 
   });
@@ -226,12 +107,12 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-7">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-12">
     <img src="/images/post_img/vim.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-7" style="display:none">
+  <div id="image-dialog-12" style="display:none">
     <img src="/images/post_img/vim.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -239,8 +120,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-7").hide();
-    jQuery("#image-dialog-7").dialog({
+    jQuery("#image-dialog-12").hide();
+    jQuery("#image-dialog-12").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -250,8 +131,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
       hide:      'scale'
     });
 
-    jQuery("#image-7").click(function() {
-      jQuery("#image-dialog-7").dialog('open');
+    jQuery("#image-12").click(function() {
+      jQuery("#image-dialog-12").dialog('open');
     });
 
   });
@@ -386,102 +267,6 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>(require 'color-theme-solarized)
 </span><span class='line'>(color-theme-solarized-light)</span></code></pre></td></tr></table></div></figure></notextile></div></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[用Mscgen，以geek的方式画顺序图]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/"/>
-    <updated>2012-07-05T09:00:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way</id>
-    <content type="html"><![CDATA[<p>相信很多人跟我一样，讨厌写文档，讨厌画图，所以喜欢
-<a href="http://www.graphviz.org/">graphviz</a>，<a href="www.doxygen.org/">doxygen</a>这些
-自动化工具来生成文档及图形。这两天要画一些很复杂的顺序图，找到我<a href="https://wiki.archlinux.org/index.php/Lightweight_Applications_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29">喜欢</a>的
-工具，<a href="http://www.mcternan.me.uk/mscgen/">Mscgen</a>，专为不爱画图，
-追求效率的geek设计。</p>
-
-<p><div><script src='https://gist.github.com/3053976.js?file='></script>
-<noscript><pre><code>#MSC for lvs in DR transparent mode
-msc{
-        hscale = &quot;2&quot;;
-        Client,LB,RS,OS;
-
-        Client=&gt;Client [ label = &quot;req(oip:oport)&quot;];
-        Client=&gt;Client [ label = &quot;routeto(LB)&quot;];
-        Client-&gt;LB [ label = &quot;(cip:cport)-&gt;(oip:oport)&quot;];
-        LB=&gt;LB     [ label = &quot;iptable-&gt;fwmark(dst==oip,dst_port=oport)&quot;];
-        LB=&gt;LB     [ label = &quot;(cip:cport)-&gt;(oip:oport)+fwmark&quot;];
-        LB=&gt;LB     [ label = &quot;trick kernel to receive()&quot;];
-        LB=&gt;LB     [ label = &quot;is_match(LB-&gt;fwmark,packet-&gt;fwmark)&quot;];
-        LB=&gt;LB     [ label = &quot;belongs_to_an_active_conn?&quot;];
-        LB=&gt;LB     [ label = &quot;is_new_conn?&quot;];
-        LB=&gt;LB     [ label = &quot;is_persistent?&quot;];
-        LB=&gt;LB     [ label = &quot;do_schedule()&quot;];
-        LB=&gt;LB     [ label = &quot;decide_rs()&quot;];
-        LB=&gt;LB     [ label = &quot;modify-mac(vmac-&gt;rmac)&quot;];
-        
-        LB-&gt;RS     [ label = &quot;(cip:cport)-&gt;(oip:oport)&quot;];
-        --- [ label = &quot;Packet is delivered to real server&quot;];
-        ...;
-        RS=&gt;RS     [ label = &quot;nf_hook-&gt;dnat(oip-&gt;rip,oport-&gt;rport)&quot;];
-        RS=&gt;RS     [ label = &quot;receive()&quot;];
-        RS=&gt;RS     [ label = &quot;proxy_www(URI)&quot;];
-        RS-&gt;OS     [ label = &quot;(rip_www:rport_www)-&gt;(oip:oport)&quot;];
-        --- [ label = &quot;Packet is delivered to the original server&quot;];
-        OS-&gt;RS     [ label = &quot;(oip:oport)-&gt;(rip_www:rport_www)&quot;];
-        RS=&gt;RS     [ label = &quot;route_to(LB or GW)&quot;];
-        --- [ label = &quot;Packet goes back to real server&quot;];
-        RS-&gt;LB [ label = &quot;(oip:oport)-&gt;(cip:cport)&quot;];
-        RS&gt;&gt;Client [ label = &quot;possible path:(oip:oport)-&gt;(cip:cport)&quot;];
-        LB-&gt;Client [ label = &quot;(oip:oport)-&gt;(cip:cport)&quot;];
-        --- [ label = &quot;Packet goes back to the client&quot;];
-}
-
-
-</code></pre></noscript></div>
-</p>
-
-<!-- more -->
-
-
-<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
-
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-8">
-    <img src="/images/post_img/lvs_transp.png"
-         width="600" height="429"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-8" style="display:none">
-    <img src="/images/post_img/lvs_transp.png"
-         width="1200" height="857"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-8").hide();
-    jQuery("#image-dialog-8").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1240,
-      minHeight: 897,
-      show:      'scale',
-      hide:      'scale'
-    });
-
-    jQuery("#image-8").click(function() {
-      jQuery("#image-dialog-8").dialog('open');
-    });
-
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/lvs_transp.png" width="1200" height="857"/>
-</div>
-</notextile></div></p>
 ]]></content>
   </entry>
   

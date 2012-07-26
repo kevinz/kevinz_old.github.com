@@ -5,12 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>学写hello world之netfilter模块 - Code Mind</title>
+  <title>学习万兆以太网，硬件和优化方法 - Code Mind</title>
   <meta name="author" content="Kevin Zeng">
 
   
-  <meta name="description" content="Netfilter hello world module">
-  <meta name="keywords" content="linux, kernel, netfilter">
+  <meta name="description" content="学习万兆网络 服务器平台 硬件 hardware and 10Gb network">
+  <meta name="keywords" content="10GbE, linux, 优化">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/">
+  <link rel="canonical" href="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -70,7 +70,7 @@
   
   <header>
     
-      <h1 class="entry-title">学写hello World之netfilter模块</h1>
+      <h1 class="entry-title">学习万兆以太网，硬件和优化方法</h1>
     
     
       <p class="meta">
@@ -86,96 +86,75 @@
   
 
 
-<time datetime="2012-07-07T23:16:00+08:00" pubdate data-updated="true">Jul 7<span>th</span>, 2012</time>
+<time datetime="2012-07-15T11:34:00+08:00" pubdate data-updated="true">Jul 15<span>th</span>, 2012</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>对于linux网络的学习，学下写netfilter module更有利于理解，下面开始实战。</p>
+<div class="entry-content"><p>上周末去杭州参加了<a href="http://adc.taobao.com/">ADC</a>，收获不小，关注的几个
+topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能的要求非常高，
+于是开始关注起10Gbe，记录一些资料和心得。</p>
 
-<div><script src='https://gist.github.com/3066821.js?file='></script>
-<noscript><pre><code>#define __KERNEL__
-#define MODULE
+<h2>个人关注点</h2>
 
-#include &lt;linux/module.h&gt;
-#include &lt;linux/kernel.h&gt;
-#include &lt;linux/netfilter_ipv4.h&gt;
-#include &lt;linux/skbuff.h&gt;
-#include &lt;linux/udp.h&gt;
-#include &lt;linux/ip.h&gt;
+<ul>
+<li><a href="https://speakerdeck.com/u/gekben/p/by-intel">拥抱万兆以太网时代 - 探索英特尔® 至强® 处理器平台上的应用性能优化</a>
 
+<ul>
+<li>图片缩放及gzip的增强</li>
+<li>E5-2600 DDIO这个绝对是重点，对网络收发性能提升明显</li>
+<li>性价比高的10G BASE-T会逐渐成为主流</li>
+</ul>
+</li>
+<li><a href="https://speakerdeck.com/u/gekben/p/lvs-used-in-taobao">LVS在淘宝环境中的应用</a>
 
-static struct nf_hook_ops nfho;      //struct holding set of hook function options
-static struct sk_buff *sock_buff;
-static struct udphdr *udp_header;
-static struct iphdr *ip_header;
-
-//function to be called by hook
-unsigned int hook_func(unsigned int hooknum,struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *))
-{
-    sock_buff = *skb; 
-    ip_header = (struct iphdr *)skb_network_header(sock_buff);    
-    if(!sock_buff){
-        return NF_ACCEPT;
-    }
-    if(ip_header-&gt;protocol == 17) {
-        udp_header = (struct udphdr *)skb_transport_header(sock_buff);
-        printk(KERN_INFO &quot;got udp packet.\n&quot;);
-        return NF_DROP;
-    }else{
-        printk(KERN_INFO &quot;packet accept.\n&quot;);
-        return NF_ACCEPT;
-    }
-}
-
-int init_module(void)
-{
-    printk(KERN_INFO &quot;register hello netfilter module.\n&quot;);
-    nfho.hook = hook_func;
-    nfho.hooknum = 0 ; // NF_IP_PRE_ROUTING
-    nfho.pf = PF_INET;
-    nfho.priority = NF_IP_PRI_FIRST;
-    nf_register_hook(&amp;nfho);
-    return 0;
-}
-
-void cleanup_module(void)
-{
-    printk(KERN_INFO &quot;cleanup hello netfilter module.\n&quot;);
-    nf_unregister_hook(&amp;nfho); 
-}
-</code></pre></noscript></div>
+<ul>
+<li>FULLNAT模式，对大型网络降低运维难度非常好，但对LVS的改造很大，增加了复杂性</li>
+<li>SynProxy，在lvs上实现syn cookie防御机制，不明白为什么要做在这里</li>
+<li>taobao也没用上sandy bridge，还是E5640+intel 82599万兆卡</li>
+<li>多队列网卡，每个core绑定网卡的一个队列</li>
+<li>KeepAlived增强，select->epoll,localaddr</li>
+<li>Cluster，因为real server本身无状态，水平扩容好做，OSPF</li>
+<li>4/7层结合，lvs+nginx，nginx做7层业务负载</li>
+</ul>
+</li>
+</ul>
 
 
+<h2>硬件</h2>
+
+<ul>
+<li><a href="http://storage.chinabyte.com/447/12275447.shtml">介绍</a>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Sandy_Bridge_%28microarchitecture%29">sandy bridge</a> cpu列表</li>
+<li><a href="http://www.intel.com/content/www/us/en/network-adapters/gigabit-network-adapters/ethernet-x520.html">x520</a></li>
+<li><a href="http://ark.intel.com/products/58954/Intel-Ethernet-Converged-Network-Adapter-X540-T2">x540</a></li>
+<li><a href="http://www.emulex.com/products/10gbe-network-adapters-nic/emulex-branded/oce11102-nt/overview.html">emulex 手头正好有这块卡</a></li>
+</ul>
+</li>
+</ul>
 
 
-<!-- more -->
+<h2>优化</h2>
+
+<ul>
+<li>intel那个slides里有几个建议
+
+<ul>
+<li>Process affinity - socket</li>
+<li>Interrupts affinity - socket</li>
+<li>Disable LLDPAD,IPTABLES,IP6TABLES,SELINUX,IRQBALANCE</li>
+</ul>
+</li>
+<li><a href="http://timetobleed.com/useful-kernel-and-driver-performance-tweaks-for-your-linux-server/">Linux kernel and driver</a></li>
+<li><a href="http://www.linuxfoundation.org/collaborate/workgroups/networking">GRO,GSO,TSO&#8230;</a></li>
+</ul>
 
 
-<div><script src='https://gist.github.com/3066825.js?file='></script>
-<noscript><pre><code>obj-m := hello.o
-KDIR := /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
-default:
-    $(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
-
-</code></pre></noscript></div>
-
-
-<p>然后就是</p>
-
-<figure class='code'><figcaption><span>install the module  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#make</span>
-</span><span class='line'><span class="c">#insmod hello.ko </span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>我的环境(archlinux64 3.31-ck)编译加载成功，但貌似会导致kernel crash，
-哈哈，后面再解决吧，have fun。</p>
+<p>先记录到这里，边实践边补充。</p>
 </div>
 
 
@@ -198,12 +177,12 @@ default:
   
 
 
-<time datetime="2012-07-07T23:16:00+08:00" pubdate data-updated="true">Jul 7<span>th</span>, 2012</time>
+<time datetime="2012-07-15T11:34:00+08:00" pubdate data-updated="true">Jul 15<span>th</span>, 2012</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/c/'>C</a>, <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/network/'>network</a>
+    <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/network/'>network</a>, <a class='category' href='/blog/categories/performance/'>performance</a>
   
 </span>
 
@@ -215,7 +194,7 @@ default:
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/" data-via="keving_zz" data-counturl="http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/" data-via="keving_zz" data-counturl="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="medium"></div>
@@ -226,10 +205,8 @@ default:
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/" title="Previous Post: 用solarized color schema提升工作效率">&laquo; 用solarized color schema提升工作效率</a>
+        <a class="basic-alignment left" href="/blog/2012/07/14/customize-kernel-in-arch-linux/" title="Previous Post: 在archlinux里定制编译内核">&laquo; 在archlinux里定制编译内核</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2012/07/11/collection-of-network-performance-tuning-tools/" title="Next Post: 寻找揭示linux网络及系统性能的工具">寻找揭示linux网络及系统性能的工具 &raquo;</a>
       
     </p>
   </footer>
@@ -332,8 +309,8 @@ default:
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/';
-        var disqus_url = 'http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/';
+        var disqus_identifier = 'http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/';
+        var disqus_url = 'http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/';
         var disqus_script = 'embed.js';
       
     (function () {
