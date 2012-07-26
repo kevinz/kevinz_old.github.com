@@ -40,7 +40,11 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
    - Disable LLDPAD,IPTABLES,IP6TABLES,SELINUX,IRQBALANCE
  * [Linux kernel and driver](http://timetobleed.com/useful-kernel-and-driver-performance-tweaks-for-your-linux-server/)
  * [GRO,GSO,TSO...](http://www.linuxfoundation.org/collaborate/workgroups/networking)
-    
+ * Papers
+   - [RedHat](http://www.google.com.hk/url?sa=t&rct=j&q=10Gbe+linux+optimization&source=web&cd=1&ved=0CFQQFjAA&url=http%3A%2F%2Fdocs.redhat.com%2Fdocs%2Fen-US%2FRed_Hat_Enterprise_Linux%2F6%2Fpdf%2FPerformance_Tuning_Guide%2FRed_Hat_Enterprise_Linux-6-Performance_Tuning_Guide-en-US.pdf&ei=3D4RUKmWJ6O3iQed2YHYCw&usg=AFQjCNGRhggpqYuUP0LQwoQE1uofWlN2dQ)
+   - [Google](http://www.google.com.hk/url?sa=t&rct=j&q=10Gbe+linux+optimization&source=web&cd=5&ved=0CGUQFjAE&url=http%3A%2F%2Fakashi.ci.i.u-tokyo.ac.jp%2Flab%2Fcmsdesigner%2Fdlfile.php%3Fentryname%3Dpublic%26entryid%3D00096%26fileid%3D00000001%26%2Fysn-camera.pdf&ei=3D4RUKmWJ6O3iQed2YHYCw&usg=AFQjCNGXO4wm2DQ8A6cAg1IsVzjbGjzvDg)
+   - [IBM](http://www.kernel.org/doc/ols/2009/ols2009-pages-169-184.pdf)
+     
 先记录到这里，边实践边补充。
       
       
