@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: linux tools arch | Code Mind]]></title>
+  <link href="http://kevinz.github.com/blog/categories/linux-tools-arch/atom.xml" rel="self"/>
+  <link href="http://kevinz.github.com/"/>
+  <updated>2012-07-29T19:19:45+08:00</updated>
+  <id>http://kevinz.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Zeng]]></name>
+    <email><![CDATA[kevintech08@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[how virtualbox work with linux-ck]]></title>
+    <link href="http://kevinz.github.com/blog/2012/07/29/virtualbox-work-with-linux-ck/"/>
+    <updated>2012-07-29T18:29:00+08:00</updated>
+    <id>http://kevinz.github.com/blog/2012/07/29/virtualbox-work-with-linux-ck</id>
+    <content type="html"><![CDATA[<p>解决了virtualbox在linux-ck里使用的问题，做一下记录。我用的是
+linux-ck-corex内核，直接通过
+<a href="https://wiki.archlinux.org/index.php/Repo-ck">repo-ck</a>装好，不过也可
+以通过<a href="http://aur.archlinux.org/packages.php?ID=50911">aur</a>来折腾下，
+调整下内核参数啥的。这里主要记录下如何让virtualbox正常工作，<a href="https://wiki.archlinux.org/index.php/Linux-ck#Running_Virtualbox_with_Linux-ck">这篇</a>提到了
+一些相关内容，做一点补充:</p>
+
+<h2>编译vboxdrv及其它模块</h2>
+
+<ul>
+<li>记得装对应的linux-ck-headers，我装的是linux-ck-corex-headers，可能
+要先fuck gfw。</li>
+<li>编译方法有所变化，老版的virtualbox是用<code>vboxbuild</code>，新版改成了<code>dkms
+install vboxhost/4.1.18</code>。</li>
+<li>解决编译vboxdrv报错问题。
+
+<ul>
+<li>headers安装目录默认是在<code>/usr/src/kernel_full_name</code>，在
+<code>/lib/modules/kernel_full_name</code>下，执行<code>ln -s
+/usr/src/kernel_full_name build</code>，编译应该就ok了。</li>
+</ul>
+</li>
+<li>老版本的virtualbox编译好的modules是存在于<code>/lib/modules/extramodules</code>
+下，新的是在<code>/lib/modules/kernel/misc</code>下。</li>
+<li>add/append your user into vboxusers group</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>
