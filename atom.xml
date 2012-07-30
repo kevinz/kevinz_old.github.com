@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Code Mind]]></title>
-  <link href="http://kevinz.github.com/atom.xml" rel="self"/>
-  <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-30T14:21:13+08:00</updated>
-  <id>http://kevinz.github.com/</id>
+  <link href="http://gekben.gitcd.com/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-07-30T21:15:56+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
     <email><![CDATA[kevintech08@gmail.com]]></email>
@@ -15,18 +15,18 @@
   
   <entry>
     <title type="html"><![CDATA[cpio issues]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/30/cpio-issues/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/30/cpio-issues/"/>
     <updated>2012-07-30T08:35:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/30/cpio-issues</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/30/cpio-issues</id>
     <content type="html"><![CDATA[<p>To be continue.</p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[how virtualbox work with linux-ck]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/29/virtualbox-work-with-linux-ck/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/29/virtualbox-work-with-linux-ck/"/>
     <updated>2012-07-29T18:29:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/29/virtualbox-work-with-linux-ck</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/29/virtualbox-work-with-linux-ck</id>
     <content type="html"><![CDATA[<p>解决了virtualbox在linux-ck里使用的问题，做一下记录。我用的是
 linux-ck-corex内核，直接通过
 <a href="https://wiki.archlinux.org/index.php/Repo-ck">repo-ck</a>装好，不过也可
@@ -59,9 +59,9 @@ install vboxhost/4.1.18</code>。</li>
   
   <entry>
     <title type="html"><![CDATA[了解lvs调试]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/26/lvs-debug-howto/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/26/lvs-debug-howto/"/>
     <updated>2012-07-26T21:32:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/26/lvs-debug-howto</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/26/lvs-debug-howto</id>
     <content type="html"><![CDATA[<p>虽然对lvs的实现代码也算是心里有数了，但遇到一些具体问题时还拿不准，这时候就想到了lvs提供的调试功能，
 是内核提供的一个选项。一般发行版默认是没打开的，至少我接触的suse enterprice和archlinux都是关闭
 了ip_vs_debug，一起来看看怎么启用吧。</p>
@@ -175,9 +175,9 @@ have fun.</p>
   
   <entry>
     <title type="html"><![CDATA[学习万兆以太网，硬件和优化方法]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network/"/>
     <updated>2012-07-15T11:34:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network</id>
     <content type="html"><![CDATA[<p>上周末去杭州参加了<a href="http://adc.taobao.com/">ADC</a>，收获不小，关注的几个
 topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能的要求非常高，
 于是开始关注起10Gbe，记录一些资料和心得。</p>
@@ -253,9 +253,9 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
   
   <entry>
     <title type="html"><![CDATA[在archlinux里定制编译内核]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
     <updated>2012-07-14T16:54:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
     <content type="html"><![CDATA[<p>心血来潮升级到
 <a href="http://repo-ck.com/x86_64/linux-ck-corex-3.4.4-4-x86_64.pkg.tar.xz">linux-ck_3.4.4-4</a>
 后，发现<code>pm-suspend</code>出问题了，可以<code>suspend</code>，但<code>resume</code>后显示屏亮不起
@@ -570,9 +570,9 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
   
   <entry>
     <title type="html"><![CDATA[解决octopress的git自动deploy问题]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/12/fix-octopress-git-issuse/"/>
     <updated>2012-07-12T07:05:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/12/fix-octopress-git-issuse</id>
     <content type="html"><![CDATA[<p>已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
 不怕麻烦了。昨天晚上为了解决octopress不能<code>rake deploy</code>的问题，搞了几个
 小时，搞完了对git的分支的理解得到了提升。</p>
@@ -618,9 +618,9 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
   
   <entry>
     <title type="html"><![CDATA[LVS peristent代码分析]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
     <updated>2012-07-11T12:24:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
     <content type="html"><![CDATA[<p>一直纠结于LVS使用persistent时，是以何为依据，决定一个新的连接请求的命运的：是被persistent管理，去到之前的real server，还是被调度算法重新调度，去到新的real server。
 代码里其实写得非常清楚：</p>
 
@@ -918,9 +918,9 @@ http://sina.com.cn时，<code>daddr</code>就是<code>0.0.0.3</code>。</p>
   
   <entry>
     <title type="html"><![CDATA[寻找揭示linux网络及系统性能的工具]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/11/collection-of-network-performance-tuning-tools/"/>
     <updated>2012-07-11T08:14:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/11/collection-of-network-performance-tuning-tools</id>
     <content type="html"><![CDATA[<h2>Performance Testing</h2>
 
 <ul>
@@ -994,9 +994,9 @@ sockets).And the author claimed it&#8217;s better than <a href="http://httpd.apa
   
   <entry>
     <title type="html"><![CDATA[学写hello world之netfilter模块]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/07/netfilter-hello-world-module/"/>
     <updated>2012-07-07T23:16:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/07/netfilter-hello-world-module</id>
     <content type="html"><![CDATA[<p>对于linux网络的学习，学下写netfilter module更有利于理解，下面开始实战。</p>
 
 <div><script src='https://gist.github.com/3066821.js?file='></script>
@@ -1085,9 +1085,9 @@ default:
   
   <entry>
     <title type="html"><![CDATA[用solarized color schema提升工作效率]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/"/>
     <updated>2012-07-05T17:34:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome</id>
     <content type="html"><![CDATA[<p>貌似<a href="http://www.solarized.com/">solarized</a>已经火了很久，相见狠晚啊，曾
 经多么想调整下awesome的focus配色，让它不那么黯然，发现很难，现在终于可以轻松搞定
 了。说实话，看不太懂官方网站上的说明，也没力气去了解，发挥下拿来主义吧。</p>
@@ -1097,12 +1097,12 @@ default:
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
   <a href='javascript:void(0)' style="text-decoration: none" id="image-2">
-    <img src="http://kevinz.github.com/images/post_img/term.png"
+    <img src="http://gekben.gitcd.com/images/post_img/term.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
   <div id="image-dialog-2" style="display:none">
-    <img src="http://kevinz.github.com/images/post_img/term.png"
+    <img src="http://gekben.gitcd.com/images/post_img/term.png"
          width="1680" height="1050"/>
     <br clear="all"/>
   </div>
@@ -1127,7 +1127,7 @@ default:
   });
 </script>
 <div class="illustration print" style="display:none">
-  <img src="http://kevinz.github.com/images/post_img/term.png" width="1680" height="1050"/>
+  <img src="http://gekben.gitcd.com/images/post_img/term.png" width="1680" height="1050"/>
 </div>
 
 
@@ -1140,12 +1140,12 @@ default:
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
   <a href='javascript:void(0)' style="text-decoration: none" id="image-3">
-    <img src="http://kevinz.github.com/images/post_img/emacs.png"
+    <img src="http://gekben.gitcd.com/images/post_img/emacs.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
   <div id="image-dialog-3" style="display:none">
-    <img src="http://kevinz.github.com/images/post_img/emacs.png"
+    <img src="http://gekben.gitcd.com/images/post_img/emacs.png"
          width="1680" height="1050"/>
     <br clear="all"/>
   </div>
@@ -1170,7 +1170,7 @@ default:
   });
 </script>
 <div class="illustration print" style="display:none">
-  <img src="http://kevinz.github.com/images/post_img/emacs.png" width="1680" height="1050"/>
+  <img src="http://gekben.gitcd.com/images/post_img/emacs.png" width="1680" height="1050"/>
 </div>
 
 
@@ -1182,12 +1182,12 @@ default:
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
   <a href='javascript:void(0)' style="text-decoration: none" id="image-4">
-    <img src="http://kevinz.github.com/images/post_img/vim.png"
+    <img src="http://gekben.gitcd.com/images/post_img/vim.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
   <div id="image-dialog-4" style="display:none">
-    <img src="http://kevinz.github.com/images/post_img/vim.png"
+    <img src="http://gekben.gitcd.com/images/post_img/vim.png"
          width="1680" height="1050"/>
     <br clear="all"/>
   </div>
@@ -1212,7 +1212,7 @@ default:
   });
 </script>
 <div class="illustration print" style="display:none">
-  <img src="http://kevinz.github.com/images/post_img/vim.png" width="1680" height="1050"/>
+  <img src="http://gekben.gitcd.com/images/post_img/vim.png" width="1680" height="1050"/>
 </div>
 
 
@@ -1325,9 +1325,9 @@ default:
   
   <entry>
     <title type="html"><![CDATA[用Mscgen，以geek的方式画顺序图]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/"/>
     <updated>2012-07-05T09:00:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way</id>
     <content type="html"><![CDATA[<p>相信很多人跟我一样，讨厌写文档，讨厌画图，所以喜欢
 <a href="http://www.graphviz.org/">graphviz</a>，<a href="www.doxygen.org/">doxygen</a>这些
 自动化工具来生成文档及图形。这两天要画一些很复杂的顺序图，找到我<a href="https://wiki.archlinux.org/index.php/Lightweight_Applications_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29">喜欢</a>的
@@ -1385,12 +1385,12 @@ msc{
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
   <a href='javascript:void(0)' style="text-decoration: none" id="image-1">
-    <img src="http://kevinz.github.com/images/post_img/lvs_transp.png"
+    <img src="http://gekben.gitcd.com/images/post_img/lvs_transp.png"
          width="600" height="429"
          alt="Click me."/>
   </a>
   <div id="image-dialog-1" style="display:none">
-    <img src="http://kevinz.github.com/images/post_img/lvs_transp.png"
+    <img src="http://gekben.gitcd.com/images/post_img/lvs_transp.png"
          width="1200" height="857"/>
     <br clear="all"/>
   </div>
@@ -1415,7 +1415,7 @@ msc{
   });
 </script>
 <div class="illustration print" style="display:none">
-  <img src="http://kevinz.github.com/images/post_img/lvs_transp.png" width="1200" height="857"/>
+  <img src="http://gekben.gitcd.com/images/post_img/lvs_transp.png" width="1200" height="857"/>
 </div>
 
 
@@ -1424,9 +1424,9 @@ msc{
   
   <entry>
     <title type="html"><![CDATA[用jekyll octopress emacs写blog]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll/"/>
     <updated>2012-07-05T07:59:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll</id>
     <content type="html"><![CDATA[<p>最近学习的动力大爆发，学了不少东西，应该记录并分享出来，把自己挂在
 github上的静态页面换成了强大的jekyll+octopress，捣鼓下开始写东西了，用markdown写
 blog的感觉应该很棒。</p>

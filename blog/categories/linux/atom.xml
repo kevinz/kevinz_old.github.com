@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: linux | Code Mind]]></title>
-  <link href="http://kevinz.github.com/blog/categories/linux/atom.xml" rel="self"/>
-  <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-30T14:21:13+08:00</updated>
-  <id>http://kevinz.github.com/</id>
+  <link href="http://gekben.gitcd.com/blog/categories/linux/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-07-30T21:15:56+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
     <email><![CDATA[kevintech08@gmail.com]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[了解lvs调试]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/26/lvs-debug-howto/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/26/lvs-debug-howto/"/>
     <updated>2012-07-26T21:32:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/26/lvs-debug-howto</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/26/lvs-debug-howto</id>
     <content type="html"><![CDATA[<p>虽然对lvs的实现代码也算是心里有数了，但遇到一些具体问题时还拿不准，这时候就想到了lvs提供的调试功能，
 是内核提供的一个选项。一般发行版默认是没打开的，至少我接触的suse enterprice和archlinux都是关闭
 了ip_vs_debug，一起来看看怎么启用吧。
@@ -165,9 +165,9 @@ have fun.</p>
   
   <entry>
     <title type="html"><![CDATA[学习万兆以太网，硬件和优化方法]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network/"/>
     <updated>2012-07-15T11:34:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network</id>
     <content type="html"><![CDATA[<p>上周末去杭州参加了<a href="http://adc.taobao.com/">ADC</a>，收获不小，关注的几个
 topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能的要求非常高，
 于是开始关注起10Gbe，记录一些资料和心得。</p>
@@ -243,9 +243,9 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
   
   <entry>
     <title type="html"><![CDATA[在archlinux里定制编译内核]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
     <updated>2012-07-14T16:54:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
     <content type="html"><![CDATA[<p>心血来潮升级到
 <a href="http://repo-ck.com/x86_64/linux-ck-corex-3.4.4-4-x86_64.pkg.tar.xz">linux-ck_3.4.4-4</a>
 后，发现<code>pm-suspend</code>出问题了，可以<code>suspend</code>，但<code>resume</code>后显示屏亮不起
@@ -572,9 +572,9 @@ ABS会自动按照PKGBUILD的步骤开始执行，可以在编译真正开始时
   
   <entry>
     <title type="html"><![CDATA[LVS peristent代码分析]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
     <updated>2012-07-11T12:24:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
     <content type="html"><![CDATA[<p>一直纠结于LVS使用persistent时，是以何为依据，决定一个新的连接请求的命运的：是被persistent管理，去到之前的real server，还是被调度算法重新调度，去到新的real server。
 代码里其实写得非常清楚：</p>
 
@@ -878,9 +878,9 @@ http://sina.com.cn时，<code>daddr</code>就是<code>0.0.0.3</code>。</p>
   
   <entry>
     <title type="html"><![CDATA[寻找揭示linux网络及系统性能的工具]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/11/collection-of-network-performance-tuning-tools/"/>
     <updated>2012-07-11T08:14:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/11/collection-of-network-performance-tuning-tools</id>
     <content type="html"><![CDATA[<h2>Performance Testing</h2>
 
 <ul>

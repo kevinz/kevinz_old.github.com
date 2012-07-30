@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: geek | Code Mind]]></title>
-  <link href="http://kevinz.github.com/blog/categories/geek/atom.xml" rel="self"/>
-  <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-30T14:21:13+08:00</updated>
-  <id>http://kevinz.github.com/</id>
+  <link href="http://gekben.gitcd.com/blog/categories/geek/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-07-30T21:15:56+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
     <email><![CDATA[kevintech08@gmail.com]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[用Mscgen，以geek的方式画顺序图]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/"/>
     <updated>2012-07-05T09:00:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way</id>
     <content type="html"><![CDATA[<p>相信很多人跟我一样，讨厌写文档，讨厌画图，所以喜欢
 <a href="http://www.graphviz.org/">graphviz</a>，<a href="www.doxygen.org/">doxygen</a>这些
 自动化工具来生成文档及图形。这两天要画一些很复杂的顺序图，找到我<a href="https://wiki.archlinux.org/index.php/Lightweight_Applications_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29">喜欢</a>的

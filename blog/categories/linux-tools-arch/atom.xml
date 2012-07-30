@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: linux tools arch | Code Mind]]></title>
-  <link href="http://kevinz.github.com/blog/categories/linux-tools-arch/atom.xml" rel="self"/>
-  <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-30T14:21:13+08:00</updated>
-  <id>http://kevinz.github.com/</id>
+  <link href="http://gekben.gitcd.com/blog/categories/linux-tools-arch/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-07-30T21:15:56+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
     <email><![CDATA[kevintech08@gmail.com]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[how virtualbox work with linux-ck]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/29/virtualbox-work-with-linux-ck/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/29/virtualbox-work-with-linux-ck/"/>
     <updated>2012-07-29T18:29:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/29/virtualbox-work-with-linux-ck</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/29/virtualbox-work-with-linux-ck</id>
     <content type="html"><![CDATA[<p>解决了virtualbox在linux-ck里使用的问题，做一下记录。我用的是
 linux-ck-corex内核，直接通过
 <a href="https://wiki.archlinux.org/index.php/Repo-ck">repo-ck</a>装好，不过也可

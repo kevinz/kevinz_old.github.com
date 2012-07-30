@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: lvs | Code Mind]]></title>
-  <link href="http://kevinz.github.com/blog/categories/lvs/atom.xml" rel="self"/>
-  <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-30T14:21:13+08:00</updated>
-  <id>http://kevinz.github.com/</id>
+  <link href="http://gekben.gitcd.com/blog/categories/lvs/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-07-30T21:15:56+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
     <email><![CDATA[kevintech08@gmail.com]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[LVS peristent代码分析]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
     <updated>2012-07-11T12:24:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
     <content type="html"><![CDATA[<p>一直纠结于LVS使用persistent时，是以何为依据，决定一个新的连接请求的命运的：是被persistent管理，去到之前的real server，还是被调度算法重新调度，去到新的real server。
 代码里其实写得非常清楚：</p>
 
