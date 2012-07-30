@@ -4,7 +4,7 @@
   <title><![CDATA[Code Mind]]></title>
   <link href="http://kevinz.github.com/atom.xml" rel="self"/>
   <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-29T19:19:45+08:00</updated>
+  <updated>2012-07-30T08:36:23+08:00</updated>
   <id>http://kevinz.github.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -12,6 +12,15 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[cpio issues]]></title>
+    <link href="http://kevinz.github.com/blog/2012/07/30/cpio-issues/"/>
+    <updated>2012-07-30T08:35:00+08:00</updated>
+    <id>http://kevinz.github.com/blog/2012/07/30/cpio-issues</id>
+    <content type="html"><![CDATA[
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[how virtualbox work with linux-ck]]></title>

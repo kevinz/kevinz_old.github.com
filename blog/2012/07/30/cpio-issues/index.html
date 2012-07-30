@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Code Mind</title>
+  <title>cpio issues - Code Mind</title>
   <meta name="author" content="Kevin Zeng">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://kevinz.github.com/blog/page/2/">
+  <link rel="canonical" href="http://kevinz.github.com/blog/2012/07/30/cpio-issues/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -65,15 +65,12 @@
 </nav>
   <div id="main">
     <div id="content">
-      <div class="blog-index">
+      <div>
+<article class="hentry" role="article">
   
-  
-  
-    <article>
-      
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/">用Mscgen，以geek的方式画顺序图</a></h1>
+      <h1 class="entry-title">Cpio Issues</h1>
     
     
       <p class="meta">
@@ -89,83 +86,25 @@
   
 
 
-<time datetime="2012-07-05T09:00:00+08:00" pubdate data-updated="true">Jul 5<span>th</span>, 2012</time>
+<time datetime="2012-07-30T08:35:00+08:00" pubdate data-updated="true">Jul 30<span>th</span>, 2012</time>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><p>相信很多人跟我一样，讨厌写文档，讨厌画图，所以喜欢
-<a href="http://www.graphviz.org/">graphviz</a>，<a href="www.doxygen.org/">doxygen</a>这些
-自动化工具来生成文档及图形。这两天要画一些很复杂的顺序图，找到我<a href="https://wiki.archlinux.org/index.php/Lightweight_Applications_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29">喜欢</a>的
-工具，<a href="http://www.mcternan.me.uk/mscgen/">Mscgen</a>，专为不爱画图，
-追求效率的geek设计。</p>
-
-<div><script src='https://gist.github.com/3053976.js?file='></script>
-<noscript><pre><code>#MSC for lvs in DR transparent mode
-msc{
-        hscale = &quot;2&quot;;
-        Client,LB,RS,OS;
-
-        Client=&gt;Client [ label = &quot;req(oip:oport)&quot;];
-        Client=&gt;Client [ label = &quot;routeto(LB)&quot;];
-        Client-&gt;LB [ label = &quot;(cip:cport)-&gt;(oip:oport)&quot;];
-        LB=&gt;LB     [ label = &quot;iptable-&gt;fwmark(dst==oip,dst_port=oport)&quot;];
-        LB=&gt;LB     [ label = &quot;(cip:cport)-&gt;(oip:oport)+fwmark&quot;];
-        LB=&gt;LB     [ label = &quot;trick kernel to receive()&quot;];
-        LB=&gt;LB     [ label = &quot;is_match(LB-&gt;fwmark,packet-&gt;fwmark)&quot;];
-        LB=&gt;LB     [ label = &quot;belongs_to_an_active_conn?&quot;];
-        LB=&gt;LB     [ label = &quot;is_new_conn?&quot;];
-        LB=&gt;LB     [ label = &quot;is_persistent?&quot;];
-        LB=&gt;LB     [ label = &quot;do_schedule()&quot;];
-        LB=&gt;LB     [ label = &quot;decide_rs()&quot;];
-        LB=&gt;LB     [ label = &quot;modify-mac(vmac-&gt;rmac)&quot;];
-        
-        LB-&gt;RS     [ label = &quot;(cip:cport)-&gt;(oip:oport)&quot;];
-        --- [ label = &quot;Packet is delivered to real server&quot;];
-        ...;
-        RS=&gt;RS     [ label = &quot;nf_hook-&gt;dnat(oip-&gt;rip,oport-&gt;rport)&quot;];
-        RS=&gt;RS     [ label = &quot;receive()&quot;];
-        RS=&gt;RS     [ label = &quot;proxy_www(URI)&quot;];
-        RS-&gt;OS     [ label = &quot;(rip_www:rport_www)-&gt;(oip:oport)&quot;];
-        --- [ label = &quot;Packet is delivered to the original server&quot;];
-        OS-&gt;RS     [ label = &quot;(oip:oport)-&gt;(rip_www:rport_www)&quot;];
-        RS=&gt;RS     [ label = &quot;route_to(LB or GW)&quot;];
-        --- [ label = &quot;Packet goes back to real server&quot;];
-        RS-&gt;LB [ label = &quot;(oip:oport)-&gt;(cip:cport)&quot;];
-        RS&gt;&gt;Client [ label = &quot;possible path:(oip:oport)-&gt;(cip:cport)&quot;];
-        LB-&gt;Client [ label = &quot;(oip:oport)-&gt;(cip:cport)&quot;];
-        --- [ label = &quot;Packet goes back to the client&quot;];
-}
-
-
-</code></pre></noscript></div>
-
-
-
-
+<div class="entry-content">
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/">Read on &rarr;</a>
-    </footer>
-  
 
 
-    </article>
-  
-  
-    <article>
+  <footer>
+    <p class="meta">
       
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/07/05/begin-to-use-jekyll/">用jekyll Octopress Emacs写blog</a></h1>
-    
-    
-      <p class="meta">
-        
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Zeng</span></span>
+
+      
 
 
 
@@ -177,48 +116,43 @@ msc{
   
 
 
-<time datetime="2012-07-05T07:59:00+08:00" pubdate data-updated="true">Jul 5<span>th</span>, 2012</time>
-        
-      </p>
+<time datetime="2012-07-30T08:35:00+08:00" pubdate data-updated="true">Jul 30<span>th</span>, 2012</time>
+      
+
+
+      
+
+
+    </p>
     
-  </header>
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinz.github.com/blog/2012/07/30/cpio-issues/" data-via="keving_zz" data-counturl="http://kevinz.github.com/blog/2012/07/30/cpio-issues/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
 
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/07/29/virtualbox-work-with-linux-ck/" title="Previous Post: how virtualbox work with linux-ck">&laquo; how virtualbox work with linux-ck</a>
+      
+      
+    </p>
+  </footer>
+</article>
 
-  <div class="entry-content"><p>最近学习的动力大爆发，学了不少东西，应该记录并分享出来，把自己挂在
-github上的静态页面换成了强大的jekyll+octopress，捣鼓下开始写东西了，用markdown写
-blog的感觉应该很棒。</p>
-
-<p>接下来是开发环境，没错，是按写代码的方式写blog，我用的是emacs +
-mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
-一个方便了得。</p>
-
-<figure class='code'><figcaption><span>install ibus-el  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>yaourt -S ibus-el
-</span></code></pre></td></tr></table></div></figure>
-
-
-
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
 
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2012/07/05/begin-to-use-jekyll/">Read on &rarr;</a>
-    </footer>
-  
 
-
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-    <a class="next" href="/">Newer &rarr;</a>
-    
-  </div>
-</div>
 <aside class="sidebar">
   
     <section>
@@ -275,7 +209,7 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
 <section>
   <h1>Latest Tweets</h1>
   <ul id="tweets">
-    <li class="loading">Status updating&#8230;</li>
+    <li class="loading">Status updating...</li>
   </ul>
   <script type="text/javascript">
     $.domReady(function(){
@@ -292,6 +226,7 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
   
 </aside>
 
+
     </div>
   </div>
   <footer role="contentinfo"><p>
@@ -306,7 +241,10 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
       var disqus_shortname = 'codemind';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinz.github.com/blog/2012/07/30/cpio-issues/';
+        var disqus_url = 'http://kevinz.github.com/blog/2012/07/30/cpio-issues/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
