@@ -11,14 +11,17 @@ keywords: "LVS, ipvs, persistent, code, implementation"
 代码里其实写得非常清楚：
 ##Persistent in LVS(ipvs)##
  * fwmark
-   - <IPPROTO_IP,caddr,0,fwmark,0,daddr,0> 这个六元组，最开始是写死的ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dport。
+   - <IPPROTO_IP,caddr,0,fwmark,0,daddr,0> 这个六元组，最开始是写死的
+     ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dport，
+     这个daddr值得一提，经过debug发现，这个值为`0.0.0.fwmark`。
  * Port zero service <protocol,caddr,0,vaddr,0,daddr,0>
  * non Port zero service
    - FTP <caddr,0,vaddr,0,daddr,0>
    - NON-FTP <caddr,0,vaddr,vport,daddr,dport>
 <!-- more -->    
-我自己的理解，daddr和dport就是请求的目的地址和端口，如果客户端请求vaddr:vport，比如在浏览器上请求http://vaddr:vport,那daddr和dport就分别和vaddr和vport相同，
-如果是透明模式，客户端不知道vip的存在，比如访问http://sina.com.cn，daddr就是sina.com.cn，dport就是80，这种透明模式一般都是通过fwmark的方式实现。
+如果是transparent mode，这种透明模式一般都是通过fwmark的方式实现，客户
+端是不知道vip的存在的，比如用`iptables`设置了`fwmark`为3，则访问
+http://sina.com.cn时，`daddr`就是`0.0.0.3`。
 
 见代码17，21，77，80行。
 {% codeblock /net/netfilter/ipvs/ip_vs_core.c lang:c %}
