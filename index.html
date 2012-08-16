@@ -118,117 +118,14 @@ kernel，可以search到的suse上安装systemtap的内容不多，碰到问题�
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>这个简单的例子是ok的，因为它不会涉及到systemtap的pass5，与kernel
-module交互。跑下面这个的时候，就不行了:</p>
-
-<figure class='code'><figcaption><span>systemtap hello_world  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>stap -v -e <span class="s1">&#39;probe vfs.read {printf(&quot;has VFS read()\n&quot;); exit()}&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
 
 
-<p>会报出类似<code>ERROR: Build-id mismatch: "kernel" vs. "vmlinux" byte 0 (0xf9 vs 0xa2)</code>的问题，关于build-id mismatch这个问题，还是可以
-搜索到不少资料的，不过告诉如何解决的也不多。先说明下这个问题，
-<code>kernel-default-debuginfo</code>里面是附赠了一个kernel elf文件的，在SUSE里，
-安装后放在<code>/usr/lib/debug/boot/vmlinux-3.0.13-0.27-default.debug</code>，这
-是debug版本的kernel vmlinux文件，是elf原始文件，未经压缩。<code>stap</code>运行时会去检查它的。
-执行<code>eu-readelf -n
-/usr/lib/debug/boot/vmlinux-3.0.13-0.27-default.debug</code>，可以拿到的
-build-id，执行结果的第一个字节是<code>f9</code>，那另外一个<code>a2</code>是从哪里得出来的，猜想应该和当
-前运行的kernel有关，于是拿到当前运行的vmlinux的压缩文件，解压后检查
-build-id：</p>
-
-<figure class='code'><figcaption><span>check build-id  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>   gunzip /boot/vmlinux-3.0.13-0.27-default.gz
-</span><span class='line'>   eu-readelf -n /boot/vmlinux-3.0.13-0.27-default
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>执行结果也是<code>f9</code>，是对得上的啊。</p>
-
-<p>但是注意，这份.gz文件是SUSE附赠的，跟当前跑的vmlinz文件没有关系，于是
-开始打vmlinuz文件的主意，得先想办法把vmlinuz->vmlinux，及bzImage到elf，
-才能去取它的build-id，
-<a href="%E8%BF%99%E9%87%8C">https://www.globalways.net/blog/archives/76-Extracting-bzImage-from-vmlinuz.html</a>有可行的方法。
-<code>eu-readelf -n vmlinux-unpacked</code>的结果果然是<code>a2</code>，我只能是怀疑SUSE给的
-默认vmlinuz有问题了，不能和SUSE提供的用于debuginfo的vmlinux匹配。</p>
-
-<p>只能另外想办法，其实systemtap做kernel mismatch判断的关键代码，就在:</p>
-
-<figure class='code'><figcaption><span>systemtap/runtime/sym.c  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="nf">_stp_build_id_check</span> <span class="p">(</span><span class="k">struct</span> <span class="n">_stp_module</span> <span class="o">*</span><span class="n">m</span><span class="p">,</span>
-</span><span class='line'>            <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">notes_addr</span><span class="p">,</span>
-</span><span class='line'>            <span class="k">struct</span> <span class="n">task_struct</span> <span class="o">*</span><span class="n">tsk</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'><span class="p">...</span>
-</span><span class='line'><span class="cm">/* just hack it */</span>
-</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">rc</span> <span class="o">||</span> <span class="p">(</span><span class="n">theory</span> <span class="o">!=</span> <span class="n">practice</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">basename</span><span class="p">;</span>
-</span><span class='line'>      <span class="n">basename</span> <span class="o">=</span> <span class="n">strrchr</span><span class="p">(</span><span class="n">m</span><span class="o">-&gt;</span><span class="n">path</span><span class="p">,</span> <span class="sc">&#39;/&#39;</span><span class="p">);</span>
-</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">basename</span><span class="p">)</span>
-</span><span class='line'><span class="o">|</span>   <span class="n">basename</span><span class="o">++</span><span class="p">;</span>
-</span><span class='line'>      <span class="k">else</span>
-</span><span class='line'><span class="o">|</span>   <span class="n">basename</span> <span class="o">=</span> <span class="n">m</span><span class="o">-&gt;</span><span class="n">path</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#if LINUX_VERSION_CODE &gt;= KERNEL_VERSION(2,6,27)</span>
-</span><span class='line'>      <span class="n">_stp_error</span> <span class="p">(</span><span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) address %#lx rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
-</span><span class='line'><span class="o">|</span>   <span class="o">|</span>     <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">notes_addr</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span>
-</span><span class='line'>      <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class='line'><span class="cp">#else</span>
-</span><span class='line'>      <span class="cm">/* This branch is a surrogate for kernels affected by Fedora bug</span>
-</span><span class='line'><span class="cm">       * #465873. */</span>
-</span><span class='line'>      <span class="n">_stp_warn</span> <span class="p">(</span><span class="n">KERN_WARNING</span>
-</span><span class='line'><span class="o">|</span>   <span class="o">|</span>    <span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
-</span><span class='line'><span class="o">|</span>   <span class="o">|</span>    <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span>
-</span><span class='line'><span class="cp">#endif</span>
-</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="cm">/* end mismatch */</span>
-</span><span class='line'>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>关键就在于<code>if (rc || (theory != practice))</code>，小小修改的一下，写成:
-<code>if (0 &amp;&amp; (rc || (theory != practice)))</code>就OK了，绕过了检查。然后重新编
-译systemtap，直接用的SUSE提供的老版本的源码，新的会有问题，注意还要用
-到SUSE提供的<code>libdwfl</code>的source code，才能完成编译，编译时在
-<code>/usr/src/packages/SOURCES/elfutils-0.152/libdwfl/linux-kernel-modules.c</code>
-文件上遇到了问题，稍作修改就可过关。尝试下新编译出来的<code>stap</code>，完全OK，它是不知
-道&#8217;build-id mismatch`为何物的，敢这样改也就是因为都是offical的东西，本
-应该match得上，应该不会出什么大问题，实践中检验吧。</p>
-
-<p>Have fun.</p>
 </div>
   
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/08/16/install-systemtap-on-suse/">Read on &rarr;</a>
+    </footer>
   
 
 
@@ -269,23 +166,12 @@ multiple queue，不禁使我对SUSE 11
 Enterprise SP2的netxen驱动产生的怀疑。<code>dmesg</code>也可以发现有抱怨driver和
 firmware的比较旧，于是萌生了升级驱动的想法。</p>
 
-<p>用<code>netxen</code>和<code>nx3031</code>search
-了很久而不得，偶然通过<code>nx_nic</code>找到了HP网卡的驱动
-<a href="%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80">http://h20000.www2.hp.com/bizsupport/TechSupport/SoftwareIndex.jsp?lang=en&amp;cc=us&amp;prodNameId=3913538&amp;prodTypeId=329290&amp;prodSeriesId=3913537&amp;swLang=8&amp;taskId=135&amp;swEnvOID=4049</a>，包括firmware的自动升级程序和网卡驱动。值得吐一把嘈的是，HP
-网站上driver是老旧的，不支持稍新的内核，貌似只支持到2.6.20以前的，编译
-时会报<code>net_dev struct</code>相关的错，费了
-那么大的力气，搞来个不能用的，之后还是google到了最新的驱动，在一个连域
-名都没有的
-<a href="ftp">ftp://15.217.49.75/ftp2/pub/softlib2/software1/pubsw-linux/p280489831/</a>
-上，haha，真欢乐，HP sucks.按照说明先升级好driver，<code>modprobe nx_nic</code>后，
-就可以升级firmware了，要注意的是，把每个网卡都up起来，才能保证所有都升
-级成功，我拆掉了一些bond，保证以前是slave状态的卡都up起来之后，经过10
-分钟左右，升级成功。重启后<code>dmesg</code>里的complains少了很多，新版本也显示出
-来了，还是没识别出multiple queue，编译驱动时也检查了选项，确实没有。同
-事也咨询过HP的sales，也不知道多队列网卡为何物，与Intel的资料的专业性相比，我对
-HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码有真相。</p>
 </div>
   
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/08/16/upgrade-the-netxen-nic/">Read on &rarr;</a>
+    </footer>
   
 
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: network | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/network/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-08-16T21:56:41+08:00</updated>
+  <updated>2012-08-16T22:18:53+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -25,6 +25,9 @@ multiple queue，不禁使我对SUSE 11
 Enterprise SP2的netxen驱动产生的怀疑。<code>dmesg</code>也可以发现有抱怨driver和
 firmware的比较旧，于是萌生了升级驱动的想法。</p>
 
+<!-- more -->
+
+
 <p>用<code>netxen</code>和<code>nx3031</code>search
 了很久而不得，偶然通过<code>nx_nic</code>找到了HP网卡的驱动
 <a href="%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80">http://h20000.www2.hp.com/bizsupport/TechSupport/SoftwareIndex.jsp?lang=en&amp;cc=us&amp;prodNameId=3913538&amp;prodTypeId=329290&amp;prodSeriesId=3913537&amp;swLang=8&amp;taskId=135&amp;swEnvOID=4049</a>，包括firmware的自动升级程序和网卡驱动。值得吐一把嘈的是，HP
@@ -40,6 +43,8 @@ firmware的比较旧，于是萌生了升级驱动的想法。</p>
 来了，还是没识别出multiple queue，编译驱动时也检查了选项，确实没有。同
 事也咨询过HP的sales，也不知道多队列网卡为何物，与Intel的资料的专业性相比，我对
 HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码有真相。</p>
+
+<p>Have fun.</p>
 ]]></content>
   </entry>
   
@@ -48,33 +53,94 @@ HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码
     <link href="http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/"/>
     <updated>2012-08-09T11:39:00+08:00</updated>
     <id>http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections</id>
-    <content type="html"><![CDATA[<p>{% imgpopup /images/post_img/Tcp_state_diagram.svg  50%  %}</p>
+    <content type="html"><![CDATA[<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-12">
+    <img src="/images/post_img/Tcp_state_diagram.svg"
+         width="542" height="409"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-12" style="display:none">
+    <img src="/images/post_img/Tcp_state_diagram.svg"
+         width="1084" height="817"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-12").hide();
+    jQuery("#image-dialog-12").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1124,
+      minHeight: 857,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-12").click(function() {
+      jQuery("#image-dialog-12").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/Tcp_state_diagram.svg" width="1084" height="817"/>
+</div>
+</notextile></div></p>
 
 <p>想必大家对上图都比较熟悉了，补充下内核里对以上状态码的表示，顺便对源代码做了下改动，每个
 状态的代码都补出来了。</p>
 
-<p>{% codeblock tcp_state.h lang:c %}</p>
-
-<p>enum {</p>
-
-<pre><code>TCP_ESTABLISHED = 1,
-TCP_SYN_SENT    = 2,
-TCP_SYN_RECV    = 3,
-TCP_FIN_WAIT1   = 4,
-TCP_FIN_WAIT2   = 5,
-TCP_TIME_WAIT   = 6
-TCP_CLOSE       = 7, 
-TCP_CLOSE_WAIT  = 8,
-TCP_LAST_ACK    = 9,
-TCP_LISTEN      = 10,
-TCP_CLOSING     = 11,   /* Now a valid state */
-
-TCP_MAX_STATES  /* Leave at the end! */
-</code></pre>
-
-<p>};</p>
-
-<p>{% endcodeblock   %}</p>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>tcp_state.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">enum</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">TCP_ESTABLISHED</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_SYN_SENT</span>    <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_SYN_RECV</span>    <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_FIN_WAIT1</span>   <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_FIN_WAIT2</span>   <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_TIME_WAIT</span>   <span class="o">=</span> <span class="mi">6</span>
+</span><span class='line'><span class="n">TCP_CLOSE</span>       <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_CLOSE_WAIT</span>  <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_LAST_ACK</span>    <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_LISTEN</span>      <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_CLOSING</span>     <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>   <span class="cm">/* Now a valid state */</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">TCP_MAX_STATES</span>  <span class="cm">/* Leave at the end! */</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">};</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
 
 <!-- more -->
 
@@ -96,9 +162,9 @@ TCP_MAX_STATES  /* Leave at the end! */
     <content type="html"><![CDATA[<p>虽然对lvs的实现代码也算是心里有数了，但遇到一些具体问题时还拿不准，这时候就想到了lvs提供的调试功能，
 是内核提供的一个选项。一般发行版默认是没打开的，至少我接触的suse enterprice和archlinux都是关闭
 了ip_vs_debug，一起来看看怎么启用吧。
-{% codeblock kernel config  %}
-CONFIG_IP_VS_DEBUG=y
-{% endcodeblock %}</p>
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>kernel config  </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>CONFIG_IP_VS_DEBUG=y</span></code></pre></td></tr></table></div></figure></notextile></div></p>
 
 <p>在默认的config文件里找到这一项，可能是注释状态，改好后，就可以开始编译内核了，这个选项不是m，必须重新
 编译产生新内核，在用<code>mkinitcpio -k kernel_full_name -c config</code>或者<code>mkinitrd -k kernel_full_name
@@ -107,75 +173,130 @@ CONFIG_IP_VS_DEBUG=y
 
 <p>新内核一切安好后，就可以玩lvs的调试功能了。先运行下<code>ipvsadm</code>，再<code>lsmod</code>看下<code>ip_vs</code>是否已经加载了。
 再后面，就可以检查期待已久的调试选项了
-{% codeblock ip_vs debug in /proc %}
-/proc/sys/net/ipv4/vs/debug_level
-{% endcodeblock %}</p>
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs debug in /proc </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/proc/sys/net/ipv4/vs/debug_level</span></code></pre></td></tr></table></div></figure></notextile></div></p>
 
 <p><code>cat debug_level</code>一下，默认值是0，以后可以通过sysctl来更改默认值，下面讲下这个值的含义:
-{% codeblock ip_vs_core.c lang:c %}
- IP_VS_DBG_BUF(1, "Forward ICMP: failed checksum from %s!\n", IP_VS_DBG_ADDR(af, snet));
-{% endcodeblock %}
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs_core.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">IP_VS_DBG_BUF</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Forward ICMP: failed checksum from %s!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">IP_VS_DBG_ADDR</span><span class="p">(</span><span class="n">af</span><span class="p">,</span> <span class="n">snet</span><span class="p">));</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 上面是一个debug macro的调用的例子，下面是宏的具体定义：</p>
 
-<p>{% codeblock ip_vs.h lang:c %}</p>
-
-<h1>ifdef CONFIG_IP_VS_DEBUG</h1>
-
-<p>extern int ip_vs_get_debug_level(void);</p>
-
-<h1>define IP_VS_DBG(level, msg...)            \</h1>
-
-<pre><code>do {                        \
-    if (level &lt;= ip_vs_get_debug_level())   \
-        printk(KERN_DEBUG "IPVS: " msg);    \
-} while (0)
-</code></pre>
-
-<h1>define IP_VS_DBG_RL(msg...)                \</h1>
-
-<pre><code>do {                        \
-    if (net_ratelimit())            \
-        printk(KERN_DEBUG "IPVS: " msg);    \
-} while (0)
-</code></pre>
-
-<h1>define IP_VS_DBG_PKT(level, pp, skb, ofs, msg)     \</h1>
-
-<pre><code>do {                        \
-    if (level &lt;= ip_vs_get_debug_level())   \
-    pp-&gt;debug_packet(pp, skb, ofs, msg);    \
-} while (0)
-</code></pre>
-
-<h1>define IP_VS_DBG_RL_PKT(level, pp, skb, ofs, msg)  \</h1>
-
-<pre><code>do {                        \
-    if (level &lt;= ip_vs_get_debug_level() &amp;&amp; \
-    net_ratelimit())            \
-    pp-&gt;debug_packet(pp, skb, ofs, msg);    \
-} while (0)
-</code></pre>
-
-<h1>else   /<em> NO DEBUGGING at ALL </em>/</h1>
-
-<h1>define IP_VS_DBG(level, msg...)  do {} while (0)</h1>
-
-<h1>define IP_VS_DBG_RL(msg...)  do {} while (0)</h1>
-
-<h1>define IP_VS_DBG_PKT(level, pp, skb, ofs, msg)     do {} while (0)</h1>
-
-<h1>define IP_VS_DBG_RL_PKT(level, pp, skb, ofs, msg)  do {} while (0)</h1>
-
-<h1>endif</h1>
-
-<p>{% endcodeblock %}
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">ifdef</span> <span class="n">CONFIG_IP_VS_DEBUG</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">extern</span> <span class="kt">int</span> <span class="n">ip_vs_get_debug_level</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">...)</span>            <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">())</span>   \
+</span><span class='line'>        <span class="n">printk</span><span class="p">(</span><span class="n">KERN_DEBUG</span> <span class="s">&quot;IPVS: &quot;</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL</span><span class="p">(</span><span class="n">msg</span><span class="p">...)</span>                <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">net_ratelimit</span><span class="p">())</span>            \
+</span><span class='line'>        <span class="n">printk</span><span class="p">(</span><span class="n">KERN_DEBUG</span> <span class="s">&quot;IPVS: &quot;</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>     <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">())</span>   \
+</span><span class='line'>    <span class="n">pp</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">debug_packet</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>  <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">()</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> \
+</span><span class='line'>    <span class="n">net_ratelimit</span><span class="p">())</span>            \
+</span><span class='line'>    <span class="n">pp</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">debug_packet</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">else</span>   <span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="n">NO</span> <span class="n">DEBUGGING</span> <span class="n">at</span> <span class="n">ALL</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">...)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL</span><span class="p">(</span><span class="n">msg</span><span class="p">...)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>     <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">endif</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 可以清晰的看到，打印debug日志的条件是<code>level &lt;= ip_vs_get_debug_level()</code>，这个函数调用的返回值就是
 <code>/proc/sys/net/ipv4/vs/debug_level</code>，万物皆文件的理念又体现了。
 可见level的值越小，其优先级越高，查了一遍ip_vs的相关代码，level最大值不过12，也就是说，
 只要把<code>/proc/sys/net/ipv4/vs/debug_level</code>设置成12，就能保证所有ip_vs的日志输出了，但一般没那个必要。
-{% codeblock set debug_level to 12 %}
-echo 12 > /proc/sys/net/ipv4/vs/debug_level
-{% endcodeblock %}
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>set debug_level to 12 </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>echo 12 > /proc/sys/net/ipv4/vs/debug_level</span></code></pre></td></tr></table></div></figure></notextile></div>
 对了，日志输出是在dmesg。</p>
 
 <p>好了，方法就差不多是这些了，接下来就边看代码，边测试，边看输出吧。
@@ -300,137 +421,270 @@ ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dpor
 http://sina.com.cn时，<code>daddr</code>就是<code>0.0.0.3</code>。</p>
 
 <p>见代码17，21，77，80行。
-{% codeblock /net/netfilter/ipvs/ip_vs_core.c lang:c %}</p>
-
-<pre><code>/*
- * As far as we know, FTP is a very complicated network protocol, and
- * it uses control connection and data connections. For active FTP,
- * FTP server initialize data connection to the client, its source port
- * is often 20. For passive FTP, FTP server tells the clients the port
- * that it passively listens to,  and the client issues the data
- * connection. In the tunneling or direct routing mode, the load
- * balancer is on the client-to-server half of connection, the port
- * number is unknown to the load balancer. So, a conn template like
- * &lt;caddr, 0, vaddr, 0, daddr, 0&gt; is created for persistent FTP
- * service, and a template like &lt;caddr, 0, vaddr, vport, daddr, dport&gt;
- * is created for other persistent services.
- */
-if (ports[1] == svc-&gt;port) {
-    /* Check if a template already exists */
-    if (svc-&gt;port != FTPPORT)
-        ct = ip_vs_ct_in_get(svc-&gt;af, iph.protocol, &amp;snet, 0,
-                     &amp;iph.daddr, ports[1]); /* &lt;caddr,0,vaddr,vport,daddr,dport&gt; */
-    else
-        ct = ip_vs_ct_in_get(svc-&gt;af, iph.protocol, &amp;snet, 0,
-                     &amp;iph.daddr, 0);        /* &lt;caddr,0,vaddr,0,daddr,0&gt; */
-
-    if (!ct || !ip_vs_check_template(ct)) {
-        /*
-         * No template found or the dest of the connection
-         * template is not available.
-         */
-        dest = svc-&gt;scheduler-&gt;schedule(svc, skb);
-        if (dest == NULL) {
-            IP_VS_DBG(1, "p-schedule: no dest found.\n");
-            return NULL;
-        }
-
-        /*
-         * Create a template like &lt;protocol,caddr,0,
-         * vaddr,vport,daddr,dport&gt; for non-ftp service,
-         * and &lt;protocol,caddr,0,vaddr,0,daddr,0&gt;
-         * for ftp service.
-         */
-        if (svc-&gt;port != FTPPORT)
-            ct = ip_vs_conn_new(svc-&gt;af, iph.protocol,
-                        &amp;snet, 0,
-                        &amp;iph.daddr,
-                        ports[1],
-                        &amp;dest-&gt;addr, dest-&gt;port,
-                        IP_VS_CONN_F_TEMPLATE,
-                        dest);
-        else
-            ct = ip_vs_conn_new(svc-&gt;af, iph.protocol,
-                        &amp;snet, 0,
-                        &amp;iph.daddr, 0,
-                        &amp;dest-&gt;addr, 0,
-                        IP_VS_CONN_F_TEMPLATE,
-                        dest);
-        if (ct == NULL)
-            return NULL;
-
-        ct-&gt;timeout = svc-&gt;timeout;
-    } else {
-        /* set destination with the found template */
-        dest = ct-&gt;dest;
-    }
-    dport = dest-&gt;port;
-} else {
-    /*
-     * Note: persistent fwmark-based services and persistent
-     * port zero service are handled here.
-     * fwmark template: &lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&gt;
-     * port zero template: &lt;protocol,caddr,0,vaddr,0,daddr,0&gt;
-     */
-    if (svc-&gt;fwmark) {
-        union nf_inet_addr fwmark = {
-            .ip = htonl(svc-&gt;fwmark)
-        };
-
-        ct = ip_vs_ct_in_get(svc-&gt;af, IPPROTO_IP, &amp;snet, 0,
-                     &amp;fwmark, 0); /* &lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&gt; */
-    } else
-        ct = ip_vs_ct_in_get(svc-&gt;af, iph.protocol, &amp;snet, 0,
-                     &amp;iph.daddr, 0); /* &lt;protocol,caddr,0,vaddr,0,daddr,0&gt; */
-
-    if (!ct || !ip_vs_check_template(ct)) {
-        /*
-         * If it is not persistent port zero, return NULL,
-         * otherwise create a connection template.
-         */
-        if (svc-&gt;port)
-            return NULL;
-
-        dest = svc-&gt;scheduler-&gt;schedule(svc, skb);
-        if (dest == NULL) {
-            IP_VS_DBG(1, "p-schedule: no dest found.\n");
-            return NULL;
-        }
-
-        /*
-         * Create a template according to the service
-         */
-        if (svc-&gt;fwmark) {
-            union nf_inet_addr fwmark = {
-                .ip = htonl(svc-&gt;fwmark)
-            };
-
-            ct = ip_vs_conn_new(svc-&gt;af, IPPROTO_IP,
-                        &amp;snet, 0,
-                        &amp;fwmark, 0,
-                        &amp;dest-&gt;addr, 0,
-                        IP_VS_CONN_F_TEMPLATE,
-                        dest);
-        } else
-            ct = ip_vs_conn_new(svc-&gt;af, iph.protocol,
-                        &amp;snet, 0,
-                        &amp;iph.daddr, 0,
-                        &amp;dest-&gt;addr, 0,
-                        IP_VS_CONN_F_TEMPLATE,
-                        dest);
-        if (ct == NULL)
-            return NULL;
-
-        ct-&gt;timeout = svc-&gt;timeout;
-    } else {
-        /* set destination with the found template */
-        dest = ct-&gt;dest;
-    }
-    dport = ports[1];
-}
-</code></pre>
-
-<p>{% endcodeblock %}</p>
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/net/netfilter/ipvs/ip_vs_core.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="cm">/*</span>
+</span><span class='line'><span class="cm"> * As far as we know, FTP is a very complicated network protocol, and</span>
+</span><span class='line'><span class="cm"> * it uses control connection and data connections. For active FTP,</span>
+</span><span class='line'><span class="cm"> * FTP server initialize data connection to the client, its source port</span>
+</span><span class='line'><span class="cm"> * is often 20. For passive FTP, FTP server tells the clients the port</span>
+</span><span class='line'><span class="cm"> * that it passively listens to,  and the client issues the data</span>
+</span><span class='line'><span class="cm"> * connection. In the tunneling or direct routing mode, the load</span>
+</span><span class='line'><span class="cm"> * balancer is on the client-to-server half of connection, the port</span>
+</span><span class='line'><span class="cm"> * number is unknown to the load balancer. So, a conn template like</span>
+</span><span class='line'><span class="cm"> * &amp;lt;caddr, 0, vaddr, 0, daddr, 0&amp;gt; is created for persistent FTP</span>
+</span><span class='line'><span class="cm"> * service, and a template like &amp;lt;caddr, 0, vaddr, vport, daddr, dport&amp;gt;</span>
+</span><span class='line'><span class="cm"> * is created for other persistent services.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="cm">/* Check if a template already exists */</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span> <span class="o">!=</span> <span class="n">FTPPORT</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span> <span class="cm">/* &amp;lt;caddr,0,vaddr,vport,daddr,dport&amp;gt; */</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>        <span class="cm">/* &amp;lt;caddr,0,vaddr,0,daddr,0&amp;gt; */</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ct</span> <span class="o">||</span> <span class="o">!</span><span class="n">ip_vs_check_template</span><span class="p">(</span><span class="n">ct</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>        <span class="cm">/*</span>
+</span><span class='line'><span class="cm">         * No template found or the dest of the connection</span>
+</span><span class='line'><span class="cm">         * template is not available.</span>
+</span><span class='line'><span class="cm">         */</span>
+</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">scheduler</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">schedule</span><span class="p">(</span><span class="n">svc</span><span class="p">,</span> <span class="n">skb</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">dest</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;p-schedule: no dest found.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="cm">/*</span>
+</span><span class='line'><span class="cm">         * Create a template like &amp;lt;protocol,caddr,0,</span>
+</span><span class='line'><span class="cm">         * vaddr,vport,daddr,dport&amp;gt; for non-ftp service,</span>
+</span><span class='line'><span class="cm">         * and &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt;</span>
+</span><span class='line'><span class="cm">         * for ftp service.</span>
+</span><span class='line'><span class="cm">         */</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span> <span class="o">!=</span> <span class="n">FTPPORT</span><span class="p">)</span>
+</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span>
+</span><span class='line'>                        <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">,</span>
+</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
+</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">else</span>
+</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
+</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">ct</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="cm">/* set destination with the found template */</span>
+</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">dest</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="n">dport</span> <span class="o">=</span> <span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="cm">/*</span>
+</span><span class='line'><span class="cm">     * Note: persistent fwmark-based services and persistent</span>
+</span><span class='line'><span class="cm">     * port zero service are handled here.</span>
+</span><span class='line'><span class="cm">     * fwmark template: &amp;lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&amp;gt;</span>
+</span><span class='line'><span class="cm">     * port zero template: &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt;</span>
+</span><span class='line'><span class="cm">     */</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">union</span> <span class="n">nf_inet_addr</span> <span class="n">fwmark</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>            <span class="p">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">htonl</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">IPPROTO_IP</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">fwmark</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="cm">/* &amp;lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&amp;gt; */</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span>
+</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="cm">/* &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt; */</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ct</span> <span class="o">||</span> <span class="o">!</span><span class="n">ip_vs_check_template</span><span class="p">(</span><span class="n">ct</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>        <span class="cm">/*</span>
+</span><span class='line'><span class="cm">         * If it is not persistent port zero, return NULL,</span>
+</span><span class='line'><span class="cm">         * otherwise create a connection template.</span>
+</span><span class='line'><span class="cm">         */</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">scheduler</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">schedule</span><span class="p">(</span><span class="n">svc</span><span class="p">,</span> <span class="n">skb</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">dest</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;p-schedule: no dest found.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="cm">/*</span>
+</span><span class='line'><span class="cm">         * Create a template according to the service</span>
+</span><span class='line'><span class="cm">         */</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="k">union</span> <span class="n">nf_inet_addr</span> <span class="n">fwmark</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>                <span class="p">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">htonl</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span>
+</span><span class='line'>            <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">IPPROTO_IP</span><span class="p">,</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">fwmark</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
+</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">else</span>
+</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
+</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">ct</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="cm">/* set destination with the found template */</span>
+</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">dest</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="n">dport</span> <span class="o">=</span> <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
 ]]></content>
   </entry>
   

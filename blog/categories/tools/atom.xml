@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tools | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/tools/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-08-16T21:56:41+08:00</updated>
+  <updated>2012-08-16T22:18:53+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -34,15 +34,20 @@ kernel，可以search到的suse上安装systemtap的内容不多，碰到问题�
 
 <p>当我做完了以上这些，运行一个简单的脚本时:</p>
 
-<p>{% codeblock systemtap hello_world lang:bash %}
-sudo stap -ve 'probe begin { log("hello world") exit() }'
-{% endcodeblock  %}</p>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>systemtap hello_world  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo stap -ve <span class="s1">&#39;probe begin { log(&quot;hello world&quot;) exit() }&#39;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<!-- more -->
+
 
 <p>这个简单的例子是ok的，因为它不会涉及到systemtap的pass5，与kernel
 module交互。跑下面这个的时候，就不行了:
-{% codeblock systemtap hello_world lang:bash %}
-stap -v -e 'probe vfs.read {printf("has VFS read()\n"); exit()}'
-{% endcodeblock  %}
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>systemtap hello_world  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>stap -v -e <span class="s1">&#39;probe vfs.read {printf(&quot;has VFS read()\n&quot;); exit()}&#39;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 会报出类似<code>ERROR: Build-id mismatch: "kernel" vs. "vmlinux" byte 0 (0xf9 vs 0xa2)</code>的问题，关于build-id mismatch这个问题，还是可以
 搜索到不少资料的，不过告诉如何解决的也不多。先说明下这个问题，
 <code>kernel-default-debuginfo</code>里面是附赠了一个kernel elf文件的，在SUSE里，
@@ -53,10 +58,12 @@ stap -v -e 'probe vfs.read {printf("has VFS read()\n"); exit()}'
 build-id，执行结果的第一个字节是<code>f9</code>，那另外一个<code>a2</code>是从哪里得出来的，猜想应该和当
 前运行的kernel有关，于是拿到当前运行的vmlinux的压缩文件，解压后检查
 build-id：
-{% codeblock check build-id lang:bash %}
-   gunzip /boot/vmlinux-3.0.13-0.27-default.gz
-   eu-readelf -n /boot/vmlinux-3.0.13-0.27-default
-{% endcodeblock %}
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>check build-id  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>   gunzip /boot/vmlinux-3.0.13-0.27-default.gz
+</span><span class='line'>   eu-readelf -n /boot/vmlinux-3.0.13-0.27-default
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 执行结果也是<code>f9</code>，是对得上的啊。</p>
 
 <p>但是注意，这份.gz文件是SUSE附赠的，跟当前跑的vmlinz文件没有关系，于是
@@ -68,57 +75,108 @@ build-id：
 
 <p>只能另外想办法，其实systemtap做kernel mismatch判断的关键代码，就在:</p>
 
-<p>{% codeblock systemtap/runtime/sym.c lang:c %}
-static int <em>stp_build_id_check (struct </em>stp_module *m,</p>
-
-<pre><code>        unsigned long notes_addr,
-        struct task_struct *tsk)
-</code></pre>
-
-<p>{
-...
-/<em> just hack it </em>/
-if (rc || (theory != practice)) {</p>
-
-<pre><code>  const char *basename;
-  basename = strrchr(m-&gt;path, '/');
-  if (basename)
-</code></pre>
-
-<p>|   basename++;</p>
-
-<pre><code>  else
-</code></pre>
-
-<p>|   basename = m->path;</p>
-
-<h1>if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)</h1>
-
-<pre><code>  _stp_error ("Build-id mismatch: \"%s\" vs. \"%s\" byte %d (0x%02x vs 0x%02x) address %#lx rc %d\n",
-</code></pre>
-
-<p>|   |     m->name, basename, j, theory, practice, notes_addr, rc);</p>
-
-<pre><code>  return 1;
-</code></pre>
-
-<h1>else</h1>
-
-<pre><code>  /* This branch is a surrogate for kernels affected by Fedora bug
-   * #465873. */
-  _stp_warn (KERN_WARNING
-</code></pre>
-
-<p>|   |    "Build-id mismatch: \"%s\" vs. \"%s\" byte %d (0x%02x vs 0x%02x) rc %d\n",
-|   |    m->name, basename, j, theory, practice, rc);</p>
-
-<h1>endif</h1>
-
-<pre><code>  break;
-} /* end mismatch */
-</code></pre>
-
-<p>{% endcodeblock %}</p>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>systemtap/runtime/sym.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">stp_build_id_check</span> <span class="p">(</span><span class="k">struct</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">stp_module</span> <span class="o">*</span><span class="n">m</span><span class="p">,</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">notes_addr</span><span class="p">,</span>
+</span><span class='line'>        <span class="k">struct</span> <span class="n">task_struct</span> <span class="o">*</span><span class="n">tsk</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">{</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="n">just</span> <span class="n">hack</span> <span class="n">it</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">rc</span> <span class="o">||</span> <span class="p">(</span><span class="n">theory</span> <span class="o">!=</span> <span class="n">practice</span><span class="p">))</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">basename</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">basename</span> <span class="o">=</span> <span class="n">strrchr</span><span class="p">(</span><span class="n">m</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">path</span><span class="p">,</span> <span class="sc">&#39;/&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="n">basename</span><span class="o">++</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">else</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="n">basename</span> <span class="o">=</span> <span class="n">m</span><span class="o">-&gt;</span><span class="n">path</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">if</span> <span class="n">LINUX_VERSION_CODE</span> <span class="o">&gt;=</span> <span class="n">KERNEL_VERSION</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">27</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="n">_stp_error</span> <span class="p">(</span><span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) address %#lx rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="o">|</span>     <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">notes_addr</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">else</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="cm">/* This branch is a surrogate for kernels affected by Fedora bug</span>
+</span><span class='line'><span class="cm">   * #465873. */</span>
+</span><span class='line'>  <span class="n">_stp_warn</span> <span class="p">(</span><span class="n">KERN_WARNING</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="o">|</span>    <span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="o">|</span>   <span class="o">|</span>    <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">endif</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">break</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span> <span class="cm">/* end mismatch */</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
 
 <p>关键就在于<code>if (rc || (theory != practice))</code>，小小修改的一下，写成:
 <code>if (0 &amp;&amp; (rc || (theory != practice)))</code>就OK了，绕过了检查。然后重新编

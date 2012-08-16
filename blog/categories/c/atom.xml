@@ -4,7 +4,7 @@
   <title><![CDATA[Category: c | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/c/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-08-16T21:56:41+08:00</updated>
+  <updated>2012-08-16T22:18:53+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -18,33 +18,94 @@
     <link href="http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/"/>
     <updated>2012-08-09T11:39:00+08:00</updated>
     <id>http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections</id>
-    <content type="html"><![CDATA[<p>{% imgpopup /images/post_img/Tcp_state_diagram.svg  50%  %}</p>
+    <content type="html"><![CDATA[<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-16">
+    <img src="/images/post_img/Tcp_state_diagram.svg"
+         width="542" height="409"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-16" style="display:none">
+    <img src="/images/post_img/Tcp_state_diagram.svg"
+         width="1084" height="817"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-16").hide();
+    jQuery("#image-dialog-16").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1124,
+      minHeight: 857,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-16").click(function() {
+      jQuery("#image-dialog-16").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/Tcp_state_diagram.svg" width="1084" height="817"/>
+</div>
+</notextile></div></p>
 
 <p>想必大家对上图都比较熟悉了，补充下内核里对以上状态码的表示，顺便对源代码做了下改动，每个
 状态的代码都补出来了。</p>
 
-<p>{% codeblock tcp_state.h lang:c %}</p>
-
-<p>enum {</p>
-
-<pre><code>TCP_ESTABLISHED = 1,
-TCP_SYN_SENT    = 2,
-TCP_SYN_RECV    = 3,
-TCP_FIN_WAIT1   = 4,
-TCP_FIN_WAIT2   = 5,
-TCP_TIME_WAIT   = 6
-TCP_CLOSE       = 7, 
-TCP_CLOSE_WAIT  = 8,
-TCP_LAST_ACK    = 9,
-TCP_LISTEN      = 10,
-TCP_CLOSING     = 11,   /* Now a valid state */
-
-TCP_MAX_STATES  /* Leave at the end! */
-</code></pre>
-
-<p>};</p>
-
-<p>{% endcodeblock   %}</p>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>tcp_state.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">enum</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">TCP_ESTABLISHED</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_SYN_SENT</span>    <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_SYN_RECV</span>    <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_FIN_WAIT1</span>   <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_FIN_WAIT2</span>   <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_TIME_WAIT</span>   <span class="o">=</span> <span class="mi">6</span>
+</span><span class='line'><span class="n">TCP_CLOSE</span>       <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_CLOSE_WAIT</span>  <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_LAST_ACK</span>    <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_LISTEN</span>      <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_CLOSING</span>     <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>   <span class="cm">/* Now a valid state */</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">TCP_MAX_STATES</span>  <span class="cm">/* Leave at the end! */</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">};</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
 
 <!-- more -->
 

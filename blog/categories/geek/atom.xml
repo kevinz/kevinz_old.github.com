@@ -4,7 +4,7 @@
   <title><![CDATA[Category: geek | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/geek/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-08-16T21:56:41+08:00</updated>
+  <updated>2012-08-16T22:18:53+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -24,12 +24,88 @@
 工具，<a href="http://www.mcternan.me.uk/mscgen/">Mscgen</a>，专为不爱画图，
 追求效率的geek设计。</p>
 
-<p>{% gist 3053976 %}</p>
+<p><div><script src='https://gist.github.com/3053976.js?file='></script>
+<noscript><pre><code>#MSC for lvs in DR transparent mode
+msc{
+        hscale = &quot;2&quot;;
+        Client,LB,RS,OS;
+
+        Client=&gt;Client [ label = &quot;req(oip:oport)&quot;];
+        Client=&gt;Client [ label = &quot;routeto(LB)&quot;];
+        Client-&gt;LB [ label = &quot;(cip:cport)-&gt;(oip:oport)&quot;];
+        LB=&gt;LB     [ label = &quot;iptable-&gt;fwmark(dst==oip,dst_port=oport)&quot;];
+        LB=&gt;LB     [ label = &quot;(cip:cport)-&gt;(oip:oport)+fwmark&quot;];
+        LB=&gt;LB     [ label = &quot;trick kernel to receive()&quot;];
+        LB=&gt;LB     [ label = &quot;is_match(LB-&gt;fwmark,packet-&gt;fwmark)&quot;];
+        LB=&gt;LB     [ label = &quot;belongs_to_an_active_conn?&quot;];
+        LB=&gt;LB     [ label = &quot;is_new_conn?&quot;];
+        LB=&gt;LB     [ label = &quot;is_persistent?&quot;];
+        LB=&gt;LB     [ label = &quot;do_schedule()&quot;];
+        LB=&gt;LB     [ label = &quot;decide_rs()&quot;];
+        LB=&gt;LB     [ label = &quot;modify-mac(vmac-&gt;rmac)&quot;];
+        
+        LB-&gt;RS     [ label = &quot;(cip:cport)-&gt;(oip:oport)&quot;];
+        --- [ label = &quot;Packet is delivered to real server&quot;];
+        ...;
+        RS=&gt;RS     [ label = &quot;nf_hook-&gt;dnat(oip-&gt;rip,oport-&gt;rport)&quot;];
+        RS=&gt;RS     [ label = &quot;receive()&quot;];
+        RS=&gt;RS     [ label = &quot;proxy_www(URI)&quot;];
+        RS-&gt;OS     [ label = &quot;(rip_www:rport_www)-&gt;(oip:oport)&quot;];
+        --- [ label = &quot;Packet is delivered to the original server&quot;];
+        OS-&gt;RS     [ label = &quot;(oip:oport)-&gt;(rip_www:rport_www)&quot;];
+        RS=&gt;RS     [ label = &quot;route_to(LB or GW)&quot;];
+        --- [ label = &quot;Packet goes back to real server&quot;];
+        RS-&gt;LB [ label = &quot;(oip:oport)-&gt;(cip:cport)&quot;];
+        RS&gt;&gt;Client [ label = &quot;possible path:(oip:oport)-&gt;(cip:cport)&quot;];
+        LB-&gt;Client [ label = &quot;(oip:oport)-&gt;(cip:cport)&quot;];
+        --- [ label = &quot;Packet goes back to the client&quot;];
+}
+
+
+</code></pre></noscript></div>
+</p>
 
 <!-- more -->
 
 
-<p>{% imgpopup /images/post_img/lvs_transp.png 50%  %}</p>
+<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-10">
+    <img src="/images/post_img/lvs_transp.png"
+         width="600" height="429"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-10" style="display:none">
+    <img src="/images/post_img/lvs_transp.png"
+         width="1200" height="857"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-10").hide();
+    jQuery("#image-dialog-10").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1240,
+      minHeight: 897,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-10").click(function() {
+      jQuery("#image-dialog-10").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/lvs_transp.png" width="1200" height="857"/>
+</div>
+</notextile></div></p>
 ]]></content>
   </entry>
   

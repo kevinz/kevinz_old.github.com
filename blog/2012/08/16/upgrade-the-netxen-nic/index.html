@@ -100,6 +100,9 @@ multiple queue，不禁使我对SUSE 11
 Enterprise SP2的netxen驱动产生的怀疑。<code>dmesg</code>也可以发现有抱怨driver和
 firmware的比较旧，于是萌生了升级驱动的想法。</p>
 
+<!-- more -->
+
+
 <p>用<code>netxen</code>和<code>nx3031</code>search
 了很久而不得，偶然通过<code>nx_nic</code>找到了HP网卡的驱动
 <a href="%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80">http://h20000.www2.hp.com/bizsupport/TechSupport/SoftwareIndex.jsp?lang=en&amp;cc=us&amp;prodNameId=3913538&amp;prodTypeId=329290&amp;prodSeriesId=3913537&amp;swLang=8&amp;taskId=135&amp;swEnvOID=4049</a>，包括firmware的自动升级程序和网卡驱动。值得吐一把嘈的是，HP
@@ -115,6 +118,8 @@ firmware的比较旧，于是萌生了升级驱动的想法。</p>
 来了，还是没识别出multiple queue，编译驱动时也检查了选项，确实没有。同
 事也咨询过HP的sales，也不知道多队列网卡为何物，与Intel的资料的专业性相比，我对
 HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码有真相。</p>
+
+<p>Have fun.</p>
 </div>
 
 
