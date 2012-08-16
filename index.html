@@ -73,7 +73,7 @@
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2012/07/30/cpio-issues/">Cpio Issues</a></h1>
+      <h1 class="entry-title"><a href="/blog/2012/08/16/install-systemtap-on-suse/">在SUSE Enterprise上安装Systemtap，解决build-id Mismatch</a></h1>
     
     
       <p class="meta">
@@ -89,16 +89,321 @@
   
 
 
-<time datetime="2012-07-30T08:35:00+08:00" pubdate data-updated="true">Jul 30<span>th</span>, 2012</time>
+<time datetime="2012-08-16T20:49:00+08:00" pubdate data-updated="true">Aug 16<span>th</span>, 2012</time>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><p>To be continue.</p>
+  <div class="entry-content"><p>最近做LVS的性能测试，自然会用的各种工具检视系统状态，用了很多工具，都
+不甚满意，于是想尝试下Systemtap，系统环境是SUSE Enterprise SP2,已经3.0的
+kernel，可以search到的suse上安装systemtap的内容不多，碰到问题并解决了
+的更是少，自然我又要成为苦逼的问题解决者了。</p>
+
+<h2>正常安装的步骤是</h2>
+
+<ul>
+<li>添加suse enterprise的包含debuginfo的iso，有几个G啊</li>
+<li><code>zypper in kernel-default-debuginfo</code></li>
+<li><code>zypper in systemtap</code></li>
+</ul>
+
+
+<p>当我做完了以上这些，运行一个简单的脚本时:</p>
+
+<figure class='code'><figcaption><span>systemtap hello_world  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo stap -ve <span class="s1">&#39;probe begin { log(&quot;hello world&quot;) exit() }&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这个简单的例子是ok的，因为它不会涉及到systemtap的pass5，与kernel
+module交互。跑下面这个的时候，就不行了:</p>
+
+<figure class='code'><figcaption><span>systemtap hello_world  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>stap -v -e <span class="s1">&#39;probe vfs.read {printf(&quot;has VFS read()\n&quot;); exit()}&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>会报出类似<code>ERROR: Build-id mismatch: "kernel" vs. "vmlinux" byte 0 (0xf9 vs 0xa2)</code>的问题，关于build-id mismatch这个问题，还是可以
+搜索到不少资料的，不过告诉如何解决的也不多。先说明下这个问题，
+<code>kernel-default-debuginfo</code>里面是附赠了一个kernel elf文件的，在SUSE里，
+安装后放在<code>/usr/lib/debug/boot/vmlinux-3.0.13-0.27-default.debug</code>，这
+是debug版本的kernel vmlinux文件，是elf原始文件，未经压缩。<code>stap</code>运行时会去检查它的。
+执行<code>eu-readelf -n
+/usr/lib/debug/boot/vmlinux-3.0.13-0.27-default.debug</code>，可以拿到的
+build-id，执行结果的第一个字节是<code>f9</code>，那另外一个<code>a2</code>是从哪里得出来的，猜想应该和当
+前运行的kernel有关，于是拿到当前运行的vmlinux的压缩文件，解压后检查
+build-id：</p>
+
+<figure class='code'><figcaption><span>check build-id  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>   gunzip /boot/vmlinux-3.0.13-0.27-default.gz
+</span><span class='line'>   eu-readelf -n /boot/vmlinux-3.0.13-0.27-default
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>执行结果也是<code>f9</code>，是对得上的啊。</p>
+
+<p>但是注意，这份.gz文件是SUSE附赠的，跟当前跑的vmlinz文件没有关系，于是
+开始打vmlinuz文件的主意，得先想办法把vmlinuz->vmlinux，及bzImage到elf，
+才能去取它的build-id，
+<a href="%E8%BF%99%E9%87%8C">https://www.globalways.net/blog/archives/76-Extracting-bzImage-from-vmlinuz.html</a>有可行的方法。
+<code>eu-readelf -n vmlinux-unpacked</code>的结果果然是<code>a2</code>，我只能是怀疑SUSE给的
+默认vmlinuz有问题了，不能和SUSE提供的用于debuginfo的vmlinux匹配。</p>
+
+<p>只能另外想办法，其实systemtap做kernel mismatch判断的关键代码，就在:</p>
+
+<figure class='code'><figcaption><span>systemtap/runtime/sym.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="nf">_stp_build_id_check</span> <span class="p">(</span><span class="k">struct</span> <span class="n">_stp_module</span> <span class="o">*</span><span class="n">m</span><span class="p">,</span>
+</span><span class='line'>            <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">notes_addr</span><span class="p">,</span>
+</span><span class='line'>            <span class="k">struct</span> <span class="n">task_struct</span> <span class="o">*</span><span class="n">tsk</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="cm">/* just hack it */</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">rc</span> <span class="o">||</span> <span class="p">(</span><span class="n">theory</span> <span class="o">!=</span> <span class="n">practice</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">basename</span><span class="p">;</span>
+</span><span class='line'>      <span class="n">basename</span> <span class="o">=</span> <span class="n">strrchr</span><span class="p">(</span><span class="n">m</span><span class="o">-&gt;</span><span class="n">path</span><span class="p">,</span> <span class="sc">&#39;/&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+</span><span class='line'><span class="o">|</span>   <span class="n">basename</span><span class="o">++</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">else</span>
+</span><span class='line'><span class="o">|</span>   <span class="n">basename</span> <span class="o">=</span> <span class="n">m</span><span class="o">-&gt;</span><span class="n">path</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#if LINUX_VERSION_CODE &gt;= KERNEL_VERSION(2,6,27)</span>
+</span><span class='line'>      <span class="n">_stp_error</span> <span class="p">(</span><span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) address %#lx rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="o">|</span>   <span class="o">|</span>     <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">notes_addr</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'><span class="cp">#else</span>
+</span><span class='line'>      <span class="cm">/* This branch is a surrogate for kernels affected by Fedora bug</span>
+</span><span class='line'><span class="cm">       * #465873. */</span>
+</span><span class='line'>      <span class="n">_stp_warn</span> <span class="p">(</span><span class="n">KERN_WARNING</span>
+</span><span class='line'><span class="o">|</span>   <span class="o">|</span>    <span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="o">|</span>   <span class="o">|</span>    <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span> <span class="cm">/* end mismatch */</span>
+</span><span class='line'>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>关键就在于<code>if (rc || (theory != practice))</code>，小小修改的一下，写成:
+<code>if (0 &amp;&amp; (rc || (theory != practice)))</code>就OK了，绕过了检查。然后重新编
+译systemtap，直接用的SUSE提供的老版本的源码，新的会有问题，注意还要用
+到SUSE提供的<code>libdwfl</code>的source code，才能完成编译，编译时在
+<code>/usr/src/packages/SOURCES/elfutils-0.152/libdwfl/linux-kernel-modules.c</code>
+文件上遇到了问题，稍作修改就可过关。尝试下新编译出来的<code>stap</code>，完全OK，它是不知
+道&#8217;build-id mismatch`为何物的，敢这样改也就是因为都是offical的东西，本
+应该match得上，应该不会出什么大问题，实践中检验吧。</p>
+
+<p>Have fun.</p>
 </div>
   
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/08/16/upgrade-the-netxen-nic/">升级Netxen网卡驱动及firmware</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-08-16T20:15:00+08:00" pubdate data-updated="true">Aug 16<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在公司做lvs测试用机是HP DL580 G7，除了网卡，其它的配置都不错，网卡是板
+载的netxen的1G卡，还有几张netxen的10G卡，观察<code>/proc/interrupts</code>，每块
+10G卡对应的中断都只有4个，而且没有识别成tx-0/rx-0的形式，不像支持
+multiple queue，不禁使我对SUSE 11
+Enterprise SP2的netxen驱动产生的怀疑。<code>dmesg</code>也可以发现有抱怨driver和
+firmware的比较旧，于是萌生了升级驱动的想法。</p>
+
+<p>用<code>netxen</code>和<code>nx3031</code>search
+了很久而不得，偶然通过<code>nx_nic</code>找到了HP网卡的驱动
+<a href="%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80">http://h20000.www2.hp.com/bizsupport/TechSupport/SoftwareIndex.jsp?lang=en&amp;cc=us&amp;prodNameId=3913538&amp;prodTypeId=329290&amp;prodSeriesId=3913537&amp;swLang=8&amp;taskId=135&amp;swEnvOID=4049</a>，包括firmware的自动升级程序和网卡驱动。值得吐一把嘈的是，HP
+网站上driver是老旧的，不支持稍新的内核，貌似只支持到2.6.20以前的，编译
+时会报<code>net_dev struct</code>相关的错，费了
+那么大的力气，搞来个不能用的，之后还是google到了最新的驱动，在一个连域
+名都没有的
+<a href="ftp">ftp://15.217.49.75/ftp2/pub/softlib2/software1/pubsw-linux/p280489831/</a>
+上，haha，真欢乐，HP sucks.按照说明先升级好driver，<code>modprobe nx_nic</code>后，
+就可以升级firmware了，要注意的是，把每个网卡都up起来，才能保证所有都升
+级成功，我拆掉了一些bond，保证以前是slave状态的卡都up起来之后，经过10
+分钟左右，升级成功。重启后<code>dmesg</code>里的complains少了很多，新版本也显示出
+来了，还是没识别出multiple queue，编译驱动时也检查了选项，确实没有。同
+事也咨询过HP的sales，也不知道多队列网卡为何物，与Intel的资料的专业性相比，我对
+HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码有真相。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/08/09/check-tcp-connections/">TCP状态迁移及状态码</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-08-09T11:39:00+08:00" pubdate data-updated="true">Aug 9<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-5">
+    <img src="/images/post_img/Tcp_state_diagram.svg"
+         width="542" height="409"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-5" style="display:none">
+    <img src="/images/post_img/Tcp_state_diagram.svg"
+         width="1084" height="817"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-5").hide();
+    jQuery("#image-dialog-5").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1124,
+      minHeight: 857,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-5").click(function() {
+      jQuery("#image-dialog-5").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/Tcp_state_diagram.svg" width="1084" height="817"/>
+</div>
+
+
+
+<p>想必大家对上图都比较熟悉了，补充下内核里对以上状态码的表示，顺便对源代码做了下改动，每个
+状态的代码都补出来了。</p>
+
+<figure class='code'><figcaption><span>tcp_state.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">enum</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">TCP_ESTABLISHED</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_SYN_SENT</span>    <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_SYN_RECV</span>    <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_FIN_WAIT1</span>   <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_FIN_WAIT2</span>   <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_TIME_WAIT</span>   <span class="o">=</span> <span class="mi">6</span>
+</span><span class='line'>  <span class="n">TCP_CLOSE</span>       <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_CLOSE_WAIT</span>  <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_LAST_ACK</span>    <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_LISTEN</span>      <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_CLOSING</span>     <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>  <span class="cm">/* Now a valid state */</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">TCP_MAX_STATES</span>   <span class="cm">/* Leave at the end! */</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/08/09/check-tcp-connections/">Read on &rarr;</a>
+    </footer>
   
 
 
@@ -139,28 +444,12 @@ linux-ck-corex内核，直接通过
 调整下内核参数啥的。这里主要记录下如何让virtualbox正常工作，<a href="https://wiki.archlinux.org/index.php/Linux-ck#Running_Virtualbox_with_Linux-ck">这篇</a>提到了
 一些相关内容，做一点补充:</p>
 
-<h2>编译vboxdrv及其它模块</h2>
-
-<ul>
-<li>记得装对应的linux-ck-headers，我装的是linux-ck-corex-headers，可能
-要先fuck gfw。</li>
-<li>编译方法有所变化，老版的virtualbox是用<code>vboxbuild</code>，新版改成了<code>dkms
-install vboxhost/4.1.18</code>。</li>
-<li>解决编译vboxdrv报错问题。
-
-<ul>
-<li>headers安装目录默认是在<code>/usr/src/kernel_full_name</code>，在
-<code>/lib/modules/kernel_full_name</code>下，执行<code>ln -s
-/usr/src/kernel_full_name build</code>，编译应该就ok了。</li>
-</ul>
-</li>
-<li>老版本的virtualbox编译好的modules是存在于<code>/lib/modules/extramodules</code>
-下，新的是在<code>/lib/modules/kernel/misc</code>下。</li>
-<li>add/append your user into vboxusers group</li>
-</ul>
-
 </div>
   
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/07/29/virtualbox-work-with-linux-ck/">Read on &rarr;</a>
+    </footer>
   
 
 
@@ -668,186 +957,6 @@ sockets).And the author claimed it&#8217;s better than <a href="http://httpd.apa
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/07/07/netfilter-hello-world-module/">学写hello World之netfilter模块</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-07-07T23:16:00+08:00" pubdate data-updated="true">Jul 7<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>对于linux网络的学习，学下写netfilter module更有利于理解，下面开始实战。</p>
-
-<div><script src='https://gist.github.com/3066821.js?file='></script>
-<noscript><pre><code>#define __KERNEL__
-#define MODULE
-
-#include &lt;linux/module.h&gt;
-#include &lt;linux/kernel.h&gt;
-#include &lt;linux/netfilter_ipv4.h&gt;
-#include &lt;linux/skbuff.h&gt;
-#include &lt;linux/udp.h&gt;
-#include &lt;linux/ip.h&gt;
-
-
-static struct nf_hook_ops nfho;      //struct holding set of hook function options
-static struct sk_buff *sock_buff;
-static struct udphdr *udp_header;
-static struct iphdr *ip_header;
-
-//function to be called by hook
-unsigned int hook_func(unsigned int hooknum,struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *))
-{
-    sock_buff = *skb; 
-    ip_header = (struct iphdr *)skb_network_header(sock_buff);    
-    if(!sock_buff){
-        return NF_ACCEPT;
-    }
-    if(ip_header-&gt;protocol == 17) {
-        udp_header = (struct udphdr *)skb_transport_header(sock_buff);
-        printk(KERN_INFO &quot;got udp packet.\n&quot;);
-        return NF_DROP;
-    }else{
-        printk(KERN_INFO &quot;packet accept.\n&quot;);
-        return NF_ACCEPT;
-    }
-}
-
-int init_module(void)
-{
-    printk(KERN_INFO &quot;register hello netfilter module.\n&quot;);
-    nfho.hook = hook_func;
-    nfho.hooknum = 0 ; // NF_IP_PRE_ROUTING
-    nfho.pf = PF_INET;
-    nfho.priority = NF_IP_PRI_FIRST;
-    nf_register_hook(&amp;nfho);
-    return 0;
-}
-
-void cleanup_module(void)
-{
-    printk(KERN_INFO &quot;cleanup hello netfilter module.\n&quot;);
-    nf_unregister_hook(&amp;nfho); 
-}
-</code></pre></noscript></div>
-
-
-
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2012/07/07/netfilter-hello-world-module/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/">用solarized Color Schema提升工作效率</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-07-05T17:34:00+08:00" pubdate data-updated="true">Jul 5<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>貌似<a href="http://www.solarized.com/">solarized</a>已经火了很久，相见狠晚啊，曾
-经多么想调整下awesome的focus配色，让它不那么黯然，发现很难，现在终于可以轻松搞定
-了。说实话，看不太懂官方网站上的说明，也没力气去了解，发挥下拿来主义吧。</p>
-
-<!-- -*- html -*- -->
-
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-2">
-    <img src="/images/post_img/term.png"
-         width="840" height="525"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-2" style="display:none">
-    <img src="/images/post_img/term.png"
-         width="1680" height="1050"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-2").hide();
-    jQuery("#image-dialog-2").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1720,
-      minHeight: 1090,
-      show:      'scale',
-      hide:      'scale'
-    });
-
-    jQuery("#image-2").click(function() {
-      jQuery("#image-dialog-2").dialog('open');
-    });
-
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/term.png" width="1680" height="1050"/>
-</div>
-
-
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -863,7 +972,15 @@ void cleanup_module(void)
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2012/07/30/cpio-issues/">cpio issues</a>
+        <a href="/blog/2012/08/16/install-systemtap-on-suse/">在SUSE Enterprise上安装Systemtap，解决build-id mismatch</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/16/upgrade-the-netxen-nic/">升级Netxen网卡驱动及firmware</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/09/check-tcp-connections/">TCP状态迁移及状态码</a>
       </li>
     
       <li class="post">
@@ -874,19 +991,11 @@ void cleanup_module(void)
         <a href="/blog/2012/07/26/lvs-debug-howto/">了解lvs调试</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2012/07/15/hardware-and-10gb-network/">学习万兆以太网，硬件和优化方法</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/07/14/customize-kernel-in-arch-linux/">在archlinux里定制编译内核</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 108.57142857142857%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 117.14285714285714%'>C(2)</a> <a href='/blog/categories/emacs' style='font-size: 117.14285714285714%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 108.57142857142857%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 108.57142857142857%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 142.85714285714286%'>Kernel(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(7)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 108.57142857142857%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 108.57142857142857%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 142.85714285714286%'>Network(5)</a> <a href='/blog/categories/octopress' style='font-size: 117.14285714285714%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 117.14285714285714%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 142.85714285714286%'>Tool(5)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 106.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 106.0%'>C(1)</a> <a href='/blog/categories/c' style='font-size: 112.0%'>C(2)</a> <a href='/blog/categories/emacs' style='font-size: 112.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 106.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 106.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 136.0%'>Kernel(6)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(10)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 106.0%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 106.0%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 142.0%'>Network(7)</a> <a href='/blog/categories/octopress' style='font-size: 112.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 112.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 130.0%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 106.0%'>Tools(1)</a> </span>
 </section>
 
 <section>

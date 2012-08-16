@@ -4,7 +4,7 @@
   <title><![CDATA[Category: kernel | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/kernel/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-07-30T21:15:56+08:00</updated>
+  <updated>2012-08-16T21:56:41+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -14,6 +14,126 @@
 
   
   <entry>
+    <title type="html"><![CDATA[在SUSE Enterprise上安装Systemtap，解决build-id mismatch]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/08/16/install-systemtap-on-suse/"/>
+    <updated>2012-08-16T20:49:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/08/16/install-systemtap-on-suse</id>
+    <content type="html"><![CDATA[<p>最近做LVS的性能测试，自然会用的各种工具检视系统状态，用了很多工具，都
+不甚满意，于是想尝试下Systemtap，系统环境是SUSE Enterprise SP2,已经3.0的
+kernel，可以search到的suse上安装systemtap的内容不多，碰到问题并解决了
+的更是少，自然我又要成为苦逼的问题解决者了。</p>
+
+<h2>正常安装的步骤是</h2>
+
+<ul>
+<li>添加suse enterprise的包含debuginfo的iso，有几个G啊</li>
+<li><code>zypper in kernel-default-debuginfo</code></li>
+<li><code>zypper in systemtap</code></li>
+</ul>
+
+
+<p>当我做完了以上这些，运行一个简单的脚本时:</p>
+
+<p>{% codeblock systemtap hello_world lang:bash %}
+sudo stap -ve 'probe begin { log("hello world") exit() }'
+{% endcodeblock  %}</p>
+
+<p>这个简单的例子是ok的，因为它不会涉及到systemtap的pass5，与kernel
+module交互。跑下面这个的时候，就不行了:
+{% codeblock systemtap hello_world lang:bash %}
+stap -v -e 'probe vfs.read {printf("has VFS read()\n"); exit()}'
+{% endcodeblock  %}
+会报出类似<code>ERROR: Build-id mismatch: "kernel" vs. "vmlinux" byte 0 (0xf9 vs 0xa2)</code>的问题，关于build-id mismatch这个问题，还是可以
+搜索到不少资料的，不过告诉如何解决的也不多。先说明下这个问题，
+<code>kernel-default-debuginfo</code>里面是附赠了一个kernel elf文件的，在SUSE里，
+安装后放在<code>/usr/lib/debug/boot/vmlinux-3.0.13-0.27-default.debug</code>，这
+是debug版本的kernel vmlinux文件，是elf原始文件，未经压缩。<code>stap</code>运行时会去检查它的。
+执行<code>eu-readelf -n
+/usr/lib/debug/boot/vmlinux-3.0.13-0.27-default.debug</code>，可以拿到的
+build-id，执行结果的第一个字节是<code>f9</code>，那另外一个<code>a2</code>是从哪里得出来的，猜想应该和当
+前运行的kernel有关，于是拿到当前运行的vmlinux的压缩文件，解压后检查
+build-id：
+{% codeblock check build-id lang:bash %}
+   gunzip /boot/vmlinux-3.0.13-0.27-default.gz
+   eu-readelf -n /boot/vmlinux-3.0.13-0.27-default
+{% endcodeblock %}
+执行结果也是<code>f9</code>，是对得上的啊。</p>
+
+<p>但是注意，这份.gz文件是SUSE附赠的，跟当前跑的vmlinz文件没有关系，于是
+开始打vmlinuz文件的主意，得先想办法把vmlinuz->vmlinux，及bzImage到elf，
+才能去取它的build-id，
+<a href="%E8%BF%99%E9%87%8C">https://www.globalways.net/blog/archives/76-Extracting-bzImage-from-vmlinuz.html</a>有可行的方法。
+<code>eu-readelf -n vmlinux-unpacked</code>的结果果然是<code>a2</code>，我只能是怀疑SUSE给的
+默认vmlinuz有问题了，不能和SUSE提供的用于debuginfo的vmlinux匹配。</p>
+
+<p>只能另外想办法，其实systemtap做kernel mismatch判断的关键代码，就在:</p>
+
+<p>{% codeblock systemtap/runtime/sym.c lang:c %}
+static int <em>stp_build_id_check (struct </em>stp_module *m,</p>
+
+<pre><code>        unsigned long notes_addr,
+        struct task_struct *tsk)
+</code></pre>
+
+<p>{
+...
+/<em> just hack it </em>/
+if (rc || (theory != practice)) {</p>
+
+<pre><code>  const char *basename;
+  basename = strrchr(m-&gt;path, '/');
+  if (basename)
+</code></pre>
+
+<p>|   basename++;</p>
+
+<pre><code>  else
+</code></pre>
+
+<p>|   basename = m->path;</p>
+
+<h1>if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)</h1>
+
+<pre><code>  _stp_error ("Build-id mismatch: \"%s\" vs. \"%s\" byte %d (0x%02x vs 0x%02x) address %#lx rc %d\n",
+</code></pre>
+
+<p>|   |     m->name, basename, j, theory, practice, notes_addr, rc);</p>
+
+<pre><code>  return 1;
+</code></pre>
+
+<h1>else</h1>
+
+<pre><code>  /* This branch is a surrogate for kernels affected by Fedora bug
+   * #465873. */
+  _stp_warn (KERN_WARNING
+</code></pre>
+
+<p>|   |    "Build-id mismatch: \"%s\" vs. \"%s\" byte %d (0x%02x vs 0x%02x) rc %d\n",
+|   |    m->name, basename, j, theory, practice, rc);</p>
+
+<h1>endif</h1>
+
+<pre><code>  break;
+} /* end mismatch */
+</code></pre>
+
+<p>{% endcodeblock %}</p>
+
+<p>关键就在于<code>if (rc || (theory != practice))</code>，小小修改的一下，写成:
+<code>if (0 &amp;&amp; (rc || (theory != practice)))</code>就OK了，绕过了检查。然后重新编
+译systemtap，直接用的SUSE提供的老版本的源码，新的会有问题，注意还要用
+到SUSE提供的<code>libdwfl</code>的source code，才能完成编译，编译时在
+<code>/usr/src/packages/SOURCES/elfutils-0.152/libdwfl/linux-kernel-modules.c</code>
+文件上遇到了问题，稍作修改就可过关。尝试下新编译出来的<code>stap</code>，完全OK，它是不知
+道'build-id mismatch`为何物的，敢这样改也就是因为都是offical的东西，本
+应该match得上，应该不会出什么大问题，实践中检验吧。</p>
+
+<p>Have fun.</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[了解lvs调试]]></title>
     <link href="http://gekben.gitcd.com/blog/2012/07/26/lvs-debug-howto/"/>
     <updated>2012-07-26T21:32:00+08:00</updated>
@@ -21,9 +141,9 @@
     <content type="html"><![CDATA[<p>虽然对lvs的实现代码也算是心里有数了，但遇到一些具体问题时还拿不准，这时候就想到了lvs提供的调试功能，
 是内核提供的一个选项。一般发行版默认是没打开的，至少我接触的suse enterprice和archlinux都是关闭
 了ip_vs_debug，一起来看看怎么启用吧。
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>kernel config  </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>CONFIG_IP_VS_DEBUG=y</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock kernel config  %}
+CONFIG_IP_VS_DEBUG=y
+{% endcodeblock %}</p>
 
 <p>在默认的config文件里找到这一项，可能是注释状态，改好后，就可以开始编译内核了，这个选项不是m，必须重新
 编译产生新内核，在用<code>mkinitcpio -k kernel_full_name -c config</code>或者<code>mkinitrd -k kernel_full_name
@@ -32,130 +152,75 @@
 
 <p>新内核一切安好后，就可以玩lvs的调试功能了。先运行下<code>ipvsadm</code>，再<code>lsmod</code>看下<code>ip_vs</code>是否已经加载了。
 再后面，就可以检查期待已久的调试选项了
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs debug in /proc </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>/proc/sys/net/ipv4/vs/debug_level</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock ip_vs debug in /proc %}
+/proc/sys/net/ipv4/vs/debug_level
+{% endcodeblock %}</p>
 
 <p><code>cat debug_level</code>一下，默认值是0，以后可以通过sysctl来更改默认值，下面讲下这个值的含义:
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs_core.c  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">IP_VS_DBG_BUF</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Forward ICMP: failed checksum from %s!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">IP_VS_DBG_ADDR</span><span class="p">(</span><span class="n">af</span><span class="p">,</span> <span class="n">snet</span><span class="p">));</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+{% codeblock ip_vs_core.c lang:c %}
+ IP_VS_DBG_BUF(1, "Forward ICMP: failed checksum from %s!\n", IP_VS_DBG_ADDR(af, snet));
+{% endcodeblock %}
 上面是一个debug macro的调用的例子，下面是宏的具体定义：</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs.h  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">ifdef</span> <span class="n">CONFIG_IP_VS_DEBUG</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">extern</span> <span class="kt">int</span> <span class="n">ip_vs_get_debug_level</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">...)</span>            <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">())</span>   \
-</span><span class='line'>        <span class="n">printk</span><span class="p">(</span><span class="n">KERN_DEBUG</span> <span class="s">&quot;IPVS: &quot;</span> <span class="n">msg</span><span class="p">);</span>    \
-</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL</span><span class="p">(</span><span class="n">msg</span><span class="p">...)</span>                <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">net_ratelimit</span><span class="p">())</span>            \
-</span><span class='line'>        <span class="n">printk</span><span class="p">(</span><span class="n">KERN_DEBUG</span> <span class="s">&quot;IPVS: &quot;</span> <span class="n">msg</span><span class="p">);</span>    \
-</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>     <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">())</span>   \
-</span><span class='line'>    <span class="n">pp</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">debug_packet</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>    \
-</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>  <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">()</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> \
-</span><span class='line'>    <span class="n">net_ratelimit</span><span class="p">())</span>            \
-</span><span class='line'>    <span class="n">pp</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">debug_packet</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>    \
-</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">else</span>   <span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="n">NO</span> <span class="n">DEBUGGING</span> <span class="n">at</span> <span class="n">ALL</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">...)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL</span><span class="p">(</span><span class="n">msg</span><span class="p">...)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>     <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">endif</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>{% codeblock ip_vs.h lang:c %}</p>
+
+<h1>ifdef CONFIG_IP_VS_DEBUG</h1>
+
+<p>extern int ip_vs_get_debug_level(void);</p>
+
+<h1>define IP_VS_DBG(level, msg...)            \</h1>
+
+<pre><code>do {                        \
+    if (level &lt;= ip_vs_get_debug_level())   \
+        printk(KERN_DEBUG "IPVS: " msg);    \
+} while (0)
+</code></pre>
+
+<h1>define IP_VS_DBG_RL(msg...)                \</h1>
+
+<pre><code>do {                        \
+    if (net_ratelimit())            \
+        printk(KERN_DEBUG "IPVS: " msg);    \
+} while (0)
+</code></pre>
+
+<h1>define IP_VS_DBG_PKT(level, pp, skb, ofs, msg)     \</h1>
+
+<pre><code>do {                        \
+    if (level &lt;= ip_vs_get_debug_level())   \
+    pp-&gt;debug_packet(pp, skb, ofs, msg);    \
+} while (0)
+</code></pre>
+
+<h1>define IP_VS_DBG_RL_PKT(level, pp, skb, ofs, msg)  \</h1>
+
+<pre><code>do {                        \
+    if (level &lt;= ip_vs_get_debug_level() &amp;&amp; \
+    net_ratelimit())            \
+    pp-&gt;debug_packet(pp, skb, ofs, msg);    \
+} while (0)
+</code></pre>
+
+<h1>else   /<em> NO DEBUGGING at ALL </em>/</h1>
+
+<h1>define IP_VS_DBG(level, msg...)  do {} while (0)</h1>
+
+<h1>define IP_VS_DBG_RL(msg...)  do {} while (0)</h1>
+
+<h1>define IP_VS_DBG_PKT(level, pp, skb, ofs, msg)     do {} while (0)</h1>
+
+<h1>define IP_VS_DBG_RL_PKT(level, pp, skb, ofs, msg)  do {} while (0)</h1>
+
+<h1>endif</h1>
+
+<p>{% endcodeblock %}
 可以清晰的看到，打印debug日志的条件是<code>level &lt;= ip_vs_get_debug_level()</code>，这个函数调用的返回值就是
 <code>/proc/sys/net/ipv4/vs/debug_level</code>，万物皆文件的理念又体现了。
 可见level的值越小，其优先级越高，查了一遍ip_vs的相关代码，level最大值不过12，也就是说，
 只要把<code>/proc/sys/net/ipv4/vs/debug_level</code>设置成12，就能保证所有ip_vs的日志输出了，但一般没那个必要。
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>set debug_level to 12 </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>echo 12 > /proc/sys/net/ipv4/vs/debug_level</span></code></pre></td></tr></table></div></figure></notextile></div>
+{% codeblock set debug_level to 12 %}
+echo 12 > /proc/sys/net/ipv4/vs/debug_level
+{% endcodeblock %}
 对了，日志输出是在dmesg。</p>
 
 <p>好了，方法就差不多是这些了，接下来就边看代码，边测试，边看输出吧。
@@ -268,293 +333,154 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
 <!-- more -->
 
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>PKGBUILD </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-<span class='line-number'>109</span>
-<span class='line-number'>110</span>
-<span class='line-number'>111</span>
-<span class='line-number'>112</span>
-<span class='line-number'>113</span>
-<span class='line-number'>114</span>
-<span class='line-number'>115</span>
-<span class='line-number'>116</span>
-<span class='line-number'>117</span>
-<span class='line-number'>118</span>
-<span class='line-number'>119</span>
-<span class='line-number'>120</span>
-<span class='line-number'>121</span>
-<span class='line-number'>122</span>
-<span class='line-number'>123</span>
-<span class='line-number'>124</span>
-<span class='line-number'>125</span>
-<span class='line-number'>126</span>
-<span class='line-number'>127</span>
-<span class='line-number'>128</span>
-<span class='line-number'>129</span>
-<span class='line-number'>130</span>
-<span class='line-number'>131</span>
-<span class='line-number'>132</span>
-<span class='line-number'>133</span>
-<span class='line-number'>134</span>
-<span class='line-number'>135</span>
-<span class='line-number'>136</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;h3>PATCH AND BUILD OPTIONS&lt;/h3>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;em>makenconfig="n"    # tweak kernel options prior to a build via nconfig
-</span><span class='line'>&lt;/em>localmodcfg="n"    # compile ONLY probed modules
-</span><span class='line'>&lt;em>use_current="n"    # use the current kernel's .config file
-</span><span class='line'>&lt;/em>BFQ_enable_="n"    # enable BFQ as the default I/O scheduler&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>pkgname=linux-ck
-</span><span class='line'>true &amp;&amp; pkgname=(linux-ck linux-ck-headers)
-</span><span class='line'>&lt;em>kernelname=-ck
-</span><span class='line'>&lt;/em>basekernel=3.3
-</span><span class='line'>pkgver=${&lt;em>basekernel}.8
-</span><span class='line'>pkgrel=1
-</span><span class='line'>arch=('i686' 'x86_64')
-</span><span class='line'>url="https://wiki.archlinux.org/index.php/Linux-ck"
-</span><span class='line'>license=('GPL2')
-</span><span class='line'>options=('!strip')
-</span><span class='line'>&lt;/em>ckpatchversion=1
-</span><span class='line'>&lt;em>ckpatchname="patch-${&lt;/em>basekernel}-ck${&lt;em>ckpatchversion}"
-</span><span class='line'>&lt;/em>bfqpath="http://algo.ing.unimo.it/people/paolo/disk_sched/patches/3.3.0-v3r3"
-</span><span class='line'>source=("http://www.kernel.org/pub/linux/kernel/v3.x/linux-3.3.tar.xz"
-</span><span class='line'>"http://www.kernel.org/pub/linux/kernel/v3.x/patch-${pkgver}.xz"
-</span><span class='line'>"http://ck.kolivas.org/patches/3.0/3.3/${&lt;em>basekernel}-ck${&lt;/em>ckpatchversion}/${&lt;em>ckpatchname}.bz2"
-</span><span class='line'>'linux-ck.preset'
-</span><span class='line'>'config' 'config.x86_64'
-</span><span class='line'>'change-default-console-loglevel.patch'
-</span><span class='line'>'i915-fix-ghost-tv-output.patch'
-</span><span class='line'>'ext4-options.patch'
-</span><span class='line'>'fix-acerhdf-1810T-bios.patch'
-</span><span class='line'>"${&lt;/em>bfqpath}/0001-block-cgroups-kconfig-build-bits-for-BFQ-v3r3-3.3.patch"
-</span><span class='line'>"${_bfqpath}/0002-block-introduce-the-BFQ-v3r3-I-O-sched-for-3.3.patch")
-</span><span class='line'>sha256sums=('355df2085626cdf0083c4bc0fe3017419034b6db5cce6f437ae8234a5e90b40c'&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>        '4bbd173c995f44cb1bc5b002293765e8d8f9f076ae801f35cf456da9f0eba06d'
-</span><span class='line'>        'dd23a8e0fc6cdb393a9659d5d097c27e1ff5a0f30d0fe6a3441512a9bf6d00cb'
-</span><span class='line'>        'c2cf8cc2600502de348f3dc3aae9a3bde5486759db15cb8a93df7aa35bd6e7da'
-</span><span class='line'>        '253b11d36850a9c06ad8861a339da8895ddbb875d4e61579447a26f13423a160'
-</span><span class='line'>        '0f6def8badb9939ddb042657fd767c3a07ea7c291ed795935ebc8f81255231d7'
-</span><span class='line'>        'b9d79ca33b0b51ff4f6976b7cd6dbb0b624ebf4fbf440222217f8ffc50445de4'
-</span><span class='line'>        '9ccadbe3eb30bb283af3eb869c3a4bdb764628854811cc616a2e02e9ef398705'
-</span><span class='line'>        '0f15e7462b5d2650c354580920978228b3092bcf47e20e600242c8ca102df6f5'
-</span><span class='line'>        'f77e1a1f2d955f0499dc2957d1d65a3eb931212a13948b33916332296d0e4a7a'
-</span><span class='line'>        '179e159deaaa3976f5e5e329a640050b9803fef3cc77f8588a949b28c732c5ad'
-</span><span class='line'>        'a401732b5bc36eeccbaab86b216295d0ce0b30b8afdae66d8f59a382689da6a4')
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>build() {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>cd "${srcdir}/linux-${_basekernel}"
-</span><span class='line'>
-</span><span class='line'>msg "Patching with upstream patch ${_basekernel} to ${_basekernel}.4"
-</span><span class='line'># add upstream patch
-</span><span class='line'>#patch -p1 -i "${srcdir}/patch-${pkgver}"
-</span><span class='line'>
-</span><span class='line'># add latest fixes from stable queue, if needed
-</span><span class='line'>#http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git
-</span><span class='line'>
-</span><span class='line'>### Patch with BFQ IO Scheduler
-</span><span class='line'>msg "Patching source with BFQ patches"
-</span><span class='line'>#for p in $(ls ${srcdir}/000{1,2}-block*.patch); do
-</span><span class='line'>#   patch -Np1 -i $p
-</span><span class='line'>#done
-</span><span class='line'>
-</span><span class='line'>### Clean tree and copy ARCH config over
-</span><span class='line'>msg "Running make mrproper to clean source tree"
-</span><span class='line'>make mrproper
-</span><span class='line'>
-</span><span class='line'>if [ "${CARCH}" = "x86_64" ]; then
-</span><span class='line'>    cat "${srcdir}/config.x86_64" &gt; ./.config
-</span><span class='line'>else
-</span><span class='line'>    cat "${srcdir}/config" &gt; ./.config
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'>### Optionally use running kernel's config
-</span><span class='line'># code originally by nous; http://aur.archlinux.org/packages.php?ID=40191
-</span><span class='line'>if [ $_use_current = "y" ]; then
-</span><span class='line'>    if [[ -s /proc/config.gz ]]; then
-</span><span class='line'>        msg "Extracting config from /proc/config.gz..."
-</span><span class='line'>        # modprobe configs
-</span><span class='line'>        zcat /proc/config.gz &gt; ./.config
-</span><span class='line'>    else
-</span><span class='line'>        warning "You kernel was not compiled with IKCONFIG_PROC!"
-</span><span class='line'>        warning "You cannot read the current config!"
-</span><span class='line'>        warning "Aborting!"
-</span><span class='line'>        exit
-</span><span class='line'>    fi
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'>if [ "${_kernelname}" != "" ]; then
-</span><span class='line'>    sed -i "s|CONFIG_LOCALVERSION=.*|CONFIG_LOCALVERSION=\"${_kernelname}\"|g" ./.config
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'>### BFQ to be compiled in but not enabled
-</span><span class='line'>sed -i -e s'/CONFIG_CFQ_GROUP_IOSCHED=y/CONFIG_CFQ_GROUP_IOSCHED=y\nCONFIG_IOSCHED_BFQ=y\nCONFIG_CGROUP_BFQIO=y/' \
-</span><span class='line'>    -i -e s'/CONFIG_DEFAULT_CFQ=y/CONFIG_DEFAULT_CFQ=y\n# CONFIG_DEFAULT_BFQ is not set/' ./.config
-</span><span class='line'>
-</span><span class='line'>### Optionally enable BFQ as the default io scheduler
-</span><span class='line'>if [ $_BFQ_enable_ = "y" ]; then
-</span><span class='line'>    sed -i -e '/CONFIG_DEFAULT_IOSCHED/ s,cfq,bfq,' \
-</span><span class='line'>        -i -e s'/CONFIG_DEFAULT_CFQ=y/# CONFIG_DEFAULT_CFQ is not set\nCONFIG_DEFAULT_BFQ=y/' ./.config
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'># set extraversion to pkgrel
-</span><span class='line'>sed -ri "s|^(EXTRAVERSION =).*|\1 -${pkgrel}|" Makefile
-</span><span class='line'>
-</span><span class='line'># get kernel version
-</span><span class='line'>msg "Running make prepare for you to enable patched options of your choosing"
-</span><span class='line'>make prepare
-</span><span class='line'>
-</span><span class='line'>### Optionally load needed modules for the make localmodconfig
-</span><span class='line'># See http://aur.archlinux.org/packages.php?ID=41689
-</span><span class='line'>if [ $_localmodcfg = "y" ]; then
-</span><span class='line'>    msg "If you have modprobe_db installed, running it in recall mode now"
-</span><span class='line'>    if [ -e /usr/bin/modprobed_db ]; then
-</span><span class='line'>        [[ ! -x /usr/bin/sudo ]] &amp;&amp; echo "Cannot call modprobe with sudo.  Install via pacman -S sudo and configure to work with this user." &amp;&amp; exit 1
-</span><span class='line'>        sudo /usr/bin/modprobed_db recall
-</span><span class='line'>    fi
-</span><span class='line'>    msg "Running Steven Rostedt's make localmodconfig now"
-</span><span class='line'>    make localmodconfig
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'>if [ $_makenconfig = "y" ]; then
-</span><span class='line'>    msg "Running make nconfig"
-</span><span class='line'>    make nconfig
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'>msg "Running make bzImage and modules"
-</span><span class='line'>make ${MAKEFLAGS} bzImage modules
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>package_linux-ck() {
-</span><span class='line'>...</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>{% codeblock PKGBUILD %}</p>
+
+<h3>PATCH AND BUILD OPTIONS</h3>
+
+<p><em>makenconfig="n"    # tweak kernel options prior to a build via nconfig
+</em>localmodcfg="n"    # compile ONLY probed modules
+<em>use_current="n"    # use the current kernel's .config file
+</em>BFQ_enable_="n"    # enable BFQ as the default I/O scheduler</p>
+
+<p>pkgname=linux-ck
+true &amp;&amp; pkgname=(linux-ck linux-ck-headers)
+<em>kernelname=-ck
+</em>basekernel=3.3
+pkgver=${<em>basekernel}.8
+pkgrel=1
+arch=('i686' 'x86_64')
+url="https://wiki.archlinux.org/index.php/Linux-ck"
+license=('GPL2')
+options=('!strip')
+</em>ckpatchversion=1
+<em>ckpatchname="patch-${</em>basekernel}-ck${<em>ckpatchversion}"
+</em>bfqpath="http://algo.ing.unimo.it/people/paolo/disk_sched/patches/3.3.0-v3r3"
+source=("http://www.kernel.org/pub/linux/kernel/v3.x/linux-3.3.tar.xz"
+"http://www.kernel.org/pub/linux/kernel/v3.x/patch-${pkgver}.xz"
+"http://ck.kolivas.org/patches/3.0/3.3/${<em>basekernel}-ck${</em>ckpatchversion}/${<em>ckpatchname}.bz2"
+'linux-ck.preset'
+'config' 'config.x86_64'
+'change-default-console-loglevel.patch'
+'i915-fix-ghost-tv-output.patch'
+'ext4-options.patch'
+'fix-acerhdf-1810T-bios.patch'
+"${</em>bfqpath}/0001-block-cgroups-kconfig-build-bits-for-BFQ-v3r3-3.3.patch"
+"${_bfqpath}/0002-block-introduce-the-BFQ-v3r3-I-O-sched-for-3.3.patch")
+sha256sums=('355df2085626cdf0083c4bc0fe3017419034b6db5cce6f437ae8234a5e90b40c'</p>
+
+<pre><code>        '4bbd173c995f44cb1bc5b002293765e8d8f9f076ae801f35cf456da9f0eba06d'
+        'dd23a8e0fc6cdb393a9659d5d097c27e1ff5a0f30d0fe6a3441512a9bf6d00cb'
+        'c2cf8cc2600502de348f3dc3aae9a3bde5486759db15cb8a93df7aa35bd6e7da'
+        '253b11d36850a9c06ad8861a339da8895ddbb875d4e61579447a26f13423a160'
+        '0f6def8badb9939ddb042657fd767c3a07ea7c291ed795935ebc8f81255231d7'
+        'b9d79ca33b0b51ff4f6976b7cd6dbb0b624ebf4fbf440222217f8ffc50445de4'
+        '9ccadbe3eb30bb283af3eb869c3a4bdb764628854811cc616a2e02e9ef398705'
+        '0f15e7462b5d2650c354580920978228b3092bcf47e20e600242c8ca102df6f5'
+        'f77e1a1f2d955f0499dc2957d1d65a3eb931212a13948b33916332296d0e4a7a'
+        '179e159deaaa3976f5e5e329a640050b9803fef3cc77f8588a949b28c732c5ad'
+        'a401732b5bc36eeccbaab86b216295d0ce0b30b8afdae66d8f59a382689da6a4')
+</code></pre>
+
+<p>build() {</p>
+
+<pre><code>cd "${srcdir}/linux-${_basekernel}"
+
+msg "Patching with upstream patch ${_basekernel} to ${_basekernel}.4"
+# add upstream patch
+#patch -p1 -i "${srcdir}/patch-${pkgver}"
+
+# add latest fixes from stable queue, if needed
+#http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git
+
+### Patch with BFQ IO Scheduler
+msg "Patching source with BFQ patches"
+#for p in $(ls ${srcdir}/000{1,2}-block*.patch); do
+#   patch -Np1 -i $p
+#done
+
+### Clean tree and copy ARCH config over
+msg "Running make mrproper to clean source tree"
+make mrproper
+
+if [ "${CARCH}" = "x86_64" ]; then
+    cat "${srcdir}/config.x86_64" &gt; ./.config
+else
+    cat "${srcdir}/config" &gt; ./.config
+fi
+
+### Optionally use running kernel's config
+# code originally by nous; http://aur.archlinux.org/packages.php?ID=40191
+if [ $_use_current = "y" ]; then
+    if [[ -s /proc/config.gz ]]; then
+        msg "Extracting config from /proc/config.gz..."
+        # modprobe configs
+        zcat /proc/config.gz &gt; ./.config
+    else
+        warning "You kernel was not compiled with IKCONFIG_PROC!"
+        warning "You cannot read the current config!"
+        warning "Aborting!"
+        exit
+    fi
+fi
+
+if [ "${_kernelname}" != "" ]; then
+    sed -i "s|CONFIG_LOCALVERSION=.*|CONFIG_LOCALVERSION=\"${_kernelname}\"|g" ./.config
+fi
+
+### BFQ to be compiled in but not enabled
+sed -i -e s'/CONFIG_CFQ_GROUP_IOSCHED=y/CONFIG_CFQ_GROUP_IOSCHED=y\nCONFIG_IOSCHED_BFQ=y\nCONFIG_CGROUP_BFQIO=y/' \
+    -i -e s'/CONFIG_DEFAULT_CFQ=y/CONFIG_DEFAULT_CFQ=y\n# CONFIG_DEFAULT_BFQ is not set/' ./.config
+
+### Optionally enable BFQ as the default io scheduler
+if [ $_BFQ_enable_ = "y" ]; then
+    sed -i -e '/CONFIG_DEFAULT_IOSCHED/ s,cfq,bfq,' \
+        -i -e s'/CONFIG_DEFAULT_CFQ=y/# CONFIG_DEFAULT_CFQ is not set\nCONFIG_DEFAULT_BFQ=y/' ./.config
+fi
+
+# set extraversion to pkgrel
+sed -ri "s|^(EXTRAVERSION =).*|\1 -${pkgrel}|" Makefile
+
+# get kernel version
+msg "Running make prepare for you to enable patched options of your choosing"
+make prepare
+
+### Optionally load needed modules for the make localmodconfig
+# See http://aur.archlinux.org/packages.php?ID=41689
+if [ $_localmodcfg = "y" ]; then
+    msg "If you have modprobe_db installed, running it in recall mode now"
+    if [ -e /usr/bin/modprobed_db ]; then
+        [[ ! -x /usr/bin/sudo ]] &amp;&amp; echo "Cannot call modprobe with sudo.  Install via pacman -S sudo and configure to work with this user." &amp;&amp; exit 1
+        sudo /usr/bin/modprobed_db recall
+    fi
+    msg "Running Steven Rostedt's make localmodconfig now"
+    make localmodconfig
+fi
+
+if [ $_makenconfig = "y" ]; then
+    msg "Running make nconfig"
+    make nconfig
+fi
+
+msg "Running make bzImage and modules"
+make ${MAKEFLAGS} bzImage modules
+</code></pre>
+
+<p>}</p>
+
+<p>package_linux-ck() {
+...
+{% endcodeblock %}</p>
 
 <p>比较长，但也很易读懂，验证资源文件，解压资源文件，打patch，获取config，最后<code>make
 bzImage modules</code>，可以在<code>export MAKEFLAGS="-j4"</code>，充分利用多核cpu加快
 编译。读上面的配置文件可以知道，对于32/64的系统，已经提供了默认的
 config文件，可以直接修改config，或者以<code>make menuconfig</code>的方式，这里有
 个小技巧：
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>获取依赖的资源并解压  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$tar</span> -xzvf linux-ck-3.3.8-1.src.tar.gz
-</span><span class='line'><span class="nv">$cd</span> linux-ck
-</span><span class='line'><span class="nv">$makepkg</span> -s
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+{% codeblock 获取依赖的资源并解压 lang:bash %}
+$tar -xzvf linux-ck-3.3.8-1.src.tar.gz
+$cd linux-ck
+$makepkg -s
+{% endcodeblock %}
 ABS会自动按照PKGBUILD的步骤开始执行，可以在编译真正开始时，终止其执行，
 可以在linux-ck目录下，发现src目录，所有patch，kernel源代码都放在这里了，
 进入kernel源码目录，<code>make menuconfig</code>就可以对默认的config进行定制修改
@@ -609,366 +535,137 @@ ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dpor
 http://sina.com.cn时，<code>daddr</code>就是<code>0.0.0.3</code>。</p>
 
 <p>见代码17，21，77，80行。
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/net/netfilter/ipvs/ip_vs_core.c  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-<span class='line-number'>109</span>
-<span class='line-number'>110</span>
-<span class='line-number'>111</span>
-<span class='line-number'>112</span>
-<span class='line-number'>113</span>
-<span class='line-number'>114</span>
-<span class='line-number'>115</span>
-<span class='line-number'>116</span>
-<span class='line-number'>117</span>
-<span class='line-number'>118</span>
-<span class='line-number'>119</span>
-<span class='line-number'>120</span>
-<span class='line-number'>121</span>
-<span class='line-number'>122</span>
-<span class='line-number'>123</span>
-<span class='line-number'>124</span>
-<span class='line-number'>125</span>
-<span class='line-number'>126</span>
-<span class='line-number'>127</span>
-<span class='line-number'>128</span>
-<span class='line-number'>129</span>
-<span class='line-number'>130</span>
-<span class='line-number'>131</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="cm">/*</span>
-</span><span class='line'><span class="cm"> * As far as we know, FTP is a very complicated network protocol, and</span>
-</span><span class='line'><span class="cm"> * it uses control connection and data connections. For active FTP,</span>
-</span><span class='line'><span class="cm"> * FTP server initialize data connection to the client, its source port</span>
-</span><span class='line'><span class="cm"> * is often 20. For passive FTP, FTP server tells the clients the port</span>
-</span><span class='line'><span class="cm"> * that it passively listens to,  and the client issues the data</span>
-</span><span class='line'><span class="cm"> * connection. In the tunneling or direct routing mode, the load</span>
-</span><span class='line'><span class="cm"> * balancer is on the client-to-server half of connection, the port</span>
-</span><span class='line'><span class="cm"> * number is unknown to the load balancer. So, a conn template like</span>
-</span><span class='line'><span class="cm"> * &amp;lt;caddr, 0, vaddr, 0, daddr, 0&amp;gt; is created for persistent FTP</span>
-</span><span class='line'><span class="cm"> * service, and a template like &amp;lt;caddr, 0, vaddr, vport, daddr, dport&amp;gt;</span>
-</span><span class='line'><span class="cm"> * is created for other persistent services.</span>
-</span><span class='line'><span class="cm"> */</span>
-</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="cm">/* Check if a template already exists */</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span> <span class="o">!=</span> <span class="n">FTPPORT</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span> <span class="cm">/* &amp;lt;caddr,0,vaddr,vport,daddr,dport&amp;gt; */</span>
-</span><span class='line'>    <span class="k">else</span>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>        <span class="cm">/* &amp;lt;caddr,0,vaddr,0,daddr,0&amp;gt; */</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ct</span> <span class="o">||</span> <span class="o">!</span><span class="n">ip_vs_check_template</span><span class="p">(</span><span class="n">ct</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * No template found or the dest of the connection</span>
-</span><span class='line'><span class="cm">         * template is not available.</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">scheduler</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">schedule</span><span class="p">(</span><span class="n">svc</span><span class="p">,</span> <span class="n">skb</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">dest</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;p-schedule: no dest found.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * Create a template like &amp;lt;protocol,caddr,0,</span>
-</span><span class='line'><span class="cm">         * vaddr,vport,daddr,dport&amp;gt; for non-ftp service,</span>
-</span><span class='line'><span class="cm">         * and &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt;</span>
-</span><span class='line'><span class="cm">         * for ftp service.</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span> <span class="o">!=</span> <span class="n">FTPPORT</span><span class="p">)</span>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">else</span>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">ct</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/* set destination with the found template */</span>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">dest</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">dport</span> <span class="o">=</span> <span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>    <span class="cm">/*</span>
-</span><span class='line'><span class="cm">     * Note: persistent fwmark-based services and persistent</span>
-</span><span class='line'><span class="cm">     * port zero service are handled here.</span>
-</span><span class='line'><span class="cm">     * fwmark template: &amp;lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&amp;gt;</span>
-</span><span class='line'><span class="cm">     * port zero template: &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt;</span>
-</span><span class='line'><span class="cm">     */</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">union</span> <span class="n">nf_inet_addr</span> <span class="n">fwmark</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class='line'>            <span class="p">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">htonl</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">IPPROTO_IP</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">fwmark</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="cm">/* &amp;lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&amp;gt; */</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="cm">/* &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt; */</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ct</span> <span class="o">||</span> <span class="o">!</span><span class="n">ip_vs_check_template</span><span class="p">(</span><span class="n">ct</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * If it is not persistent port zero, return NULL,</span>
-</span><span class='line'><span class="cm">         * otherwise create a connection template.</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">scheduler</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">schedule</span><span class="p">(</span><span class="n">svc</span><span class="p">,</span> <span class="n">skb</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">dest</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;p-schedule: no dest found.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * Create a template according to the service</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="k">union</span> <span class="n">nf_inet_addr</span> <span class="n">fwmark</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class='line'>                <span class="p">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">htonl</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span>
-</span><span class='line'>            <span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">IPPROTO_IP</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">fwmark</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">ct</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/* set destination with the found template */</span>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">dest</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">dport</span> <span class="o">=</span> <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[学写hello world之netfilter模块]]></title>
-    <link href="http://gekben.gitcd.com/blog/2012/07/07/netfilter-hello-world-module/"/>
-    <updated>2012-07-07T23:16:00+08:00</updated>
-    <id>http://gekben.gitcd.com/blog/2012/07/07/netfilter-hello-world-module</id>
-    <content type="html"><![CDATA[<p>对于linux网络的学习，学下写netfilter module更有利于理解，下面开始实战。
-<div><script src='https://gist.github.com/3066821.js?file='></script>
-<noscript><pre><code>#define __KERNEL__
-#define MODULE
+{% codeblock /net/netfilter/ipvs/ip_vs_core.c lang:c %}</p>
 
-#include &lt;linux/module.h&gt;
-#include &lt;linux/kernel.h&gt;
-#include &lt;linux/netfilter_ipv4.h&gt;
-#include &lt;linux/skbuff.h&gt;
-#include &lt;linux/udp.h&gt;
-#include &lt;linux/ip.h&gt;
+<pre><code>/*
+ * As far as we know, FTP is a very complicated network protocol, and
+ * it uses control connection and data connections. For active FTP,
+ * FTP server initialize data connection to the client, its source port
+ * is often 20. For passive FTP, FTP server tells the clients the port
+ * that it passively listens to,  and the client issues the data
+ * connection. In the tunneling or direct routing mode, the load
+ * balancer is on the client-to-server half of connection, the port
+ * number is unknown to the load balancer. So, a conn template like
+ * &lt;caddr, 0, vaddr, 0, daddr, 0&gt; is created for persistent FTP
+ * service, and a template like &lt;caddr, 0, vaddr, vport, daddr, dport&gt;
+ * is created for other persistent services.
+ */
+if (ports[1] == svc-&gt;port) {
+    /* Check if a template already exists */
+    if (svc-&gt;port != FTPPORT)
+        ct = ip_vs_ct_in_get(svc-&gt;af, iph.protocol, &amp;snet, 0,
+                     &amp;iph.daddr, ports[1]); /* &lt;caddr,0,vaddr,vport,daddr,dport&gt; */
+    else
+        ct = ip_vs_ct_in_get(svc-&gt;af, iph.protocol, &amp;snet, 0,
+                     &amp;iph.daddr, 0);        /* &lt;caddr,0,vaddr,0,daddr,0&gt; */
 
+    if (!ct || !ip_vs_check_template(ct)) {
+        /*
+         * No template found or the dest of the connection
+         * template is not available.
+         */
+        dest = svc-&gt;scheduler-&gt;schedule(svc, skb);
+        if (dest == NULL) {
+            IP_VS_DBG(1, "p-schedule: no dest found.\n");
+            return NULL;
+        }
 
-static struct nf_hook_ops nfho;      //struct holding set of hook function options
-static struct sk_buff *sock_buff;
-static struct udphdr *udp_header;
-static struct iphdr *ip_header;
+        /*
+         * Create a template like &lt;protocol,caddr,0,
+         * vaddr,vport,daddr,dport&gt; for non-ftp service,
+         * and &lt;protocol,caddr,0,vaddr,0,daddr,0&gt;
+         * for ftp service.
+         */
+        if (svc-&gt;port != FTPPORT)
+            ct = ip_vs_conn_new(svc-&gt;af, iph.protocol,
+                        &amp;snet, 0,
+                        &amp;iph.daddr,
+                        ports[1],
+                        &amp;dest-&gt;addr, dest-&gt;port,
+                        IP_VS_CONN_F_TEMPLATE,
+                        dest);
+        else
+            ct = ip_vs_conn_new(svc-&gt;af, iph.protocol,
+                        &amp;snet, 0,
+                        &amp;iph.daddr, 0,
+                        &amp;dest-&gt;addr, 0,
+                        IP_VS_CONN_F_TEMPLATE,
+                        dest);
+        if (ct == NULL)
+            return NULL;
 
-//function to be called by hook
-unsigned int hook_func(unsigned int hooknum,struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *))
-{
-    sock_buff = *skb; 
-    ip_header = (struct iphdr *)skb_network_header(sock_buff);    
-    if(!sock_buff){
-        return NF_ACCEPT;
+        ct-&gt;timeout = svc-&gt;timeout;
+    } else {
+        /* set destination with the found template */
+        dest = ct-&gt;dest;
     }
-    if(ip_header-&gt;protocol == 17) {
-        udp_header = (struct udphdr *)skb_transport_header(sock_buff);
-        printk(KERN_INFO &quot;got udp packet.\n&quot;);
-        return NF_DROP;
-    }else{
-        printk(KERN_INFO &quot;packet accept.\n&quot;);
-        return NF_ACCEPT;
+    dport = dest-&gt;port;
+} else {
+    /*
+     * Note: persistent fwmark-based services and persistent
+     * port zero service are handled here.
+     * fwmark template: &lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&gt;
+     * port zero template: &lt;protocol,caddr,0,vaddr,0,daddr,0&gt;
+     */
+    if (svc-&gt;fwmark) {
+        union nf_inet_addr fwmark = {
+            .ip = htonl(svc-&gt;fwmark)
+        };
+
+        ct = ip_vs_ct_in_get(svc-&gt;af, IPPROTO_IP, &amp;snet, 0,
+                     &amp;fwmark, 0); /* &lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&gt; */
+    } else
+        ct = ip_vs_ct_in_get(svc-&gt;af, iph.protocol, &amp;snet, 0,
+                     &amp;iph.daddr, 0); /* &lt;protocol,caddr,0,vaddr,0,daddr,0&gt; */
+
+    if (!ct || !ip_vs_check_template(ct)) {
+        /*
+         * If it is not persistent port zero, return NULL,
+         * otherwise create a connection template.
+         */
+        if (svc-&gt;port)
+            return NULL;
+
+        dest = svc-&gt;scheduler-&gt;schedule(svc, skb);
+        if (dest == NULL) {
+            IP_VS_DBG(1, "p-schedule: no dest found.\n");
+            return NULL;
+        }
+
+        /*
+         * Create a template according to the service
+         */
+        if (svc-&gt;fwmark) {
+            union nf_inet_addr fwmark = {
+                .ip = htonl(svc-&gt;fwmark)
+            };
+
+            ct = ip_vs_conn_new(svc-&gt;af, IPPROTO_IP,
+                        &amp;snet, 0,
+                        &amp;fwmark, 0,
+                        &amp;dest-&gt;addr, 0,
+                        IP_VS_CONN_F_TEMPLATE,
+                        dest);
+        } else
+            ct = ip_vs_conn_new(svc-&gt;af, iph.protocol,
+                        &amp;snet, 0,
+                        &amp;iph.daddr, 0,
+                        &amp;dest-&gt;addr, 0,
+                        IP_VS_CONN_F_TEMPLATE,
+                        dest);
+        if (ct == NULL)
+            return NULL;
+
+        ct-&gt;timeout = svc-&gt;timeout;
+    } else {
+        /* set destination with the found template */
+        dest = ct-&gt;dest;
     }
+    dport = ports[1];
 }
+</code></pre>
 
-int init_module(void)
-{
-    printk(KERN_INFO &quot;register hello netfilter module.\n&quot;);
-    nfho.hook = hook_func;
-    nfho.hooknum = 0 ; // NF_IP_PRE_ROUTING
-    nfho.pf = PF_INET;
-    nfho.priority = NF_IP_PRI_FIRST;
-    nf_register_hook(&amp;nfho);
-    return 0;
-}
-
-void cleanup_module(void)
-{
-    printk(KERN_INFO &quot;cleanup hello netfilter module.\n&quot;);
-    nf_unregister_hook(&amp;nfho); 
-}
-</code></pre></noscript></div>
-</p>
-
-<!-- more -->
-
-
-<p><div><script src='https://gist.github.com/3066825.js?file='></script>
-<noscript><pre><code>obj-m := hello.o
-KDIR := /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
-default:
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
-
-</code></pre></noscript></div>
-</p>
-
-<p>然后就是
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>install the module  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;make&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;insmod hello.ko&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
-
-<p>我的环境(archlinux64 3.31-ck)编译加载成功，但貌似会导致kernel crash，
-哈哈，后面再解决吧，have fun。</p>
+<p>{% endcodeblock %}</p>
 ]]></content>
   </entry>
   

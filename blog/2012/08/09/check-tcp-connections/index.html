@@ -5,12 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>用jekyll octopress emacs写blog - Code Mind</title>
+  <title>TCP状态迁移及状态码 - Code Mind</title>
   <meta name="author" content="Kevin Zeng">
 
   
-  <meta name="description" content="写博客 Blog with jekyll octopress emacs on github">
-  <meta name="keywords" content="jekyll, octopress, emacs, github">
+  <meta name="description" content="check tcp connections">
+  <meta name="keywords" content="linux, tcp, connection">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll/">
+  <link rel="canonical" href="http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -70,7 +70,7 @@
   
   <header>
     
-      <h1 class="entry-title">用jekyll Octopress Emacs写blog</h1>
+      <h1 class="entry-title">TCP状态迁移及状态码</h1>
     
     
       <p class="meta">
@@ -86,24 +86,87 @@
   
 
 
-<time datetime="2012-07-05T07:59:00+08:00" pubdate data-updated="true">Jul 5<span>th</span>, 2012</time>
+<time datetime="2012-08-09T11:39:00+08:00" pubdate data-updated="true">Aug 9<span>th</span>, 2012</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>最近学习的动力大爆发，学了不少东西，应该记录并分享出来，把自己挂在
-github上的静态页面换成了强大的jekyll+octopress，捣鼓下开始写东西了，用markdown写
-blog的感觉应该很棒。</p>
+<div class="entry-content"><!-- -*- html -*- -->
 
-<p>接下来是开发环境，没错，是按写代码的方式写blog，我用的是emacs +
-mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
-一个方便了得。</p>
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-5">
+    <img src="/images/post_img/Tcp_state_diagram.svg"
+         width="542" height="409"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-5" style="display:none">
+    <img src="/images/post_img/Tcp_state_diagram.svg"
+         width="1084" height="817"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-5").hide();
+    jQuery("#image-dialog-5").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1124,
+      minHeight: 857,
+      show:      'scale',
+      hide:      'scale'
+    });
 
-<figure class='code'><figcaption><span>install ibus-el  </span></figcaption>
+    jQuery("#image-5").click(function() {
+      jQuery("#image-dialog-5").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/Tcp_state_diagram.svg" width="1084" height="817"/>
+</div>
+
+
+
+<p>想必大家对上图都比较熟悉了，补充下内核里对以上状态码的表示，顺便对源代码做了下改动，每个
+状态的代码都补出来了。</p>
+
+<figure class='code'><figcaption><span>tcp_state.h  </span></figcaption>
  <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>yaourt -S ibus-el
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">enum</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">TCP_ESTABLISHED</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_SYN_SENT</span>    <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_SYN_RECV</span>    <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_FIN_WAIT1</span>   <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_FIN_WAIT2</span>   <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_TIME_WAIT</span>   <span class="o">=</span> <span class="mi">6</span>
+</span><span class='line'>  <span class="n">TCP_CLOSE</span>       <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_CLOSE_WAIT</span>  <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_LAST_ACK</span>    <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_LISTEN</span>      <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_CLOSING</span>     <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>  <span class="cm">/* Now a valid state */</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">TCP_MAX_STATES</span>   <span class="cm">/* Leave at the end! */</span>
+</span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -112,50 +175,12 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
 <!-- more -->
 
 
+<p>用<code>cat /proc/net/tcp</code>打印时，输出所有active connections，
+<a href="%E8%BE%93%E5%87%BA%E6%A0%BC%E5%BC%8F%E4%BB%8B%E7%BB%8D">http://search.cpan.org/~salva/Linux-Proc-Net-TCP-0.03/lib/Linux/Proc/Net/TCP.pm#The_/proc/net/tcp_documentation</a>。</p>
 
+<p><code>st</code>这一列即代表连接状态，下面该怎么做，你懂的。</p>
 
-<figure class='code'><figcaption><span>ibus-mode configuration </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>(require 'ibus)
-</span><span class='line'>(add-hook 'after-init-hook 'ibus-mode-on)
-</span><span class='line'>(global-set-key (kbd "C-\\") 'ibus-toggle)</span></code></pre></td></tr></table></div></figure>
-
-
-<p>备注：因为ibus-mode很恼人的context warning问题，已经抛弃它了，直接把
-emacs可执行文件包装一下，放在shell里:</p>
-
-<figure class='code'><figcaption><span>my emacs wrapper script </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/sh</span>
-</span><span class='line'><span class="c">#emacs-real is the real original emacs executable</span>
-</span><span class='line'><span class="nv">LC_CTYPE</span><span class="o">=</span>zh_CN.UTF-8 /usr/bin/emacs-real
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>就可以直接使用系统的ibus了，低碳环保还不闹心。</p>
-
-<figure class='code'><figcaption><span>Enable markdown mode </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>(autoload 'markdown-mode "markdown-mode.el"
-</span><span class='line'>   "Major mode for editing Markdown files" t)
-</span><span class='line'>(setq auto-mode-alist
-</span><span class='line'>   (cons '("\\.text"  . markdown-mode) auto-mode-alist))
-</span><span class='line'>
-</span><span class='line'>(setq auto-mode-alist
-</span><span class='line'>      (cons '("\\.md"  . markdown-mode) auto-mode-alist))</span></code></pre></td></tr></table></div></figure>
-
-
-
+<p>Have fun.</p>
 </div>
 
 
@@ -178,12 +203,12 @@ emacs可执行文件包装一下，放在shell里:</p>
   
 
 
-<time datetime="2012-07-05T07:59:00+08:00" pubdate data-updated="true">Jul 5<span>th</span>, 2012</time>
+<time datetime="2012-08-09T11:39:00+08:00" pubdate data-updated="true">Aug 9<span>th</span>, 2012</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/emacs/'>emacs</a>, <a class='category' href='/blog/categories/octopress/'>octopress</a>, <a class='category' href='/blog/categories/tool/'>tool</a>
+    <a class='category' href='/blog/categories/c/'>c</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/network/'>network</a>
   
 </span>
 
@@ -195,7 +220,7 @@ emacs可执行文件包装一下，放在shell里:</p>
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll/" data-via="keving_zz" data-counturl="http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/" data-via="keving_zz" data-counturl="http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="medium"></div>
@@ -206,8 +231,10 @@ emacs可执行文件包装一下，放在shell里:</p>
     
     <p class="meta">
       
+        <a class="basic-alignment left" href="/blog/2012/07/29/virtualbox-work-with-linux-ck/" title="Previous Post: how virtualbox work with linux-ck">&laquo; how virtualbox work with linux-ck</a>
       
-        <a class="basic-alignment right" href="/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/" title="Next Post: 用Mscgen，以geek的方式画顺序图">用Mscgen，以geek的方式画顺序图 &raquo;</a>
+      
+        <a class="basic-alignment right" href="/blog/2012/08/16/upgrade-the-netxen-nic/" title="Next Post: 升级Netxen网卡驱动及firmware">升级Netxen网卡驱动及firmware &raquo;</a>
       
     </p>
   </footer>
@@ -310,8 +337,8 @@ emacs可执行文件包装一下，放在shell里:</p>
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll/';
-        var disqus_url = 'http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll/';
+        var disqus_identifier = 'http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/';
+        var disqus_url = 'http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/';
         var disqus_script = 'embed.js';
       
     (function () {

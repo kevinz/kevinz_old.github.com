@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux tools arch | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/linux-tools-arch/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-07-30T21:15:56+08:00</updated>
+  <updated>2012-08-16T21:56:41+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -24,6 +24,9 @@ linux-ck-corex内核，直接通过
 以通过<a href="http://aur.archlinux.org/packages.php?ID=50911">aur</a>来折腾下，
 调整下内核参数啥的。这里主要记录下如何让virtualbox正常工作，<a href="https://wiki.archlinux.org/index.php/Linux-ck#Running_Virtualbox_with_Linux-ck">这篇</a>提到了
 一些相关内容，做一点补充:</p>
+
+<!-- more -->
+
 
 <h2>编译vboxdrv及其它模块</h2>
 
@@ -45,6 +48,8 @@ install vboxhost/4.1.18</code>。</li>
 <li>add/append your user into vboxusers group</li>
 </ul>
 
+
+<p>Have fun.</p>
 ]]></content>
   </entry>
   

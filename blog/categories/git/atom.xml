@@ -4,7 +4,7 @@
   <title><![CDATA[Category: git | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/git/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-07-30T21:15:56+08:00</updated>
+  <updated>2012-08-16T21:56:41+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -33,26 +33,17 @@
 <!-- more -->
 
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>my solution  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$rm</span> -rf &lt;em&gt;deploy
-</span><span class='line'><span class="nv">$mkdir</span> &lt;/em&gt;deploy
-</span><span class='line'><span class="nv">$cd</span> _deploy
-</span><span class='line'><span class="nv">$git</span> init
-</span><span class='line'><span class="nv">$echo</span> <span class="s2">&quot;test&quot;</span> &gt; index.html
-</span><span class='line'><span class="nv">$git</span> branch -m master
-</span><span class='line'><span class="nv">$git</span> commit -m <span class="s2">&quot;octopress init&quot;</span>
-</span><span class='line'><span class="nv">$git</span> remote add origin git@github.com:username/username.github.com.git
-</span><span class='line'><span class="nv">$git</span> push origin master
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>{% codeblock my solution lang:bash %}
+$rm -rf <em>deploy
+$mkdir </em>deploy
+$cd _deploy
+$git init
+$echo "test" > index.html
+$git branch -m master
+$git commit -m "octopress init"
+$git remote add origin git@github.com:username/username.github.com.git
+$git push origin master
+{% endcodeblock %}</p>
 ]]></content>
   </entry>
   

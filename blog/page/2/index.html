@@ -73,6 +73,186 @@
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2012/07/07/netfilter-hello-world-module/">学写hello World之netfilter模块</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-07T23:16:00+08:00" pubdate data-updated="true">Jul 7<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>对于linux网络的学习，学下写netfilter module更有利于理解，下面开始实战。</p>
+
+<div><script src='https://gist.github.com/3066821.js?file='></script>
+<noscript><pre><code>#define __KERNEL__
+#define MODULE
+
+#include &lt;linux/module.h&gt;
+#include &lt;linux/kernel.h&gt;
+#include &lt;linux/netfilter_ipv4.h&gt;
+#include &lt;linux/skbuff.h&gt;
+#include &lt;linux/udp.h&gt;
+#include &lt;linux/ip.h&gt;
+
+
+static struct nf_hook_ops nfho;      //struct holding set of hook function options
+static struct sk_buff *sock_buff;
+static struct udphdr *udp_header;
+static struct iphdr *ip_header;
+
+//function to be called by hook
+unsigned int hook_func(unsigned int hooknum,struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *))
+{
+    sock_buff = *skb; 
+    ip_header = (struct iphdr *)skb_network_header(sock_buff);    
+    if(!sock_buff){
+        return NF_ACCEPT;
+    }
+    if(ip_header-&gt;protocol == 17) {
+        udp_header = (struct udphdr *)skb_transport_header(sock_buff);
+        printk(KERN_INFO &quot;got udp packet.\n&quot;);
+        return NF_DROP;
+    }else{
+        printk(KERN_INFO &quot;packet accept.\n&quot;);
+        return NF_ACCEPT;
+    }
+}
+
+int init_module(void)
+{
+    printk(KERN_INFO &quot;register hello netfilter module.\n&quot;);
+    nfho.hook = hook_func;
+    nfho.hooknum = 0 ; // NF_IP_PRE_ROUTING
+    nfho.pf = PF_INET;
+    nfho.priority = NF_IP_PRI_FIRST;
+    nf_register_hook(&amp;nfho);
+    return 0;
+}
+
+void cleanup_module(void)
+{
+    printk(KERN_INFO &quot;cleanup hello netfilter module.\n&quot;);
+    nf_unregister_hook(&amp;nfho); 
+}
+</code></pre></noscript></div>
+
+
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/07/07/netfilter-hello-world-module/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/">用solarized Color Schema提升工作效率</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-05T17:34:00+08:00" pubdate data-updated="true">Jul 5<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>貌似<a href="http://www.solarized.com/">solarized</a>已经火了很久，相见狠晚啊，曾
+经多么想调整下awesome的focus配色，让它不那么黯然，发现很难，现在终于可以轻松搞定
+了。说实话，看不太懂官方网站上的说明，也没力气去了解，发挥下拿来主义吧。</p>
+
+<!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-2">
+    <img src="/images/post_img/term.png"
+         width="840" height="525"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-2" style="display:none">
+    <img src="/images/post_img/term.png"
+         width="1680" height="1050"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-2").hide();
+    jQuery("#image-dialog-2").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1720,
+      minHeight: 1090,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-2").click(function() {
+      jQuery("#image-dialog-2").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/term.png" width="1680" height="1050"/>
+</div>
+
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/">用Mscgen，以geek的方式画顺序图</a></h1>
     
     
@@ -226,7 +406,15 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2012/07/30/cpio-issues/">cpio issues</a>
+        <a href="/blog/2012/08/16/install-systemtap-on-suse/">在SUSE Enterprise上安装Systemtap，解决build-id mismatch</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/16/upgrade-the-netxen-nic/">升级Netxen网卡驱动及firmware</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/09/check-tcp-connections/">TCP状态迁移及状态码</a>
       </li>
     
       <li class="post">
@@ -237,19 +425,11 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
         <a href="/blog/2012/07/26/lvs-debug-howto/">了解lvs调试</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2012/07/15/hardware-and-10gb-network/">学习万兆以太网，硬件和优化方法</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/07/14/customize-kernel-in-arch-linux/">在archlinux里定制编译内核</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 108.57142857142857%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 117.14285714285714%'>C(2)</a> <a href='/blog/categories/emacs' style='font-size: 117.14285714285714%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 108.57142857142857%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 108.57142857142857%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 142.85714285714286%'>Kernel(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(7)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 108.57142857142857%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 108.57142857142857%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 142.85714285714286%'>Network(5)</a> <a href='/blog/categories/octopress' style='font-size: 117.14285714285714%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 117.14285714285714%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 142.85714285714286%'>Tool(5)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 106.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 106.0%'>C(1)</a> <a href='/blog/categories/c' style='font-size: 112.0%'>C(2)</a> <a href='/blog/categories/emacs' style='font-size: 112.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 106.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 106.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 136.0%'>Kernel(6)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(10)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 106.0%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 106.0%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 142.0%'>Network(7)</a> <a href='/blog/categories/octopress' style='font-size: 112.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 112.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 130.0%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 106.0%'>Tools(1)</a> </span>
 </section>
 
 <section>
