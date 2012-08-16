@@ -13,6 +13,7 @@ linux-ck-corex内核，直接通过
 以通过[aur](http://aur.archlinux.org/packages.php?ID=50911)来折腾下，
 调整下内核参数啥的。这里主要记录下如何让virtualbox正常工作，[这篇](https://wiki.archlinux.org/index.php/Linux-ck#Running_Virtualbox_with_Linux-ck)提到了
 一些相关内容，做一点补充:
+<!-- more -->
 
 ##编译vboxdrv及其它模块##
  * 记得装对应的linux-ck-headers，我装的是linux-ck-corex-headers，可能
@@ -27,3 +28,4 @@ linux-ck-corex内核，直接通过
    下，新的是在`/lib/modules/kernel/misc`下。
  * add/append your user into vboxusers group
  
+Have fun.
