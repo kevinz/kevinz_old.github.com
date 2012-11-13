@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>升级Netxen网卡驱动及firmware - Code Mind</title>
+  <meta name="author" content="Kevin Zeng">
+
+  
+  <meta name="description" content="upgrade the netxen nic">
+  <meta name="keywords" content="linux, network, nic, driver">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://gekben.gitcd.com/blog/2012/08/16/upgrade-the-netxen-nic/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Code Mind" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Code Mind</a></h1>
+  
+    <h2>Geek ben's blog about '(Linux Network Programming Kernel Tools Geek)</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:gekben.gitcd.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">升级Netxen网卡驱动及firmware</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-08-16T20:15:00+08:00" pubdate data-updated="true">Aug 16<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>在公司做lvs测试用机是HP DL580 G7，除了网卡，其它的配置都不错，网卡是板
+载的netxen的1G卡，还有几张netxen的10G卡，观察<code>/proc/interrupts</code>，每块
+10G卡对应的中断都只有4个，而且没有识别成tx-0/rx-0的形式，不像支持
+multiple queue，不禁使我对SUSE 11
+Enterprise SP2的netxen驱动产生的怀疑。<code>dmesg</code>也可以发现有抱怨driver和
+firmware的比较旧，于是萌生了升级驱动的想法。</p>
+
+<!-- more -->
+
+
+<p>用<code>netxen</code>和<code>nx3031</code>search
+了很久而不得，偶然通过<code>nx_nic</code>找到了HP网卡的驱动
+<a href="%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80">http://h20000.www2.hp.com/bizsupport/TechSupport/SoftwareIndex.jsp?lang=en&amp;cc=us&amp;prodNameId=3913538&amp;prodTypeId=329290&amp;prodSeriesId=3913537&amp;swLang=8&amp;taskId=135&amp;swEnvOID=4049</a>，包括firmware的自动升级程序和网卡驱动。值得吐一把嘈的是，HP
+网站上driver是老旧的，不支持稍新的内核，貌似只支持到2.6.20以前的，编译
+时会报<code>net_dev struct</code>相关的错，费了
+那么大的力气，搞来个不能用的，之后还是google到了最新的驱动，在一个连域
+名都没有的
+<a href="ftp">ftp://15.217.49.75/ftp2/pub/softlib2/software1/pubsw-linux/p280489831/</a>
+上，haha，真欢乐，HP sucks.按照说明先升级好driver，<code>modprobe nx_nic</code>后，
+就可以升级firmware了，要注意的是，把每个网卡都up起来，才能保证所有都升
+级成功，我拆掉了一些bond，保证以前是slave状态的卡都up起来之后，经过10
+分钟左右，升级成功。重启后<code>dmesg</code>里的complains少了很多，新版本也显示出
+来了，还是没识别出multiple queue，编译驱动时也检查了选项，确实没有。同
+事也咨询过HP的sales，也不知道多队列网卡为何物，与Intel的资料的专业性相比，我对
+HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码有真相。</p>
+
+<p>Have fun.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Zeng</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-08-16T20:15:00+08:00" pubdate data-updated="true">Aug 16<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/network/'>network</a>
+  
+</span>
+
+
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://gekben.gitcd.com/blog/2012/08/16/upgrade-the-netxen-nic/" data-via="keving_zz" data-counturl="http://gekben.gitcd.com/blog/2012/08/16/upgrade-the-netxen-nic/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/08/09/check-tcp-connections/" title="Previous Post: TCP状态迁移及状态码">&laquo; TCP状态迁移及状态码</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2012/08/16/install-systemtap-on-suse/" title="Next Post: 在SUSE Enterprise上安装Systemtap，解决build-id mismatch">在SUSE Enterprise上安装Systemtap，解决build-id mismatch &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/11/13/build-uml-development-environment/">搭建基于User Mode Linux网络模块开发环境</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/16/install-systemtap-on-suse/">在SUSE Enterprise上安装Systemtap，解决build-id mismatch</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/16/upgrade-the-netxen-nic/">升级Netxen网卡驱动及firmware</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/09/check-tcp-connections/">TCP状态迁移及状态码</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/07/29/virtualbox-work-with-linux-ck/">how virtualbox work with linux-ck</a>
+      </li>
+    
+  </ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.45454545454545%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 110.9090909090909%'>C(2)</a> <a href='/blog/categories/c' style='font-size: 105.45454545454545%'>C(1)</a> <a href='/blog/categories/emacs' style='font-size: 110.9090909090909%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.45454545454545%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.45454545454545%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 138.1818181818182%'>Kernel(7)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(11)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.45454545454545%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 105.45454545454545%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 138.1818181818182%'>Network(7)</a> <a href='/blog/categories/networking' style='font-size: 105.45454545454545%'>Networking(1)</a> <a href='/blog/categories/octopress' style='font-size: 110.9090909090909%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.9090909090909%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 127.27272727272728%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.45454545454545%'>Tools(1)</a> </span>
+</section>
+
+<section>
+<h2>Reading List</h2>
+<div>
+<script type="text/javascript" src="http://www.douban.com/service/badge/2898110/?show=dolist&amp;n=10&amp;columns=2&amp;hidelogo=yes&amp;hideself=yes&amp;cat=book" ></script> 
+</div>
+</section>
+
+<iframe width="100%" height="550" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=550&fansRow=2&ptype=1&speed=0&skin=10&isTitle=0&noborder=0&isWeibo=1&isFans=0&uid=1652588700&verifier=275352cd&dpc=1"></iframe>
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevintech08@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("keving_zz", 0, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/keving_zz" class="twitter-follow-button" data-show-count="false">Follow @keving_zz</a>
+  
+</section>
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Kevin Zeng -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'codemind';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://gekben.gitcd.com/blog/2012/08/16/upgrade-the-netxen-nic/';
+        var disqus_url = 'http://gekben.gitcd.com/blog/2012/08/16/upgrade-the-netxen-nic/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

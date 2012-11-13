@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: emacs | Code Mind]]></title>
-  <link href="http://kevinz.github.com/blog/categories/emacs/atom.xml" rel="self"/>
-  <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-15T14:43:56+08:00</updated>
-  <id>http://kevinz.github.com/</id>
+  <link href="http://gekben.gitcd.com/blog/categories/emacs/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-11-13T17:20:39+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
     <email><![CDATA[kevintech08@gmail.com]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[用solarized color schema提升工作效率]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/"/>
     <updated>2012-07-05T17:34:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome</id>
     <content type="html"><![CDATA[<p>貌似<a href="http://www.solarized.com/">solarized</a>已经火了很久，相见狠晚啊，曾
 经多么想调整下awesome的focus配色，让它不那么黯然，发现很难，现在终于可以轻松搞定
 了。说实话，看不太懂官方网站上的说明，也没力气去了解，发挥下拿来主义吧。</p>
@@ -26,12 +26,12 @@
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-10">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-13">
     <img src="/images/post_img/term.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-10" style="display:none">
+  <div id="image-dialog-13" style="display:none">
     <img src="/images/post_img/term.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -39,8 +39,8 @@
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-10").hide();
-    jQuery("#image-dialog-10").dialog({
+    jQuery("#image-dialog-13").hide();
+    jQuery("#image-dialog-13").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -50,8 +50,8 @@
       hide:      'scale'
     });
 
-    jQuery("#image-10").click(function() {
-      jQuery("#image-dialog-10").dialog('open');
+    jQuery("#image-13").click(function() {
+      jQuery("#image-dialog-13").dialog('open');
     });
 
   });
@@ -68,12 +68,12 @@
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-11">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-14">
     <img src="/images/post_img/emacs.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-11" style="display:none">
+  <div id="image-dialog-14" style="display:none">
     <img src="/images/post_img/emacs.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -81,8 +81,8 @@
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-11").hide();
-    jQuery("#image-dialog-11").dialog({
+    jQuery("#image-dialog-14").hide();
+    jQuery("#image-dialog-14").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -92,8 +92,8 @@
       hide:      'scale'
     });
 
-    jQuery("#image-11").click(function() {
-      jQuery("#image-dialog-11").dialog('open');
+    jQuery("#image-14").click(function() {
+      jQuery("#image-dialog-14").dialog('open');
     });
 
   });
@@ -107,12 +107,12 @@
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-12">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-15">
     <img src="/images/post_img/vim.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-12" style="display:none">
+  <div id="image-dialog-15" style="display:none">
     <img src="/images/post_img/vim.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -120,8 +120,8 @@
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-12").hide();
-    jQuery("#image-dialog-12").dialog({
+    jQuery("#image-dialog-15").hide();
+    jQuery("#image-dialog-15").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -131,8 +131,8 @@
       hide:      'scale'
     });
 
-    jQuery("#image-12").click(function() {
-      jQuery("#image-dialog-12").dialog('open');
+    jQuery("#image-15").click(function() {
+      jQuery("#image-dialog-15").dialog('open');
     });
 
   });
@@ -272,9 +272,9 @@
   
   <entry>
     <title type="html"><![CDATA[用jekyll octopress emacs写blog]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll/"/>
     <updated>2012-07-05T07:59:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll</id>
     <content type="html"><![CDATA[<p>最近学习的动力大爆发，学了不少东西，应该记录并分享出来，把自己挂在
 github上的静态页面换成了强大的jekyll+octopress，捣鼓下开始写东西了，用markdown写
 blog的感觉应该很棒。</p>

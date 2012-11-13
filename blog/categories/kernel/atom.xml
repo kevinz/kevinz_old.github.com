@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: kernel | Code Mind]]></title>
-  <link href="http://kevinz.github.com/blog/categories/kernel/atom.xml" rel="self"/>
-  <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-15T14:43:56+08:00</updated>
-  <id>http://kevinz.github.com/</id>
+  <link href="http://gekben.gitcd.com/blog/categories/kernel/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-11-13T17:20:39+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
     <email><![CDATA[kevintech08@gmail.com]]></email>
@@ -14,10 +14,471 @@
 
   
   <entry>
+    <title type="html"><![CDATA[搭建基于User Mode Linux网络模块开发环境]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/"/>
+    <updated>2012-11-13T15:40:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment</id>
+    <content type="html"><![CDATA[<p>最近在写一些内核网络模块，需要一个好用的编译、调试、测试环境，选用了uml，记录一下设置多台uml和host通信，并share fs。
+uml基本安装和使用可以参考<a href="https://wiki.archlinux.org/index.php/User-mode_Linux#Setup_by_rootfs_.2B_tap">archlinux uml</a>。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>start uml with vde support  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;先启动虚拟switch&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;vde_switch -s /tmp/switch1 -tap tap0 -m 666&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;启动一台单网卡的uml，已经与之前定义的switch绑定&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;vmlinux <span class="nv">ubd0</span><span class="o">=</span>arch_rootfs1  <span class="nv">mem</span><span class="o">=</span>256M <span class="nv">eth0</span><span class="o">=</span>vde,/tmp/switch1&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;启动一台双网卡的uml，已经与之前定义的switch绑定&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;vmlinux <span class="nv">ubd0</span><span class="o">=</span>arch_rootfs2  <span class="nv">mem</span><span class="o">=</span>256M <span class="nv">eth0</span><span class="o">=</span>vde,/tmp/switch1 <span class="nv">eth1</span><span class="o">=</span>vde,/tmp/switch1&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<!-- more -->
+
+
+<p>启动完成后，在linux里用常规的网络设置方法完成ip地址的分配。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>network configuration  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;ifconfig eth0 192.168.0.101 up&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;ifconfig eth1 192.168.0.101 up&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;确定host上的tap0已经正确设置并启用&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;ifconfig tap0 192.168.0.100 up&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+完成后用ping测试下，各个uml和host之间的网络通信是否正常。</p>
+
+<p>接下来设置uml与主机的文件系统共享。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>mounting hostfs directory  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;mkdir -p /root/source&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;mount none /root/source/ -t hostfs -o /home/yourname/code/&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>完成后，应该可以读写hostfs的文件，测试一下，放一份linux源代码在host的<code>/home/yourname/code/</code>下，
+目录结构是<code>/home/yourname/code/linux</code>，自己写的module的目录在<code>/home/yourname/code/my_module</code>，
+对应在uml上的目录就是<code>/root/source/linux</code>和<code>/root/source/my_module</code>。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Makefile of my_module :bash </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>obj-m := test.o #source file is test.c
+</span><span class='line'>KDIR := /root/source/linux
+</span><span class='line'>PWD := $(shell pwd)
+</span><span class='line'>default:&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>    $(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>在<code>/root/source/my_module</code>下<code>make</code>就可以了，在<code>#insmod test.ko</code>测试，如果crash了就<code>kill</code>掉host上的<code>vmlinux</code>进程，非常方便快速。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>kill all vmlinux process  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;killall vmlinux processes <span class="k">if </span>uml can<span class="err">&#39;</span>t be started&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;killall vmlinux&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>当然，gdb也是可以用的，可以参考uml gdb调试相关的介绍。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[在SUSE Enterprise上安装Systemtap，解决build-id mismatch]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/08/16/install-systemtap-on-suse/"/>
+    <updated>2012-08-16T20:49:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/08/16/install-systemtap-on-suse</id>
+    <content type="html"><![CDATA[<p>最近做LVS的性能测试，自然会用的各种工具检视系统状态，用了很多工具，都
+不甚满意，于是想尝试下Systemtap，系统环境是SUSE Enterprise SP2,已经3.0的
+kernel，可以search到的suse上安装systemtap的内容不多，碰到问题并解决了
+的更是少，自然我又要成为苦逼的问题解决者了。</p>
+
+<h2>正常安装的步骤是</h2>
+
+<ul>
+<li>添加suse enterprise的包含debuginfo的iso，有几个G啊</li>
+<li><code>zypper in kernel-default-debuginfo</code></li>
+<li><code>zypper in systemtap</code></li>
+</ul>
+
+
+<p>当我做完了以上这些，运行一个简单的脚本时:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>systemtap hello_world  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo stap -ve <span class="s1">&#39;probe begin { log(&quot;hello world&quot;) exit() }&#39;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<!-- more -->
+
+
+<p>这个简单的例子是ok的，因为它不会涉及到systemtap的pass5，与kernel
+module交互。跑下面这个的时候，就不行了:
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>systemtap hello_world  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>stap -v -e <span class="s1">&#39;probe vfs.read {printf(&quot;has VFS read()\n&quot;); exit()}&#39;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+会报出类似<code>ERROR: Build-id mismatch: "kernel" vs. "vmlinux" byte 0 (0xf9 vs 0xa2)</code>的问题，关于build-id mismatch这个问题，还是可以
+搜索到不少资料的，不过告诉如何解决的也不多。先说明下这个问题，
+<code>kernel-default-debuginfo</code>里面是附赠了一个kernel elf文件的，在SUSE里，
+安装后放在<code>/usr/lib/debug/boot/vmlinux-3.0.13-0.27-default.debug</code>，这
+是debug版本的kernel vmlinux文件，是elf原始文件，未经压缩。<code>stap</code>运行时会去检查它的。
+执行<code>eu-readelf -n
+/usr/lib/debug/boot/vmlinux-3.0.13-0.27-default.debug</code>，可以拿到的
+build-id，执行结果的第一个字节是<code>f9</code>，那另外一个<code>a2</code>是从哪里得出来的，猜想应该和当
+前运行的kernel有关，于是拿到当前运行的vmlinux的压缩文件，解压后检查
+build-id：
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>check build-id  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>   gunzip /boot/vmlinux-3.0.13-0.27-default.gz
+</span><span class='line'>   eu-readelf -n /boot/vmlinux-3.0.13-0.27-default
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+执行结果也是<code>f9</code>，是对得上的啊。</p>
+
+<p>但是注意，这份.gz文件是SUSE附赠的，跟当前跑的vmlinz文件没有关系，于是
+开始打vmlinuz文件的主意，得先想办法把vmlinuz->vmlinux，及bzImage到elf，
+才能去取它的build-id，
+<a href="%E8%BF%99%E9%87%8C">https://www.globalways.net/blog/archives/76-Extracting-bzImage-from-vmlinuz.html</a>有可行的方法。
+<code>eu-readelf -n vmlinux-unpacked</code>的结果果然是<code>a2</code>，我只能是怀疑SUSE给的
+默认vmlinuz有问题了，不能和SUSE提供的用于debuginfo的vmlinux匹配。</p>
+
+<p>只能另外想办法，其实systemtap做kernel mismatch判断的关键代码，就在:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>systemtap/runtime/sym.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">stp_build_id_check</span> <span class="p">(</span><span class="k">struct</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">stp_module</span> <span class="o">*</span><span class="n">m</span><span class="p">,</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">notes_addr</span><span class="p">,</span>
+</span><span class='line'>        <span class="k">struct</span> <span class="n">task_struct</span> <span class="o">*</span><span class="n">tsk</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">{</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="n">just</span> <span class="n">hack</span> <span class="n">it</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">rc</span> <span class="o">||</span> <span class="p">(</span><span class="n">theory</span> <span class="o">!=</span> <span class="n">practice</span><span class="p">))</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">basename</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">basename</span> <span class="o">=</span> <span class="n">strrchr</span><span class="p">(</span><span class="n">m</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">path</span><span class="p">,</span> <span class="sc">&#39;/&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="n">basename</span><span class="o">++</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">else</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="n">basename</span> <span class="o">=</span> <span class="n">m</span><span class="o">-&gt;</span><span class="n">path</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">if</span> <span class="n">LINUX_VERSION_CODE</span> <span class="o">&gt;=</span> <span class="n">KERNEL_VERSION</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">27</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="n">_stp_error</span> <span class="p">(</span><span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) address %#lx rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="o">|</span>     <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">notes_addr</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">else</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="cm">/* This branch is a surrogate for kernels affected by Fedora bug</span>
+</span><span class='line'><span class="cm">   * #465873. */</span>
+</span><span class='line'>  <span class="n">_stp_warn</span> <span class="p">(</span><span class="n">KERN_WARNING</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="o">|</span>    <span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="o">|</span>   <span class="o">|</span>    <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">endif</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">break</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span> <span class="cm">/* end mismatch */</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>关键就在于<code>if (rc || (theory != practice))</code>，小小修改的一下，写成:
+<code>if (0 &amp;&amp; (rc || (theory != practice)))</code>就OK了，绕过了检查。然后重新编
+译systemtap，直接用的SUSE提供的老版本的源码，新的会有问题，注意还要用
+到SUSE提供的<code>libdwfl</code>的source code，才能完成编译，编译时在
+<code>/usr/src/packages/SOURCES/elfutils-0.152/libdwfl/linux-kernel-modules.c</code>
+文件上遇到了问题，稍作修改就可过关。尝试下新编译出来的<code>stap</code>，完全OK，它是不知
+道'build-id mismatch`为何物的，敢这样改也就是因为都是offical的东西，本
+应该match得上，应该不会出什么大问题，实践中检验吧。</p>
+
+<p>Have fun.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[了解lvs调试]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/07/26/lvs-debug-howto/"/>
+    <updated>2012-07-26T21:32:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/07/26/lvs-debug-howto</id>
+    <content type="html"><![CDATA[<p>虽然对lvs的实现代码也算是心里有数了，但遇到一些具体问题时还拿不准，这时候就想到了lvs提供的调试功能，
+是内核提供的一个选项。一般发行版默认是没打开的，至少我接触的suse enterprice和archlinux都是关闭
+了ip_vs_debug，一起来看看怎么启用吧。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>kernel config  </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>CONFIG_IP_VS_DEBUG=y</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>在默认的config文件里找到这一项，可能是注释状态，改好后，就可以开始编译内核了，这个选项不是m，必须重新
+编译产生新内核，在用<code>mkinitcpio -k kernel_full_name -c config</code>或者<code>mkinitrd -k kernel_full_name
+</code>，前面是针对archlinux的，后面是针对suse的，这里有坑，此处略去1000字，反正记得如果用新内核启动，出现
+找不到root的情况，八成是initrd做得有问题，fs相关的modules的问题。</p>
+
+<p>新内核一切安好后，就可以玩lvs的调试功能了。先运行下<code>ipvsadm</code>，再<code>lsmod</code>看下<code>ip_vs</code>是否已经加载了。
+再后面，就可以检查期待已久的调试选项了
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs debug in /proc </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/proc/sys/net/ipv4/vs/debug_level</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><code>cat debug_level</code>一下，默认值是0，以后可以通过sysctl来更改默认值，下面讲下这个值的含义:
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs_core.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">IP_VS_DBG_BUF</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Forward ICMP: failed checksum from %s!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">IP_VS_DBG_ADDR</span><span class="p">(</span><span class="n">af</span><span class="p">,</span> <span class="n">snet</span><span class="p">));</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+上面是一个debug macro的调用的例子，下面是宏的具体定义：</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">ifdef</span> <span class="n">CONFIG_IP_VS_DEBUG</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">extern</span> <span class="kt">int</span> <span class="n">ip_vs_get_debug_level</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">...)</span>            <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">())</span>   \
+</span><span class='line'>        <span class="n">printk</span><span class="p">(</span><span class="n">KERN_DEBUG</span> <span class="s">&quot;IPVS: &quot;</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL</span><span class="p">(</span><span class="n">msg</span><span class="p">...)</span>                <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">net_ratelimit</span><span class="p">())</span>            \
+</span><span class='line'>        <span class="n">printk</span><span class="p">(</span><span class="n">KERN_DEBUG</span> <span class="s">&quot;IPVS: &quot;</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>     <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">())</span>   \
+</span><span class='line'>    <span class="n">pp</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">debug_packet</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>  <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">()</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> \
+</span><span class='line'>    <span class="n">net_ratelimit</span><span class="p">())</span>            \
+</span><span class='line'>    <span class="n">pp</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">debug_packet</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">else</span>   <span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="n">NO</span> <span class="n">DEBUGGING</span> <span class="n">at</span> <span class="n">ALL</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">...)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL</span><span class="p">(</span><span class="n">msg</span><span class="p">...)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>     <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">endif</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+可以清晰的看到，打印debug日志的条件是<code>level &lt;= ip_vs_get_debug_level()</code>，这个函数调用的返回值就是
+<code>/proc/sys/net/ipv4/vs/debug_level</code>，万物皆文件的理念又体现了。
+可见level的值越小，其优先级越高，查了一遍ip_vs的相关代码，level最大值不过12，也就是说，
+只要把<code>/proc/sys/net/ipv4/vs/debug_level</code>设置成12，就能保证所有ip_vs的日志输出了，但一般没那个必要。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>set debug_level to 12 </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>echo 12 > /proc/sys/net/ipv4/vs/debug_level</span></code></pre></td></tr></table></div></figure></notextile></div>
+对了，日志输出是在dmesg。</p>
+
+<p>好了，方法就差不多是这些了，接下来就边看代码，边测试，边看输出吧。
+have fun.</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[学习万兆以太网，硬件和优化方法]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network/"/>
     <updated>2012-07-15T11:34:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network</id>
     <content type="html"><![CDATA[<p>上周末去杭州参加了<a href="http://adc.taobao.com/">ADC</a>，收获不小，关注的几个
 topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能的要求非常高，
 于是开始关注起10Gbe，记录一些资料和心得。</p>
@@ -76,6 +537,14 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
 </li>
 <li><a href="http://timetobleed.com/useful-kernel-and-driver-performance-tweaks-for-your-linux-server/">Linux kernel and driver</a></li>
 <li><a href="http://www.linuxfoundation.org/collaborate/workgroups/networking">GRO,GSO,TSO...</a></li>
+<li>Papers
+
+<ul>
+<li><a href="http://www.google.com.hk/url?sa=t&amp;rct=j&amp;q=10Gbe+linux+optimization&amp;source=web&amp;cd=1&amp;ved=0CFQQFjAA&amp;url=http%3A%2F%2Fdocs.redhat.com%2Fdocs%2Fen-US%2FRed_Hat_Enterprise_Linux%2F6%2Fpdf%2FPerformance_Tuning_Guide%2FRed_Hat_Enterprise_Linux-6-Performance_Tuning_Guide-en-US.pdf&amp;ei=3D4RUKmWJ6O3iQed2YHYCw&amp;usg=AFQjCNGRhggpqYuUP0LQwoQE1uofWlN2dQ">RedHat</a></li>
+<li><a href="http://www.google.com.hk/url?sa=t&amp;rct=j&amp;q=10Gbe+linux+optimization&amp;source=web&amp;cd=5&amp;ved=0CGUQFjAE&amp;url=http%3A%2F%2Fakashi.ci.i.u-tokyo.ac.jp%2Flab%2Fcmsdesigner%2Fdlfile.php%3Fentryname%3Dpublic%26entryid%3D00096%26fileid%3D00000001%26%2Fysn-camera.pdf&amp;ei=3D4RUKmWJ6O3iQed2YHYCw&amp;usg=AFQjCNGXO4wm2DQ8A6cAg1IsVzjbGjzvDg">Google</a></li>
+<li><a href="http://www.kernel.org/doc/ols/2009/ols2009-pages-169-184.pdf">IBM</a></li>
+</ul>
+</li>
 </ul>
 
 
@@ -85,9 +554,9 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
   
   <entry>
     <title type="html"><![CDATA[在archlinux里定制编译内核]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
     <updated>2012-07-14T16:54:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
     <content type="html"><![CDATA[<p>心血来潮升级到
 <a href="http://repo-ck.com/x86_64/linux-ck-corex-3.4.4-4-x86_64.pkg.tar.xz">linux-ck_3.4.4-4</a>
 后，发现<code>pm-suspend</code>出问题了，可以<code>suspend</code>，但<code>resume</code>后显示屏亮不起
@@ -400,413 +869,15 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
 ABS会自动按照PKGBUILD的步骤开始执行，可以在编译真正开始时，终止其执行，
 可以在linux-ck目录下，发现src目录，所有patch，kernel源代码都放在这里了，
 进入kernel源码目录，<code>make menuconfig</code>就可以对默认的config进行定制修改
-了，具体步骤就不赘述了，大家慢慢体会。</p>
+了，具体步骤就不赘述了，大家慢慢体会，要注意的是，改了config文件后，记
+得把PKGBUILD里相应文件的shasum也更新了。</p>
 
 <p>用这种方法编译出来的kernel，是以<code>.xz</code> package的形式存在，就跟在
 <code>/var/cache/pacman/pkg/</code>下的官方package一样，可以很好管理、跟踪。</p>
 
-<p>最后解决休眠恢复的问题，是降级成nvidia-295.53-2的驱动解决的，可以用在
+<p>最后解决休眠恢复的问题的方法，是降级成nvidia-295.53-2的驱动解决的，可以用在
 最新的3.4.4-4-ck内核上，确实是驱动的问题，期间换用nouveau的开源驱动也
-有同样问题。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[LVS peristent代码分析]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
-    <updated>2012-07-11T12:24:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
-    <content type="html"><![CDATA[<p>一直纠结于LVS使用persistent时，是以何为依据，决定一个新的连接请求的命运的：是被persistent管理，去到之前的real server，还是被调度算法重新调度，去到新的real server。
-代码里其实写得非常清楚：</p>
-
-<h2>Persistent in LVS(ipvs)</h2>
-
-<ul>
-<li>fwmark
-
-<ul>
-<li>&lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0> 这个六元组，最开始是写死的ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dport。</li>
-</ul>
-</li>
-<li>Port zero service &lt;protocol,caddr,0,vaddr,0,daddr,0></li>
-<li>non Port zero service
-
-<ul>
-<li>FTP &lt;caddr,0,vaddr,0,daddr,0></li>
-<li>NON-FTP &lt;caddr,0,vaddr,vport,daddr,dport></li>
-</ul>
-</li>
-</ul>
-
-
-<!-- more -->
-
-
-<p>  <br/>
-我自己的理解，daddr和dport就是请求的目的地址和端口，如果客户端请求vaddr:vport，比如在浏览器上请求http://vaddr:vport,那daddr和dport就分别和vaddr和vport相同，
-如果是透明模式，客户端不知道vip的存在，比如访问http://sina.com.cn，daddr就是sina.com.cn，dport就是80，这种透明模式一般都是通过fwmark的方式实现。</p>
-
-<p>见代码17，21，77，80行。
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/net/netfilter/ipvs/ip_vs_core.c  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-<span class='line-number'>109</span>
-<span class='line-number'>110</span>
-<span class='line-number'>111</span>
-<span class='line-number'>112</span>
-<span class='line-number'>113</span>
-<span class='line-number'>114</span>
-<span class='line-number'>115</span>
-<span class='line-number'>116</span>
-<span class='line-number'>117</span>
-<span class='line-number'>118</span>
-<span class='line-number'>119</span>
-<span class='line-number'>120</span>
-<span class='line-number'>121</span>
-<span class='line-number'>122</span>
-<span class='line-number'>123</span>
-<span class='line-number'>124</span>
-<span class='line-number'>125</span>
-<span class='line-number'>126</span>
-<span class='line-number'>127</span>
-<span class='line-number'>128</span>
-<span class='line-number'>129</span>
-<span class='line-number'>130</span>
-<span class='line-number'>131</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="cm">/*</span>
-</span><span class='line'><span class="cm"> * As far as we know, FTP is a very complicated network protocol, and</span>
-</span><span class='line'><span class="cm"> * it uses control connection and data connections. For active FTP,</span>
-</span><span class='line'><span class="cm"> * FTP server initialize data connection to the client, its source port</span>
-</span><span class='line'><span class="cm"> * is often 20. For passive FTP, FTP server tells the clients the port</span>
-</span><span class='line'><span class="cm"> * that it passively listens to,  and the client issues the data</span>
-</span><span class='line'><span class="cm"> * connection. In the tunneling or direct routing mode, the load</span>
-</span><span class='line'><span class="cm"> * balancer is on the client-to-server half of connection, the port</span>
-</span><span class='line'><span class="cm"> * number is unknown to the load balancer. So, a conn template like</span>
-</span><span class='line'><span class="cm"> * &amp;lt;caddr, 0, vaddr, 0, daddr, 0&amp;gt; is created for persistent FTP</span>
-</span><span class='line'><span class="cm"> * service, and a template like &amp;lt;caddr, 0, vaddr, vport, daddr, dport&amp;gt;</span>
-</span><span class='line'><span class="cm"> * is created for other persistent services.</span>
-</span><span class='line'><span class="cm"> */</span>
-</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="cm">/* Check if a template already exists */</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span> <span class="o">!=</span> <span class="n">FTPPORT</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span> <span class="cm">/* &amp;lt;caddr,0,vaddr,vport,daddr,dport&amp;gt; */</span>
-</span><span class='line'>    <span class="k">else</span>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>        <span class="cm">/* &amp;lt;caddr,0,vaddr,0,daddr,0&amp;gt; */</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ct</span> <span class="o">||</span> <span class="o">!</span><span class="n">ip_vs_check_template</span><span class="p">(</span><span class="n">ct</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * No template found or the dest of the connection</span>
-</span><span class='line'><span class="cm">         * template is not available.</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">scheduler</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">schedule</span><span class="p">(</span><span class="n">svc</span><span class="p">,</span> <span class="n">skb</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">dest</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;p-schedule: no dest found.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * Create a template like &amp;lt;protocol,caddr,0,</span>
-</span><span class='line'><span class="cm">         * vaddr,vport,daddr,dport&amp;gt; for non-ftp service,</span>
-</span><span class='line'><span class="cm">         * and &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt;</span>
-</span><span class='line'><span class="cm">         * for ftp service.</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span> <span class="o">!=</span> <span class="n">FTPPORT</span><span class="p">)</span>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">else</span>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">ct</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/* set destination with the found template */</span>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">dest</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">dport</span> <span class="o">=</span> <span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>    <span class="cm">/*</span>
-</span><span class='line'><span class="cm">     * Note: persistent fwmark-based services and persistent</span>
-</span><span class='line'><span class="cm">     * port zero service are handled here.</span>
-</span><span class='line'><span class="cm">     * fwmark template: &amp;lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&amp;gt;</span>
-</span><span class='line'><span class="cm">     * port zero template: &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt;</span>
-</span><span class='line'><span class="cm">     */</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">union</span> <span class="n">nf_inet_addr</span> <span class="n">fwmark</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class='line'>            <span class="p">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">htonl</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">IPPROTO_IP</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">fwmark</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="cm">/* &amp;lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&amp;gt; */</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="cm">/* &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt; */</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ct</span> <span class="o">||</span> <span class="o">!</span><span class="n">ip_vs_check_template</span><span class="p">(</span><span class="n">ct</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * If it is not persistent port zero, return NULL,</span>
-</span><span class='line'><span class="cm">         * otherwise create a connection template.</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">scheduler</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">schedule</span><span class="p">(</span><span class="n">svc</span><span class="p">,</span> <span class="n">skb</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">dest</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;p-schedule: no dest found.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * Create a template according to the service</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="k">union</span> <span class="n">nf_inet_addr</span> <span class="n">fwmark</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class='line'>                <span class="p">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">htonl</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span>
-</span><span class='line'>            <span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">IPPROTO_IP</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">fwmark</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">ct</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/* set destination with the found template */</span>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">dest</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">dport</span> <span class="o">=</span> <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[学写hello world之netfilter模块]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/"/>
-    <updated>2012-07-07T23:16:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module</id>
-    <content type="html"><![CDATA[<p>对于linux网络的学习，学下写netfilter module更有利于理解，下面开始实战。
-<div><script src='https://gist.github.com/3066821.js?file='></script>
-<noscript><pre><code>#define __KERNEL__
-#define MODULE
-
-#include &lt;linux/module.h&gt;
-#include &lt;linux/kernel.h&gt;
-#include &lt;linux/netfilter_ipv4.h&gt;
-#include &lt;linux/skbuff.h&gt;
-#include &lt;linux/udp.h&gt;
-#include &lt;linux/ip.h&gt;
-
-
-static struct nf_hook_ops nfho;      //struct holding set of hook function options
-static struct sk_buff *sock_buff;
-static struct udphdr *udp_header;
-static struct iphdr *ip_header;
-
-//function to be called by hook
-unsigned int hook_func(unsigned int hooknum,struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *))
-{
-    sock_buff = *skb; 
-    ip_header = (struct iphdr *)skb_network_header(sock_buff);    
-    if(!sock_buff){
-        return NF_ACCEPT;
-    }
-    if(ip_header-&gt;protocol == 17) {
-        udp_header = (struct udphdr *)skb_transport_header(sock_buff);
-        printk(KERN_INFO &quot;got udp packet.\n&quot;);
-        return NF_DROP;
-    }else{
-        printk(KERN_INFO &quot;packet accept.\n&quot;);
-        return NF_ACCEPT;
-    }
-}
-
-int init_module(void)
-{
-    printk(KERN_INFO &quot;register hello netfilter module.\n&quot;);
-    nfho.hook = hook_func;
-    nfho.hooknum = 0 ; // NF_IP_PRE_ROUTING
-    nfho.pf = PF_INET;
-    nfho.priority = NF_IP_PRI_FIRST;
-    nf_register_hook(&amp;nfho);
-    return 0;
-}
-
-void cleanup_module(void)
-{
-    printk(KERN_INFO &quot;cleanup hello netfilter module.\n&quot;);
-    nf_unregister_hook(&amp;nfho); 
-}
-</code></pre></noscript></div>
-</p>
-
-<!-- more -->
-
-
-<p><div><script src='https://gist.github.com/3066825.js?file='></script>
-<noscript><pre><code>obj-m := hello.o
-KDIR := /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
-default:
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
-
-</code></pre></noscript></div>
-</p>
-
-<p>然后就是
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>install the module  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;make&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;insmod hello.ko&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
-
-<p>我的环境(archlinux64 3.31-ck)编译加载成功，但貌似会导致kernel crash，
-哈哈，后面再解决吧，have fun。</p>
+有同样问题。再之后，升级到更新的nvidia-ck驱动，就没问题了，没有以后了。</p>
 ]]></content>
   </entry>
   

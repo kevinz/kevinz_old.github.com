@@ -1,0 +1,368 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>搭建基于User Mode Linux网络模块开发环境 - Code Mind</title>
+  <meta name="author" content="Kevin Zeng">
+
+  
+  <meta name="description" content="Setup uml network development environment">
+  <meta name="keywords" content="linux, uml, user mode linux,vde">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Code Mind" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Code Mind</a></h1>
+  
+    <h2>Geek ben's blog about '(Linux Network Programming Kernel Tools Geek)</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:gekben.gitcd.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">搭建基于User Mode Linux网络模块开发环境</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-13T15:40:00+08:00" pubdate data-updated="true">Nov 13<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>最近在写一些内核网络模块，需要一个好用的编译、调试、测试环境，选用了uml，记录一下设置多台uml和host通信，并share fs。
+uml基本安装和使用可以参考<a href="https://wiki.archlinux.org/index.php/User-mode_Linux#Setup_by_rootfs_.2B_tap">archlinux uml</a>。</p>
+
+<figure class='code'><figcaption><span>start uml with vde support  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># 先启动虚拟switch</span>
+</span><span class='line'><span class="c">#vde_switch -s /tmp/switch1 -tap tap0 -m 666</span>
+</span><span class='line'><span class="c"># 启动一台单网卡的uml，已经与之前定义的switch绑定</span>
+</span><span class='line'><span class="c">#vmlinux ubd0=arch_rootfs1  mem=256M eth0=vde,/tmp/switch1</span>
+</span><span class='line'><span class="c"># 启动一台双网卡的uml，已经与之前定义的switch绑定</span>
+</span><span class='line'><span class="c">#vmlinux ubd0=arch_rootfs2  mem=256M eth0=vde,/tmp/switch1 eth1=vde,/tmp/switch1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!-- more -->
+
+
+<p>启动完成后，在linux里用常规的网络设置方法完成ip地址的分配。</p>
+
+<figure class='code'><figcaption><span>network configuration  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#ifconfig eth0 192.168.0.101 up</span>
+</span><span class='line'><span class="c">#ifconfig eth1 192.168.0.101 up</span>
+</span><span class='line'><span class="c">#确定host上的tap0已经正确设置并启用</span>
+</span><span class='line'><span class="c">#ifconfig tap0 192.168.0.100 up</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>完成后用ping测试下，各个uml和host之间的网络通信是否正常。</p>
+
+<p>接下来设置uml与主机的文件系统共享。</p>
+
+<figure class='code'><figcaption><span>mounting hostfs directory  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#mkdir -p /root/source</span>
+</span><span class='line'><span class="c">#mount none /root/source/ -t hostfs -o /home/yourname/code/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>完成后，应该可以读写hostfs的文件，测试一下，放一份linux源代码在host的<code>/home/yourname/code/</code>下，
+目录结构是<code>/home/yourname/code/linux</code>，自己写的module的目录在<code>/home/yourname/code/my_module</code>，
+对应在uml上的目录就是<code>/root/source/linux</code>和<code>/root/source/my_module</code>。</p>
+
+<figure class='code'><figcaption><span>Makefile of my_module :bash </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>obj-m := test.o #source file is test.c
+</span><span class='line'>KDIR := /root/source/linux
+</span><span class='line'>PWD := $(shell pwd)
+</span><span class='line'>default:
+</span><span class='line'>        $(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在<code>/root/source/my_module</code>下<code>make</code>就可以了，在<code>#insmod test.ko</code>测试，如果crash了就<code>kill</code>掉host上的<code>vmlinux</code>进程，非常方便快速。</p>
+
+<figure class='code'><figcaption><span>kill all vmlinux process  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#killall vmlinux processes if uml can&#39;t be started</span>
+</span><span class='line'><span class="c">#killall vmlinux</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>当然，gdb也是可以用的，可以参考uml gdb调试相关的介绍。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Zeng</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-13T15:40:00+08:00" pubdate data-updated="true">Nov 13<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/networking/'>networking</a>
+  
+</span>
+
+
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/" data-via="keving_zz" data-counturl="http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/08/16/install-systemtap-on-suse/" title="Previous Post: 在SUSE Enterprise上安装Systemtap，解决build-id mismatch">&laquo; 在SUSE Enterprise上安装Systemtap，解决build-id mismatch</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/11/13/build-uml-development-environment/">搭建基于User Mode Linux网络模块开发环境</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/16/install-systemtap-on-suse/">在SUSE Enterprise上安装Systemtap，解决build-id mismatch</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/16/upgrade-the-netxen-nic/">升级Netxen网卡驱动及firmware</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/09/check-tcp-connections/">TCP状态迁移及状态码</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/07/29/virtualbox-work-with-linux-ck/">how virtualbox work with linux-ck</a>
+      </li>
+    
+  </ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.45454545454545%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 110.9090909090909%'>C(2)</a> <a href='/blog/categories/c' style='font-size: 105.45454545454545%'>C(1)</a> <a href='/blog/categories/emacs' style='font-size: 110.9090909090909%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.45454545454545%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.45454545454545%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 138.1818181818182%'>Kernel(7)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(11)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.45454545454545%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 105.45454545454545%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 138.1818181818182%'>Network(7)</a> <a href='/blog/categories/networking' style='font-size: 105.45454545454545%'>Networking(1)</a> <a href='/blog/categories/octopress' style='font-size: 110.9090909090909%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.9090909090909%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 127.27272727272728%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.45454545454545%'>Tools(1)</a> </span>
+</section>
+
+<section>
+<h2>Reading List</h2>
+<div>
+<script type="text/javascript" src="http://www.douban.com/service/badge/2898110/?show=dolist&amp;n=10&amp;columns=2&amp;hidelogo=yes&amp;hideself=yes&amp;cat=book" ></script> 
+</div>
+</section>
+
+<iframe width="100%" height="550" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=550&fansRow=2&ptype=1&speed=0&skin=10&isTitle=0&noborder=0&isWeibo=1&isFans=0&uid=1652588700&verifier=275352cd&dpc=1"></iframe>
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevintech08@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("keving_zz", 0, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/keving_zz" class="twitter-follow-button" data-show-count="false">Follow @keving_zz</a>
+  
+</section>
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Kevin Zeng -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'codemind';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/';
+        var disqus_url = 'http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

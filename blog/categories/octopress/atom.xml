@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: octopress | Code Mind]]></title>
-  <link href="http://kevinz.github.com/blog/categories/octopress/atom.xml" rel="self"/>
-  <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-15T14:43:56+08:00</updated>
-  <id>http://kevinz.github.com/</id>
+  <link href="http://gekben.gitcd.com/blog/categories/octopress/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-11-13T17:20:39+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
     <email><![CDATA[kevintech08@gmail.com]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[解决octopress的git自动deploy问题]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/12/fix-octopress-git-issuse/"/>
     <updated>2012-07-12T07:05:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/12/fix-octopress-git-issuse</id>
     <content type="html"><![CDATA[<p>已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
 不怕麻烦了。昨天晚上为了解决octopress不能<code>rake deploy</code>的问题，搞了几个
 小时，搞完了对git的分支的理解得到了提升。</p>
@@ -58,9 +58,9 @@
   
   <entry>
     <title type="html"><![CDATA[用jekyll octopress emacs写blog]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll/"/>
     <updated>2012-07-05T07:59:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll</id>
     <content type="html"><![CDATA[<p>最近学习的动力大爆发，学了不少东西，应该记录并分享出来，把自己挂在
 github上的静态页面换成了强大的jekyll+octopress，捣鼓下开始写东西了，用markdown写
 blog的感觉应该很棒。</p>

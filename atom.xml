@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Code Mind]]></title>
-  <link href="http://kevinz.github.com/atom.xml" rel="self"/>
-  <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-15T14:43:56+08:00</updated>
-  <id>http://kevinz.github.com/</id>
+  <link href="http://gekben.gitcd.com/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-11-13T17:20:39+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
     <email><![CDATA[kevintech08@gmail.com]]></email>
@@ -14,10 +14,527 @@
 
   
   <entry>
+    <title type="html"><![CDATA[搭建基于User Mode Linux网络模块开发环境]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/"/>
+    <updated>2012-11-13T15:40:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment</id>
+    <content type="html"><![CDATA[<p>最近在写一些内核网络模块，需要一个好用的编译、调试、测试环境，选用了uml，记录一下设置多台uml和host通信，并share fs。
+uml基本安装和使用可以参考<a href="https://wiki.archlinux.org/index.php/User-mode_Linux#Setup_by_rootfs_.2B_tap">archlinux uml</a>。</p>
+
+<figure class='code'><figcaption><span>start uml with vde support  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># 先启动虚拟switch</span>
+</span><span class='line'><span class="c">#vde_switch -s /tmp/switch1 -tap tap0 -m 666</span>
+</span><span class='line'><span class="c"># 启动一台单网卡的uml，已经与之前定义的switch绑定</span>
+</span><span class='line'><span class="c">#vmlinux ubd0=arch_rootfs1  mem=256M eth0=vde,/tmp/switch1</span>
+</span><span class='line'><span class="c"># 启动一台双网卡的uml，已经与之前定义的switch绑定</span>
+</span><span class='line'><span class="c">#vmlinux ubd0=arch_rootfs2  mem=256M eth0=vde,/tmp/switch1 eth1=vde,/tmp/switch1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!-- more -->
+
+
+<p>启动完成后，在linux里用常规的网络设置方法完成ip地址的分配。</p>
+
+<figure class='code'><figcaption><span>network configuration  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#ifconfig eth0 192.168.0.101 up</span>
+</span><span class='line'><span class="c">#ifconfig eth1 192.168.0.101 up</span>
+</span><span class='line'><span class="c">#确定host上的tap0已经正确设置并启用</span>
+</span><span class='line'><span class="c">#ifconfig tap0 192.168.0.100 up</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>完成后用ping测试下，各个uml和host之间的网络通信是否正常。</p>
+
+<p>接下来设置uml与主机的文件系统共享。</p>
+
+<figure class='code'><figcaption><span>mounting hostfs directory  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#mkdir -p /root/source</span>
+</span><span class='line'><span class="c">#mount none /root/source/ -t hostfs -o /home/yourname/code/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>完成后，应该可以读写hostfs的文件，测试一下，放一份linux源代码在host的<code>/home/yourname/code/</code>下，
+目录结构是<code>/home/yourname/code/linux</code>，自己写的module的目录在<code>/home/yourname/code/my_module</code>，
+对应在uml上的目录就是<code>/root/source/linux</code>和<code>/root/source/my_module</code>。</p>
+
+<figure class='code'><figcaption><span>Makefile of my_module :bash </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>obj-m := test.o #source file is test.c
+</span><span class='line'>KDIR := /root/source/linux
+</span><span class='line'>PWD := $(shell pwd)
+</span><span class='line'>default:
+</span><span class='line'>        $(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在<code>/root/source/my_module</code>下<code>make</code>就可以了，在<code>#insmod test.ko</code>测试，如果crash了就<code>kill</code>掉host上的<code>vmlinux</code>进程，非常方便快速。</p>
+
+<figure class='code'><figcaption><span>kill all vmlinux process  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#killall vmlinux processes if uml can&#39;t be started</span>
+</span><span class='line'><span class="c">#killall vmlinux</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>当然，gdb也是可以用的，可以参考uml gdb调试相关的介绍。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[在SUSE Enterprise上安装Systemtap，解决build-id mismatch]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/08/16/install-systemtap-on-suse/"/>
+    <updated>2012-08-16T20:49:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/08/16/install-systemtap-on-suse</id>
+    <content type="html"><![CDATA[<p>最近做LVS的性能测试，自然会用的各种工具检视系统状态，用了很多工具，都
+不甚满意，于是想尝试下Systemtap，系统环境是SUSE Enterprise SP2,已经3.0的
+kernel，可以search到的suse上安装systemtap的内容不多，碰到问题并解决了
+的更是少，自然我又要成为苦逼的问题解决者了。</p>
+
+<h2>正常安装的步骤是</h2>
+
+<ul>
+<li>添加suse enterprise的包含debuginfo的iso，有几个G啊</li>
+<li><code>zypper in kernel-default-debuginfo</code></li>
+<li><code>zypper in systemtap</code></li>
+</ul>
+
+
+<p>当我做完了以上这些，运行一个简单的脚本时:</p>
+
+<figure class='code'><figcaption><span>systemtap hello_world  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo stap -ve <span class="s1">&#39;probe begin { log(&quot;hello world&quot;) exit() }&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!-- more -->
+
+
+<p>这个简单的例子是ok的，因为它不会涉及到systemtap的pass5，与kernel
+module交互。跑下面这个的时候，就不行了:</p>
+
+<figure class='code'><figcaption><span>systemtap hello_world  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>stap -v -e <span class="s1">&#39;probe vfs.read {printf(&quot;has VFS read()\n&quot;); exit()}&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>会报出类似<code>ERROR: Build-id mismatch: "kernel" vs. "vmlinux" byte 0 (0xf9 vs 0xa2)</code>的问题，关于build-id mismatch这个问题，还是可以
+搜索到不少资料的，不过告诉如何解决的也不多。先说明下这个问题，
+<code>kernel-default-debuginfo</code>里面是附赠了一个kernel elf文件的，在SUSE里，
+安装后放在<code>/usr/lib/debug/boot/vmlinux-3.0.13-0.27-default.debug</code>，这
+是debug版本的kernel vmlinux文件，是elf原始文件，未经压缩。<code>stap</code>运行时会去检查它的。
+执行<code>eu-readelf -n
+/usr/lib/debug/boot/vmlinux-3.0.13-0.27-default.debug</code>，可以拿到的
+build-id，执行结果的第一个字节是<code>f9</code>，那另外一个<code>a2</code>是从哪里得出来的，猜想应该和当
+前运行的kernel有关，于是拿到当前运行的vmlinux的压缩文件，解压后检查
+build-id：</p>
+
+<figure class='code'><figcaption><span>check build-id  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>   gunzip /boot/vmlinux-3.0.13-0.27-default.gz
+</span><span class='line'>   eu-readelf -n /boot/vmlinux-3.0.13-0.27-default
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>执行结果也是<code>f9</code>，是对得上的啊。</p>
+
+<p>但是注意，这份.gz文件是SUSE附赠的，跟当前跑的vmlinz文件没有关系，于是
+开始打vmlinuz文件的主意，得先想办法把vmlinuz->vmlinux，及bzImage到elf，
+才能去取它的build-id，
+<a href="%E8%BF%99%E9%87%8C">https://www.globalways.net/blog/archives/76-Extracting-bzImage-from-vmlinuz.html</a>有可行的方法。
+<code>eu-readelf -n vmlinux-unpacked</code>的结果果然是<code>a2</code>，我只能是怀疑SUSE给的
+默认vmlinuz有问题了，不能和SUSE提供的用于debuginfo的vmlinux匹配。</p>
+
+<p>只能另外想办法，其实systemtap做kernel mismatch判断的关键代码，就在:</p>
+
+<figure class='code'><figcaption><span>systemtap/runtime/sym.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="nf">_stp_build_id_check</span> <span class="p">(</span><span class="k">struct</span> <span class="n">_stp_module</span> <span class="o">*</span><span class="n">m</span><span class="p">,</span>
+</span><span class='line'>            <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">notes_addr</span><span class="p">,</span>
+</span><span class='line'>            <span class="k">struct</span> <span class="n">task_struct</span> <span class="o">*</span><span class="n">tsk</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="cm">/* just hack it */</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">rc</span> <span class="o">||</span> <span class="p">(</span><span class="n">theory</span> <span class="o">!=</span> <span class="n">practice</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">basename</span><span class="p">;</span>
+</span><span class='line'>      <span class="n">basename</span> <span class="o">=</span> <span class="n">strrchr</span><span class="p">(</span><span class="n">m</span><span class="o">-&gt;</span><span class="n">path</span><span class="p">,</span> <span class="sc">&#39;/&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+</span><span class='line'><span class="o">|</span>   <span class="n">basename</span><span class="o">++</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">else</span>
+</span><span class='line'><span class="o">|</span>   <span class="n">basename</span> <span class="o">=</span> <span class="n">m</span><span class="o">-&gt;</span><span class="n">path</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#if LINUX_VERSION_CODE &gt;= KERNEL_VERSION(2,6,27)</span>
+</span><span class='line'>      <span class="n">_stp_error</span> <span class="p">(</span><span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) address %#lx rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="o">|</span>   <span class="o">|</span>     <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">notes_addr</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'><span class="cp">#else</span>
+</span><span class='line'>      <span class="cm">/* This branch is a surrogate for kernels affected by Fedora bug</span>
+</span><span class='line'><span class="cm">       * #465873. */</span>
+</span><span class='line'>      <span class="n">_stp_warn</span> <span class="p">(</span><span class="n">KERN_WARNING</span>
+</span><span class='line'><span class="o">|</span>   <span class="o">|</span>    <span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="o">|</span>   <span class="o">|</span>    <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span> <span class="cm">/* end mismatch */</span>
+</span><span class='line'>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>关键就在于<code>if (rc || (theory != practice))</code>，小小修改的一下，写成:
+<code>if (0 &amp;&amp; (rc || (theory != practice)))</code>就OK了，绕过了检查。然后重新编
+译systemtap，直接用的SUSE提供的老版本的源码，新的会有问题，注意还要用
+到SUSE提供的<code>libdwfl</code>的source code，才能完成编译，编译时在
+<code>/usr/src/packages/SOURCES/elfutils-0.152/libdwfl/linux-kernel-modules.c</code>
+文件上遇到了问题，稍作修改就可过关。尝试下新编译出来的<code>stap</code>，完全OK，它是不知
+道&#8217;build-id mismatch`为何物的，敢这样改也就是因为都是offical的东西，本
+应该match得上，应该不会出什么大问题，实践中检验吧。</p>
+
+<p>Have fun.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[升级Netxen网卡驱动及firmware]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/08/16/upgrade-the-netxen-nic/"/>
+    <updated>2012-08-16T20:15:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/08/16/upgrade-the-netxen-nic</id>
+    <content type="html"><![CDATA[<p>在公司做lvs测试用机是HP DL580 G7，除了网卡，其它的配置都不错，网卡是板
+载的netxen的1G卡，还有几张netxen的10G卡，观察<code>/proc/interrupts</code>，每块
+10G卡对应的中断都只有4个，而且没有识别成tx-0/rx-0的形式，不像支持
+multiple queue，不禁使我对SUSE 11
+Enterprise SP2的netxen驱动产生的怀疑。<code>dmesg</code>也可以发现有抱怨driver和
+firmware的比较旧，于是萌生了升级驱动的想法。</p>
+
+<!-- more -->
+
+
+<p>用<code>netxen</code>和<code>nx3031</code>search
+了很久而不得，偶然通过<code>nx_nic</code>找到了HP网卡的驱动
+<a href="%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80">http://h20000.www2.hp.com/bizsupport/TechSupport/SoftwareIndex.jsp?lang=en&amp;cc=us&amp;prodNameId=3913538&amp;prodTypeId=329290&amp;prodSeriesId=3913537&amp;swLang=8&amp;taskId=135&amp;swEnvOID=4049</a>，包括firmware的自动升级程序和网卡驱动。值得吐一把嘈的是，HP
+网站上driver是老旧的，不支持稍新的内核，貌似只支持到2.6.20以前的，编译
+时会报<code>net_dev struct</code>相关的错，费了
+那么大的力气，搞来个不能用的，之后还是google到了最新的驱动，在一个连域
+名都没有的
+<a href="ftp">ftp://15.217.49.75/ftp2/pub/softlib2/software1/pubsw-linux/p280489831/</a>
+上，haha，真欢乐，HP sucks.按照说明先升级好driver，<code>modprobe nx_nic</code>后，
+就可以升级firmware了，要注意的是，把每个网卡都up起来，才能保证所有都升
+级成功，我拆掉了一些bond，保证以前是slave状态的卡都up起来之后，经过10
+分钟左右，升级成功。重启后<code>dmesg</code>里的complains少了很多，新版本也显示出
+来了，还是没识别出multiple queue，编译驱动时也检查了选项，确实没有。同
+事也咨询过HP的sales，也不知道多队列网卡为何物，与Intel的资料的专业性相比，我对
+HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码有真相。</p>
+
+<p>Have fun.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[TCP状态迁移及状态码]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/"/>
+    <updated>2012-08-09T11:39:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections</id>
+    <content type="html"><![CDATA[<!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-5">
+    <img src="http://gekben.gitcd.com/images/post_img/Tcp_state_diagram.svg"
+         width="542" height="409"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-5" style="display:none">
+    <img src="http://gekben.gitcd.com/images/post_img/Tcp_state_diagram.svg"
+         width="1084" height="817"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-5").hide();
+    jQuery("#image-dialog-5").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1124,
+      minHeight: 857,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-5").click(function() {
+      jQuery("#image-dialog-5").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="http://gekben.gitcd.com/images/post_img/Tcp_state_diagram.svg" width="1084" height="817"/>
+</div>
+
+
+
+<p>想必大家对上图都比较熟悉了，补充下内核里对以上状态码的表示，顺便对源代码做了下改动，每个
+状态的代码都补出来了。</p>
+
+<figure class='code'><figcaption><span>tcp_state.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">enum</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">TCP_ESTABLISHED</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_SYN_SENT</span>    <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_SYN_RECV</span>    <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_FIN_WAIT1</span>   <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_FIN_WAIT2</span>   <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_TIME_WAIT</span>   <span class="o">=</span> <span class="mi">6</span>
+</span><span class='line'>  <span class="n">TCP_CLOSE</span>       <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_CLOSE_WAIT</span>  <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_LAST_ACK</span>    <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_LISTEN</span>      <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">TCP_CLOSING</span>     <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>  <span class="cm">/* Now a valid state */</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">TCP_MAX_STATES</span>   <span class="cm">/* Leave at the end! */</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!-- more -->
+
+
+<p>用<code>cat /proc/net/tcp</code>打印时，输出所有active connections，
+<a href="%E8%BE%93%E5%87%BA%E6%A0%BC%E5%BC%8F%E4%BB%8B%E7%BB%8D">http://search.cpan.org/~salva/Linux-Proc-Net-TCP-0.03/lib/Linux/Proc/Net/TCP.pm#The_/proc/net/tcp_documentation</a>。</p>
+
+<p><code>st</code>这一列即代表连接状态，下面该怎么做，你懂的。</p>
+
+<p>Have fun.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[how virtualbox work with linux-ck]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/07/29/virtualbox-work-with-linux-ck/"/>
+    <updated>2012-07-29T18:29:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/07/29/virtualbox-work-with-linux-ck</id>
+    <content type="html"><![CDATA[<p>解决了virtualbox在linux-ck里使用的问题，做一下记录。我用的是
+linux-ck-corex内核，直接通过
+<a href="https://wiki.archlinux.org/index.php/Repo-ck">repo-ck</a>装好，不过也可
+以通过<a href="http://aur.archlinux.org/packages.php?ID=50911">aur</a>来折腾下，
+调整下内核参数啥的。这里主要记录下如何让virtualbox正常工作，<a href="https://wiki.archlinux.org/index.php/Linux-ck#Running_Virtualbox_with_Linux-ck">这篇</a>提到了
+一些相关内容，做一点补充:</p>
+
+<!-- more -->
+
+
+<h2>编译vboxdrv及其它模块</h2>
+
+<ul>
+<li>记得装对应的linux-ck-headers，我装的是linux-ck-corex-headers，可能
+要先fuck gfw。</li>
+<li>编译方法有所变化，老版的virtualbox是用<code>vboxbuild</code>，新版改成了<code>dkms
+install vboxhost/4.1.18</code>。</li>
+<li>解决编译vboxdrv报错问题。
+
+<ul>
+<li>headers安装目录默认是在<code>/usr/src/kernel_full_name</code>，在
+<code>/lib/modules/kernel_full_name</code>下，执行<code>ln -s
+/usr/src/kernel_full_name build</code>，编译应该就ok了。</li>
+</ul>
+</li>
+<li>老版本的virtualbox编译好的modules是存在于<code>/lib/modules/extramodules</code>
+下，新的是在<code>/lib/modules/kernel/misc</code>下。</li>
+<li>add/append your user into vboxusers group</li>
+</ul>
+
+
+<p>Have fun.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[了解lvs调试]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/07/26/lvs-debug-howto/"/>
+    <updated>2012-07-26T21:32:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/07/26/lvs-debug-howto</id>
+    <content type="html"><![CDATA[<p>虽然对lvs的实现代码也算是心里有数了，但遇到一些具体问题时还拿不准，这时候就想到了lvs提供的调试功能，
+是内核提供的一个选项。一般发行版默认是没打开的，至少我接触的suse enterprice和archlinux都是关闭
+了ip_vs_debug，一起来看看怎么启用吧。</p>
+
+<figure class='code'><figcaption><span>kernel config  </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>CONFIG_IP_VS_DEBUG=y</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在默认的config文件里找到这一项，可能是注释状态，改好后，就可以开始编译内核了，这个选项不是m，必须重新
+编译产生新内核，在用<code>mkinitcpio -k kernel_full_name -c config</code>或者<code>mkinitrd -k kernel_full_name
+</code>，前面是针对archlinux的，后面是针对suse的，这里有坑，此处略去1000字，反正记得如果用新内核启动，出现
+找不到root的情况，八成是initrd做得有问题，fs相关的modules的问题。</p>
+
+<p>新内核一切安好后，就可以玩lvs的调试功能了。先运行下<code>ipvsadm</code>，再<code>lsmod</code>看下<code>ip_vs</code>是否已经加载了。
+再后面，就可以检查期待已久的调试选项了</p>
+
+<figure class='code'><figcaption><span>ip_vs debug in /proc </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/proc/sys/net/ipv4/vs/debug_level</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>cat debug_level</code>一下，默认值是0，以后可以通过sysctl来更改默认值，下面讲下这个值的含义:</p>
+
+<figure class='code'><figcaption><span>ip_vs_core.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">IP_VS_DBG_BUF</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Forward ICMP: failed checksum from %s!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">IP_VS_DBG_ADDR</span><span class="p">(</span><span class="n">af</span><span class="p">,</span> <span class="n">snet</span><span class="p">));</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上面是一个debug macro的调用的例子，下面是宏的具体定义：</p>
+
+<figure class='code'><figcaption><span>ip_vs.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#ifdef CONFIG_IP_VS_DEBUG</span>
+</span><span class='line'><span class="k">extern</span> <span class="kt">int</span> <span class="n">ip_vs_get_debug_level</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#define IP_VS_DBG(level, msg...)         \</span>
+</span><span class='line'><span class="cp">    do {                     \</span>
+</span><span class='line'><span class="cp">     if (level &lt;= ip_vs_get_debug_level())    \</span>
+</span><span class='line'><span class="cp">         printk(KERN_DEBUG &quot;IPVS: &quot; msg);  \</span>
+</span><span class='line'><span class="cp">    } while (0)</span>
+</span><span class='line'><span class="cp">#define IP_VS_DBG_RL(msg...)             \</span>
+</span><span class='line'><span class="cp">    do {                     \</span>
+</span><span class='line'><span class="cp">     if (net_ratelimit())            \</span>
+</span><span class='line'><span class="cp">         printk(KERN_DEBUG &quot;IPVS: &quot; msg);  \</span>
+</span><span class='line'><span class="cp">    } while (0)</span>
+</span><span class='line'><span class="cp">#define IP_VS_DBG_PKT(level, pp, skb, ofs, msg)      \</span>
+</span><span class='line'><span class="cp">    do {                     \</span>
+</span><span class='line'><span class="cp">     if (level &lt;= ip_vs_get_debug_level())    \</span>
+</span><span class='line'><span class="cp">     pp-&gt;debug_packet(pp, skb, ofs, msg); \</span>
+</span><span class='line'><span class="cp">    } while (0)</span>
+</span><span class='line'><span class="cp">#define IP_VS_DBG_RL_PKT(level, pp, skb, ofs, msg)   \</span>
+</span><span class='line'><span class="cp">    do {                     \</span>
+</span><span class='line'><span class="cp">     if (level &lt;= ip_vs_get_debug_level() &amp;&amp;  \</span>
+</span><span class='line'><span class="cp">     net_ratelimit())            \</span>
+</span><span class='line'><span class="cp">     pp-&gt;debug_packet(pp, skb, ofs, msg); \</span>
+</span><span class='line'><span class="cp">    } while (0)</span>
+</span><span class='line'><span class="cp">#else    </span><span class="cm">/* NO DEBUGGING at ALL */</span><span class="cp"></span>
+</span><span class='line'><span class="cp">#define IP_VS_DBG(level, msg...)  do {} while (0)</span>
+</span><span class='line'><span class="cp">#define IP_VS_DBG_RL(msg...)  do {} while (0)</span>
+</span><span class='line'><span class="cp">#define IP_VS_DBG_PKT(level, pp, skb, ofs, msg)      do {} while (0)</span>
+</span><span class='line'><span class="cp">#define IP_VS_DBG_RL_PKT(level, pp, skb, ofs, msg)   do {} while (0)</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以清晰的看到，打印debug日志的条件是<code>level &lt;= ip_vs_get_debug_level()</code>，这个函数调用的返回值就是
+<code>/proc/sys/net/ipv4/vs/debug_level</code>，万物皆文件的理念又体现了。
+可见level的值越小，其优先级越高，查了一遍ip_vs的相关代码，level最大值不过12，也就是说，
+只要把<code>/proc/sys/net/ipv4/vs/debug_level</code>设置成12，就能保证所有ip_vs的日志输出了，但一般没那个必要。</p>
+
+<figure class='code'><figcaption><span>set debug_level to 12 </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>echo 12 > /proc/sys/net/ipv4/vs/debug_level</span></code></pre></td></tr></table></div></figure>
+
+
+<p>对了，日志输出是在dmesg。</p>
+
+<p>好了，方法就差不多是这些了，接下来就边看代码，边测试，边看输出吧。
+have fun.</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[学习万兆以太网，硬件和优化方法]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network/"/>
     <updated>2012-07-15T11:34:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network</id>
     <content type="html"><![CDATA[<p>上周末去杭州参加了<a href="http://adc.taobao.com/">ADC</a>，收获不小，关注的几个
 topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能的要求非常高，
 于是开始关注起10Gbe，记录一些资料和心得。</p>
@@ -76,6 +593,14 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
 </li>
 <li><a href="http://timetobleed.com/useful-kernel-and-driver-performance-tweaks-for-your-linux-server/">Linux kernel and driver</a></li>
 <li><a href="http://www.linuxfoundation.org/collaborate/workgroups/networking">GRO,GSO,TSO&#8230;</a></li>
+<li>Papers
+
+<ul>
+<li><a href="http://www.google.com.hk/url?sa=t&amp;rct=j&amp;q=10Gbe+linux+optimization&amp;source=web&amp;cd=1&amp;ved=0CFQQFjAA&amp;url=http%3A%2F%2Fdocs.redhat.com%2Fdocs%2Fen-US%2FRed_Hat_Enterprise_Linux%2F6%2Fpdf%2FPerformance_Tuning_Guide%2FRed_Hat_Enterprise_Linux-6-Performance_Tuning_Guide-en-US.pdf&amp;ei=3D4RUKmWJ6O3iQed2YHYCw&amp;usg=AFQjCNGRhggpqYuUP0LQwoQE1uofWlN2dQ">RedHat</a></li>
+<li><a href="http://www.google.com.hk/url?sa=t&amp;rct=j&amp;q=10Gbe+linux+optimization&amp;source=web&amp;cd=5&amp;ved=0CGUQFjAE&amp;url=http%3A%2F%2Fakashi.ci.i.u-tokyo.ac.jp%2Flab%2Fcmsdesigner%2Fdlfile.php%3Fentryname%3Dpublic%26entryid%3D00096%26fileid%3D00000001%26%2Fysn-camera.pdf&amp;ei=3D4RUKmWJ6O3iQed2YHYCw&amp;usg=AFQjCNGXO4wm2DQ8A6cAg1IsVzjbGjzvDg">Google</a></li>
+<li><a href="http://www.kernel.org/doc/ols/2009/ols2009-pages-169-184.pdf">IBM</a></li>
+</ul>
+</li>
 </ul>
 
 
@@ -85,9 +610,9 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
   
   <entry>
     <title type="html"><![CDATA[在archlinux里定制编译内核]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
     <updated>2012-07-14T16:54:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
     <content type="html"><![CDATA[<p>心血来潮升级到
 <a href="http://repo-ck.com/x86_64/linux-ck-corex-3.4.4-4-x86_64.pkg.tar.xz">linux-ck_3.4.4-4</a>
 后，发现<code>pm-suspend</code>出问题了，可以<code>suspend</code>，但<code>resume</code>后显示屏亮不起
@@ -388,22 +913,23 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
 <p>ABS会自动按照PKGBUILD的步骤开始执行，可以在编译真正开始时，终止其执行，
 可以在linux-ck目录下，发现src目录，所有patch，kernel源代码都放在这里了，
 进入kernel源码目录，<code>make menuconfig</code>就可以对默认的config进行定制修改
-了，具体步骤就不赘述了，大家慢慢体会。</p>
+了，具体步骤就不赘述了，大家慢慢体会，要注意的是，改了config文件后，记
+得把PKGBUILD里相应文件的shasum也更新了。</p>
 
 <p>用这种方法编译出来的kernel，是以<code>.xz</code> package的形式存在，就跟在
 <code>/var/cache/pacman/pkg/</code>下的官方package一样，可以很好管理、跟踪。</p>
 
-<p>最后解决休眠恢复的问题，是降级成nvidia-295.53-2的驱动解决的，可以用在
+<p>最后解决休眠恢复的问题的方法，是降级成nvidia-295.53-2的驱动解决的，可以用在
 最新的3.4.4-4-ck内核上，确实是驱动的问题，期间换用nouveau的开源驱动也
-有同样问题。</p>
+有同样问题。再之后，升级到更新的nvidia-ck驱动，就没问题了，没有以后了。</p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[解决octopress的git自动deploy问题]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/12/fix-octopress-git-issuse/"/>
     <updated>2012-07-12T07:05:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/12/fix-octopress-git-issuse</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/12/fix-octopress-git-issuse</id>
     <content type="html"><![CDATA[<p>已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
 不怕麻烦了。昨天晚上为了解决octopress不能<code>rake deploy</code>的问题，搞了几个
 小时，搞完了对git的分支的理解得到了提升。</p>
@@ -449,9 +975,9 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
   
   <entry>
     <title type="html"><![CDATA[LVS peristent代码分析]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
     <updated>2012-07-11T12:24:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
     <content type="html"><![CDATA[<p>一直纠结于LVS使用persistent时，是以何为依据，决定一个新的连接请求的命运的：是被persistent管理，去到之前的real server，还是被调度算法重新调度，去到新的real server。
 代码里其实写得非常清楚：</p>
 
@@ -461,7 +987,9 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
 <li>fwmark
 
 <ul>
-<li>&lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0> 这个六元组，最开始是写死的ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dport。</li>
+<li>&lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0> 这个六元组，最开始是写死的
+ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dport，
+这个daddr值得一提，经过debug发现，这个值为<code>0.0.0.fwmark</code>。</li>
 </ul>
 </li>
 <li>Port zero service &lt;protocol,caddr,0,vaddr,0,daddr,0></li>
@@ -479,8 +1007,9 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
 
 
 <p>  <br/>
-我自己的理解，daddr和dport就是请求的目的地址和端口，如果客户端请求vaddr:vport，比如在浏览器上请求http://vaddr:vport,那daddr和dport就分别和vaddr和vport相同，
-如果是透明模式，客户端不知道vip的存在，比如访问http://sina.com.cn，daddr就是sina.com.cn，dport就是80，这种透明模式一般都是通过fwmark的方式实现。</p>
+如果是transparent mode，这种透明模式一般都是通过fwmark的方式实现，客户
+端是不知道vip的存在的，比如用<code>iptables</code>设置了<code>fwmark</code>为3，则访问
+http://sina.com.cn时，<code>daddr</code>就是<code>0.0.0.3</code>。</p>
 
 <p>见代码17，21，77，80行。</p>
 
@@ -746,9 +1275,9 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
   
   <entry>
     <title type="html"><![CDATA[寻找揭示linux网络及系统性能的工具]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/11/collection-of-network-performance-tuning-tools/"/>
     <updated>2012-07-11T08:14:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/11/collection-of-network-performance-tuning-tools</id>
     <content type="html"><![CDATA[<h2>Performance Testing</h2>
 
 <ul>
@@ -822,9 +1351,9 @@ sockets).And the author claimed it&#8217;s better than <a href="http://httpd.apa
   
   <entry>
     <title type="html"><![CDATA[学写hello world之netfilter模块]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/07/netfilter-hello-world-module/"/>
     <updated>2012-07-07T23:16:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/07/netfilter-hello-world-module</id>
     <content type="html"><![CDATA[<p>对于linux网络的学习，学下写netfilter module更有利于理解，下面开始实战。</p>
 
 <div><script src='https://gist.github.com/3066821.js?file='></script>
@@ -913,9 +1442,9 @@ default:
   
   <entry>
     <title type="html"><![CDATA[用solarized color schema提升工作效率]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome/"/>
     <updated>2012-07-05T17:34:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/05/use-solarized-color-schemea-under-archlinux-and-awesome</id>
     <content type="html"><![CDATA[<p>貌似<a href="http://www.solarized.com/">solarized</a>已经火了很久，相见狠晚啊，曾
 经多么想调整下awesome的focus配色，让它不那么黯然，发现很难，现在终于可以轻松搞定
 了。说实话，看不太懂官方网站上的说明，也没力气去了解，发挥下拿来主义吧。</p>
@@ -925,12 +1454,12 @@ default:
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
   <a href='javascript:void(0)' style="text-decoration: none" id="image-2">
-    <img src="http://kevinz.github.com/images/post_img/term.png"
+    <img src="http://gekben.gitcd.com/images/post_img/term.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
   <div id="image-dialog-2" style="display:none">
-    <img src="http://kevinz.github.com/images/post_img/term.png"
+    <img src="http://gekben.gitcd.com/images/post_img/term.png"
          width="1680" height="1050"/>
     <br clear="all"/>
   </div>
@@ -955,7 +1484,7 @@ default:
   });
 </script>
 <div class="illustration print" style="display:none">
-  <img src="http://kevinz.github.com/images/post_img/term.png" width="1680" height="1050"/>
+  <img src="http://gekben.gitcd.com/images/post_img/term.png" width="1680" height="1050"/>
 </div>
 
 
@@ -968,12 +1497,12 @@ default:
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
   <a href='javascript:void(0)' style="text-decoration: none" id="image-3">
-    <img src="http://kevinz.github.com/images/post_img/emacs.png"
+    <img src="http://gekben.gitcd.com/images/post_img/emacs.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
   <div id="image-dialog-3" style="display:none">
-    <img src="http://kevinz.github.com/images/post_img/emacs.png"
+    <img src="http://gekben.gitcd.com/images/post_img/emacs.png"
          width="1680" height="1050"/>
     <br clear="all"/>
   </div>
@@ -998,7 +1527,7 @@ default:
   });
 </script>
 <div class="illustration print" style="display:none">
-  <img src="http://kevinz.github.com/images/post_img/emacs.png" width="1680" height="1050"/>
+  <img src="http://gekben.gitcd.com/images/post_img/emacs.png" width="1680" height="1050"/>
 </div>
 
 
@@ -1010,12 +1539,12 @@ default:
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
   <a href='javascript:void(0)' style="text-decoration: none" id="image-4">
-    <img src="http://kevinz.github.com/images/post_img/vim.png"
+    <img src="http://gekben.gitcd.com/images/post_img/vim.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
   <div id="image-dialog-4" style="display:none">
-    <img src="http://kevinz.github.com/images/post_img/vim.png"
+    <img src="http://gekben.gitcd.com/images/post_img/vim.png"
          width="1680" height="1050"/>
     <br clear="all"/>
   </div>
@@ -1040,7 +1569,7 @@ default:
   });
 </script>
 <div class="illustration print" style="display:none">
-  <img src="http://kevinz.github.com/images/post_img/vim.png" width="1680" height="1050"/>
+  <img src="http://gekben.gitcd.com/images/post_img/vim.png" width="1680" height="1050"/>
 </div>
 
 
@@ -1153,9 +1682,9 @@ default:
   
   <entry>
     <title type="html"><![CDATA[用Mscgen，以geek的方式画顺序图]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way/"/>
     <updated>2012-07-05T09:00:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/05/drawing-message-sequence-chart-in-geek-way</id>
     <content type="html"><![CDATA[<p>相信很多人跟我一样，讨厌写文档，讨厌画图，所以喜欢
 <a href="http://www.graphviz.org/">graphviz</a>，<a href="www.doxygen.org/">doxygen</a>这些
 自动化工具来生成文档及图形。这两天要画一些很复杂的顺序图，找到我<a href="https://wiki.archlinux.org/index.php/Lightweight_Applications_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29">喜欢</a>的
@@ -1213,12 +1742,12 @@ msc{
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
   <a href='javascript:void(0)' style="text-decoration: none" id="image-1">
-    <img src="http://kevinz.github.com/images/post_img/lvs_transp.png"
+    <img src="http://gekben.gitcd.com/images/post_img/lvs_transp.png"
          width="600" height="429"
          alt="Click me."/>
   </a>
   <div id="image-dialog-1" style="display:none">
-    <img src="http://kevinz.github.com/images/post_img/lvs_transp.png"
+    <img src="http://gekben.gitcd.com/images/post_img/lvs_transp.png"
          width="1200" height="857"/>
     <br clear="all"/>
   </div>
@@ -1243,7 +1772,7 @@ msc{
   });
 </script>
 <div class="illustration print" style="display:none">
-  <img src="http://kevinz.github.com/images/post_img/lvs_transp.png" width="1200" height="857"/>
+  <img src="http://gekben.gitcd.com/images/post_img/lvs_transp.png" width="1200" height="857"/>
 </div>
 
 
@@ -1252,9 +1781,9 @@ msc{
   
   <entry>
     <title type="html"><![CDATA[用jekyll octopress emacs写blog]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll/"/>
     <updated>2012-07-05T07:59:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/05/begin-to-use-jekyll</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/05/begin-to-use-jekyll</id>
     <content type="html"><![CDATA[<p>最近学习的动力大爆发，学了不少东西，应该记录并分享出来，把自己挂在
 github上的静态页面换成了强大的jekyll+octopress，捣鼓下开始写东西了，用markdown写
 blog的感觉应该很棒。</p>

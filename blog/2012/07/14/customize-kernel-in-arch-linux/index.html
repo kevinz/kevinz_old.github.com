@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux/">
+  <link rel="canonical" href="http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -49,9 +49,9 @@
   
 </ul>
   
-<form action="http://google.com/search" method="get">
+<form action="https://google.com/search" method="get">
   <fieldset role="search">
-    <input type="hidden" name="q" value="site:kevinz.github.com" />
+    <input type="hidden" name="q" value="site:gekben.gitcd.com" />
     <input class="search" type="text" name="q" results="0" placeholder="Search"/>
   </fieldset>
 </form>
@@ -393,14 +393,15 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
 <p>ABS会自动按照PKGBUILD的步骤开始执行，可以在编译真正开始时，终止其执行，
 可以在linux-ck目录下，发现src目录，所有patch，kernel源代码都放在这里了，
 进入kernel源码目录，<code>make menuconfig</code>就可以对默认的config进行定制修改
-了，具体步骤就不赘述了，大家慢慢体会。</p>
+了，具体步骤就不赘述了，大家慢慢体会，要注意的是，改了config文件后，记
+得把PKGBUILD里相应文件的shasum也更新了。</p>
 
 <p>用这种方法编译出来的kernel，是以<code>.xz</code> package的形式存在，就跟在
 <code>/var/cache/pacman/pkg/</code>下的官方package一样，可以很好管理、跟踪。</p>
 
-<p>最后解决休眠恢复的问题，是降级成nvidia-295.53-2的驱动解决的，可以用在
+<p>最后解决休眠恢复的问题的方法，是降级成nvidia-295.53-2的驱动解决的，可以用在
 最新的3.4.4-4-ck内核上，确实是驱动的问题，期间换用nouveau的开源驱动也
-有同样问题。</p>
+有同样问题。再之后，升级到更新的nvidia-ck驱动，就没问题了，没有以后了。</p>
 </div>
 
 
@@ -440,7 +441,7 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux/" data-via="keving_zz" data-counturl="http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux/" data-via="keving_zz" data-counturl="http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="medium"></div>
@@ -475,30 +476,30 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2012/07/15/hardware-and-10gb-network/">学习万兆以太网，硬件和优化方法</a>
+        <a href="/blog/2012/11/13/build-uml-development-environment/">搭建基于User Mode Linux网络模块开发环境</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2012/07/14/customize-kernel-in-arch-linux/">在archlinux里定制编译内核</a>
+        <a href="/blog/2012/08/16/install-systemtap-on-suse/">在SUSE Enterprise上安装Systemtap，解决build-id mismatch</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2012/07/12/fix-octopress-git-issuse/">解决octopress的git自动deploy问题</a>
+        <a href="/blog/2012/08/16/upgrade-the-netxen-nic/">升级Netxen网卡驱动及firmware</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2012/07/11/study-on-lvs-kernel-code/">LVS peristent代码分析</a>
+        <a href="/blog/2012/08/09/check-tcp-connections/">TCP状态迁移及状态码</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2012/07/11/collection-of-network-performance-tuning-tools/">寻找揭示linux网络及系统性能的工具</a>
+        <a href="/blog/2012/07/29/virtualbox-work-with-linux-ck/">how virtualbox work with linux-ck</a>
       </li>
     
   </ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 110.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 120.0%'>C(2)</a> <a href='/blog/categories/emacs' style='font-size: 120.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 110.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 110.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 140.0%'>Kernel(4)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(6)</a> <a href='/blog/categories/lvs' style='font-size: 110.0%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 140.0%'>Network(4)</a> <a href='/blog/categories/octopress' style='font-size: 120.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 120.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 150.0%'>Tool(5)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.45454545454545%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 110.9090909090909%'>C(2)</a> <a href='/blog/categories/c' style='font-size: 105.45454545454545%'>C(1)</a> <a href='/blog/categories/emacs' style='font-size: 110.9090909090909%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.45454545454545%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.45454545454545%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 138.1818181818182%'>Kernel(7)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(11)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.45454545454545%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 105.45454545454545%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 138.1818181818182%'>Network(7)</a> <a href='/blog/categories/networking' style='font-size: 105.45454545454545%'>Networking(1)</a> <a href='/blog/categories/octopress' style='font-size: 110.9090909090909%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.9090909090909%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 127.27272727272728%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.45454545454545%'>Tools(1)</a> </span>
 </section>
 
 <section>
@@ -557,8 +558,8 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux/';
-        var disqus_url = 'http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux/';
+        var disqus_identifier = 'http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux/';
+        var disqus_url = 'http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux/';
         var disqus_script = 'embed.js';
       
     (function () {

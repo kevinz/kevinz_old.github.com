@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: arch | Code Mind]]></title>
-  <link href="http://kevinz.github.com/blog/categories/arch/atom.xml" rel="self"/>
-  <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-15T14:43:56+08:00</updated>
-  <id>http://kevinz.github.com/</id>
+  <link href="http://gekben.gitcd.com/blog/categories/arch/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-11-13T17:20:39+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
     <email><![CDATA[kevintech08@gmail.com]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[在archlinux里定制编译内核]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
     <updated>2012-07-14T16:54:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
     <content type="html"><![CDATA[<p>心血来潮升级到
 <a href="http://repo-ck.com/x86_64/linux-ck-corex-3.4.4-4-x86_64.pkg.tar.xz">linux-ck_3.4.4-4</a>
 后，发现<code>pm-suspend</code>出问题了，可以<code>suspend</code>，但<code>resume</code>后显示屏亮不起
@@ -330,14 +330,15 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
 ABS会自动按照PKGBUILD的步骤开始执行，可以在编译真正开始时，终止其执行，
 可以在linux-ck目录下，发现src目录，所有patch，kernel源代码都放在这里了，
 进入kernel源码目录，<code>make menuconfig</code>就可以对默认的config进行定制修改
-了，具体步骤就不赘述了，大家慢慢体会。</p>
+了，具体步骤就不赘述了，大家慢慢体会，要注意的是，改了config文件后，记
+得把PKGBUILD里相应文件的shasum也更新了。</p>
 
 <p>用这种方法编译出来的kernel，是以<code>.xz</code> package的形式存在，就跟在
 <code>/var/cache/pacman/pkg/</code>下的官方package一样，可以很好管理、跟踪。</p>
 
-<p>最后解决休眠恢复的问题，是降级成nvidia-295.53-2的驱动解决的，可以用在
+<p>最后解决休眠恢复的问题的方法，是降级成nvidia-295.53-2的驱动解决的，可以用在
 最新的3.4.4-4-ck内核上，确实是驱动的问题，期间换用nouveau的开源驱动也
-有同样问题。</p>
+有同样问题。再之后，升级到更新的nvidia-ck驱动，就没问题了，没有以后了。</p>
 ]]></content>
   </entry>
   

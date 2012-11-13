@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: network | Code Mind]]></title>
-  <link href="http://kevinz.github.com/blog/categories/network/atom.xml" rel="self"/>
-  <link href="http://kevinz.github.com/"/>
-  <updated>2012-07-15T14:43:56+08:00</updated>
-  <id>http://kevinz.github.com/</id>
+  <link href="http://gekben.gitcd.com/blog/categories/network/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-11-13T17:20:39+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
     <email><![CDATA[kevintech08@gmail.com]]></email>
@@ -14,10 +14,301 @@
 
   
   <entry>
+    <title type="html"><![CDATA[升级Netxen网卡驱动及firmware]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/08/16/upgrade-the-netxen-nic/"/>
+    <updated>2012-08-16T20:15:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/08/16/upgrade-the-netxen-nic</id>
+    <content type="html"><![CDATA[<p>在公司做lvs测试用机是HP DL580 G7，除了网卡，其它的配置都不错，网卡是板
+载的netxen的1G卡，还有几张netxen的10G卡，观察<code>/proc/interrupts</code>，每块
+10G卡对应的中断都只有4个，而且没有识别成tx-0/rx-0的形式，不像支持
+multiple queue，不禁使我对SUSE 11
+Enterprise SP2的netxen驱动产生的怀疑。<code>dmesg</code>也可以发现有抱怨driver和
+firmware的比较旧，于是萌生了升级驱动的想法。</p>
+
+<!-- more -->
+
+
+<p>用<code>netxen</code>和<code>nx3031</code>search
+了很久而不得，偶然通过<code>nx_nic</code>找到了HP网卡的驱动
+<a href="%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80">http://h20000.www2.hp.com/bizsupport/TechSupport/SoftwareIndex.jsp?lang=en&amp;cc=us&amp;prodNameId=3913538&amp;prodTypeId=329290&amp;prodSeriesId=3913537&amp;swLang=8&amp;taskId=135&amp;swEnvOID=4049</a>，包括firmware的自动升级程序和网卡驱动。值得吐一把嘈的是，HP
+网站上driver是老旧的，不支持稍新的内核，貌似只支持到2.6.20以前的，编译
+时会报<code>net_dev struct</code>相关的错，费了
+那么大的力气，搞来个不能用的，之后还是google到了最新的驱动，在一个连域
+名都没有的
+<a href="ftp">ftp://15.217.49.75/ftp2/pub/softlib2/software1/pubsw-linux/p280489831/</a>
+上，haha，真欢乐，HP sucks.按照说明先升级好driver，<code>modprobe nx_nic</code>后，
+就可以升级firmware了，要注意的是，把每个网卡都up起来，才能保证所有都升
+级成功，我拆掉了一些bond，保证以前是slave状态的卡都up起来之后，经过10
+分钟左右，升级成功。重启后<code>dmesg</code>里的complains少了很多，新版本也显示出
+来了，还是没识别出multiple queue，编译驱动时也检查了选项，确实没有。同
+事也咨询过HP的sales，也不知道多队列网卡为何物，与Intel的资料的专业性相比，我对
+HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码有真相。</p>
+
+<p>Have fun.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[TCP状态迁移及状态码]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/"/>
+    <updated>2012-08-09T11:39:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections</id>
+    <content type="html"><![CDATA[<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-12">
+    <img src="/images/post_img/Tcp_state_diagram.svg"
+         width="542" height="409"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-12" style="display:none">
+    <img src="/images/post_img/Tcp_state_diagram.svg"
+         width="1084" height="817"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-12").hide();
+    jQuery("#image-dialog-12").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1124,
+      minHeight: 857,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-12").click(function() {
+      jQuery("#image-dialog-12").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/Tcp_state_diagram.svg" width="1084" height="817"/>
+</div>
+</notextile></div></p>
+
+<p>想必大家对上图都比较熟悉了，补充下内核里对以上状态码的表示，顺便对源代码做了下改动，每个
+状态的代码都补出来了。</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>tcp_state.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">enum</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">TCP_ESTABLISHED</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_SYN_SENT</span>    <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_SYN_RECV</span>    <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_FIN_WAIT1</span>   <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_FIN_WAIT2</span>   <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_TIME_WAIT</span>   <span class="o">=</span> <span class="mi">6</span>
+</span><span class='line'><span class="n">TCP_CLOSE</span>       <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_CLOSE_WAIT</span>  <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_LAST_ACK</span>    <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_LISTEN</span>      <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+</span><span class='line'><span class="n">TCP_CLOSING</span>     <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>   <span class="cm">/* Now a valid state */</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">TCP_MAX_STATES</span>  <span class="cm">/* Leave at the end! */</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">};</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<!-- more -->
+
+
+<p>用<code>cat /proc/net/tcp</code>打印时，输出所有active connections，
+<a href="%E8%BE%93%E5%87%BA%E6%A0%BC%E5%BC%8F%E4%BB%8B%E7%BB%8D">http://search.cpan.org/~salva/Linux-Proc-Net-TCP-0.03/lib/Linux/Proc/Net/TCP.pm#The_/proc/net/tcp_documentation</a>。</p>
+
+<p><code>st</code>这一列即代表连接状态，下面该怎么做，你懂的。</p>
+
+<p>Have fun.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[了解lvs调试]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/07/26/lvs-debug-howto/"/>
+    <updated>2012-07-26T21:32:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/07/26/lvs-debug-howto</id>
+    <content type="html"><![CDATA[<p>虽然对lvs的实现代码也算是心里有数了，但遇到一些具体问题时还拿不准，这时候就想到了lvs提供的调试功能，
+是内核提供的一个选项。一般发行版默认是没打开的，至少我接触的suse enterprice和archlinux都是关闭
+了ip_vs_debug，一起来看看怎么启用吧。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>kernel config  </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>CONFIG_IP_VS_DEBUG=y</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>在默认的config文件里找到这一项，可能是注释状态，改好后，就可以开始编译内核了，这个选项不是m，必须重新
+编译产生新内核，在用<code>mkinitcpio -k kernel_full_name -c config</code>或者<code>mkinitrd -k kernel_full_name
+</code>，前面是针对archlinux的，后面是针对suse的，这里有坑，此处略去1000字，反正记得如果用新内核启动，出现
+找不到root的情况，八成是initrd做得有问题，fs相关的modules的问题。</p>
+
+<p>新内核一切安好后，就可以玩lvs的调试功能了。先运行下<code>ipvsadm</code>，再<code>lsmod</code>看下<code>ip_vs</code>是否已经加载了。
+再后面，就可以检查期待已久的调试选项了
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs debug in /proc </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/proc/sys/net/ipv4/vs/debug_level</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><code>cat debug_level</code>一下，默认值是0，以后可以通过sysctl来更改默认值，下面讲下这个值的含义:
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs_core.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">IP_VS_DBG_BUF</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Forward ICMP: failed checksum from %s!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">IP_VS_DBG_ADDR</span><span class="p">(</span><span class="n">af</span><span class="p">,</span> <span class="n">snet</span><span class="p">));</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+上面是一个debug macro的调用的例子，下面是宏的具体定义：</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ip_vs.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">ifdef</span> <span class="n">CONFIG_IP_VS_DEBUG</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">extern</span> <span class="kt">int</span> <span class="n">ip_vs_get_debug_level</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">...)</span>            <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">())</span>   \
+</span><span class='line'>        <span class="n">printk</span><span class="p">(</span><span class="n">KERN_DEBUG</span> <span class="s">&quot;IPVS: &quot;</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL</span><span class="p">(</span><span class="n">msg</span><span class="p">...)</span>                <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">net_ratelimit</span><span class="p">())</span>            \
+</span><span class='line'>        <span class="n">printk</span><span class="p">(</span><span class="n">KERN_DEBUG</span> <span class="s">&quot;IPVS: &quot;</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>     <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">())</span>   \
+</span><span class='line'>    <span class="n">pp</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">debug_packet</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>  <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">do</span> <span class="p">{</span>                        \
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">ip_vs_get_debug_level</span><span class="p">()</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> \
+</span><span class='line'>    <span class="n">net_ratelimit</span><span class="p">())</span>            \
+</span><span class='line'>    <span class="n">pp</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">debug_packet</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>    \
+</span><span class='line'><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">else</span>   <span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="n">NO</span> <span class="n">DEBUGGING</span> <span class="n">at</span> <span class="n">ALL</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">...)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL</span><span class="p">(</span><span class="n">msg</span><span class="p">...)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>     <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">IP_VS_DBG_RL_PKT</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">skb</span><span class="p">,</span> <span class="n">ofs</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>  <span class="k">do</span> <span class="p">{}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">endif</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+可以清晰的看到，打印debug日志的条件是<code>level &lt;= ip_vs_get_debug_level()</code>，这个函数调用的返回值就是
+<code>/proc/sys/net/ipv4/vs/debug_level</code>，万物皆文件的理念又体现了。
+可见level的值越小，其优先级越高，查了一遍ip_vs的相关代码，level最大值不过12，也就是说，
+只要把<code>/proc/sys/net/ipv4/vs/debug_level</code>设置成12，就能保证所有ip_vs的日志输出了，但一般没那个必要。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>set debug_level to 12 </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>echo 12 > /proc/sys/net/ipv4/vs/debug_level</span></code></pre></td></tr></table></div></figure></notextile></div>
+对了，日志输出是在dmesg。</p>
+
+<p>好了，方法就差不多是这些了，接下来就边看代码，边测试，边看输出吧。
+have fun.</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[学习万兆以太网，硬件和优化方法]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network/"/>
     <updated>2012-07-15T11:34:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/15/hardware-and-10gb-network</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network</id>
     <content type="html"><![CDATA[<p>上周末去杭州参加了<a href="http://adc.taobao.com/">ADC</a>，收获不小，关注的几个
 topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能的要求非常高，
 于是开始关注起10Gbe，记录一些资料和心得。</p>
@@ -76,6 +367,14 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
 </li>
 <li><a href="http://timetobleed.com/useful-kernel-and-driver-performance-tweaks-for-your-linux-server/">Linux kernel and driver</a></li>
 <li><a href="http://www.linuxfoundation.org/collaborate/workgroups/networking">GRO,GSO,TSO...</a></li>
+<li>Papers
+
+<ul>
+<li><a href="http://www.google.com.hk/url?sa=t&amp;rct=j&amp;q=10Gbe+linux+optimization&amp;source=web&amp;cd=1&amp;ved=0CFQQFjAA&amp;url=http%3A%2F%2Fdocs.redhat.com%2Fdocs%2Fen-US%2FRed_Hat_Enterprise_Linux%2F6%2Fpdf%2FPerformance_Tuning_Guide%2FRed_Hat_Enterprise_Linux-6-Performance_Tuning_Guide-en-US.pdf&amp;ei=3D4RUKmWJ6O3iQed2YHYCw&amp;usg=AFQjCNGRhggpqYuUP0LQwoQE1uofWlN2dQ">RedHat</a></li>
+<li><a href="http://www.google.com.hk/url?sa=t&amp;rct=j&amp;q=10Gbe+linux+optimization&amp;source=web&amp;cd=5&amp;ved=0CGUQFjAE&amp;url=http%3A%2F%2Fakashi.ci.i.u-tokyo.ac.jp%2Flab%2Fcmsdesigner%2Fdlfile.php%3Fentryname%3Dpublic%26entryid%3D00096%26fileid%3D00000001%26%2Fysn-camera.pdf&amp;ei=3D4RUKmWJ6O3iQed2YHYCw&amp;usg=AFQjCNGXO4wm2DQ8A6cAg1IsVzjbGjzvDg">Google</a></li>
+<li><a href="http://www.kernel.org/doc/ols/2009/ols2009-pages-169-184.pdf">IBM</a></li>
+</ul>
+</li>
 </ul>
 
 
@@ -85,9 +384,9 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
   
   <entry>
     <title type="html"><![CDATA[LVS peristent代码分析]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
+    <link href="http://gekben.gitcd.com/blog/2012/07/11/study-on-lvs-kernel-code/"/>
     <updated>2012-07-11T12:24:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
+    <id>http://gekben.gitcd.com/blog/2012/07/11/study-on-lvs-kernel-code</id>
     <content type="html"><![CDATA[<p>一直纠结于LVS使用persistent时，是以何为依据，决定一个新的连接请求的命运的：是被persistent管理，去到之前的real server，还是被调度算法重新调度，去到新的real server。
 代码里其实写得非常清楚：</p>
 
@@ -97,7 +396,9 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
 <li>fwmark
 
 <ul>
-<li>&lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0> 这个六元组，最开始是写死的ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dport。</li>
+<li>&lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0> 这个六元组，最开始是写死的
+ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dport，
+这个daddr值得一提，经过debug发现，这个值为<code>0.0.0.fwmark</code>。</li>
 </ul>
 </li>
 <li>Port zero service &lt;protocol,caddr,0,vaddr,0,daddr,0></li>
@@ -115,8 +416,9 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
 
 
 <p>  <br/>
-我自己的理解，daddr和dport就是请求的目的地址和端口，如果客户端请求vaddr:vport，比如在浏览器上请求http://vaddr:vport,那daddr和dport就分别和vaddr和vport相同，
-如果是透明模式，客户端不知道vip的存在，比如访问http://sina.com.cn，daddr就是sina.com.cn，dport就是80，这种透明模式一般都是通过fwmark的方式实现。</p>
+如果是transparent mode，这种透明模式一般都是通过fwmark的方式实现，客户
+端是不知道vip的存在的，比如用<code>iptables</code>设置了<code>fwmark</code>为3，则访问
+http://sina.com.cn时，<code>daddr</code>就是<code>0.0.0.3</code>。</p>
 
 <p>见代码17，21，77，80行。
 <div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/net/netfilter/ipvs/ip_vs_core.c  </span></figcaption>
@@ -383,178 +685,6 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[寻找揭示linux网络及系统性能的工具]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools/"/>
-    <updated>2012-07-11T08:14:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/11/collection-of-network-performance-tuning-tools</id>
-    <content type="html"><![CDATA[<h2>Performance Testing</h2>
-
-<ul>
-<li><a href="http://www.netperf.org/netperf/">Netperf</a>
-
-<ul>
-<li><a href="http://www.ibm.com/developerworks/cn/linux/l-netperf/">Introduction</a></li>
-</ul>
-</li>
-<li><a href="http://blog.yufeng.info/archives/2234">qperf</a></li>
-<li><a href="https://github.com/wangbin579/tcpcopy/">Tcpcopy</a>
-
-<ul>
-<li><a href="https://code.google.com/p/tcpcopy">old version on googlecode</a></li>
-<li>It is an online TCP duplication tool and can be used for testing (using netlink and raw
-sockets).And the author claimed it's better than <a href="http://httpd.apache.org/docs/2.0/programs/ab.html">ab</a>.</li>
-</ul>
-</li>
-<li><a href="http://redmine.lighttpd.net/projects/weighttp/wiki">Weighhttp</a></li>
-</ul>
-
-
-<h2>System Inspecting</h2>
-
-<ul>
-<li><a href="https://www.linuxpowertop.org/powertop/">PowerTop</a></li>
-<li><a href="https://latencytop.org">LatencyTop</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=893">Introduction</a></li>
-</ul>
-</li>
-<li><a href="http://sourceware.org/systemtap/">Systemtap</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=477">Introduction</a></li>
-<li><a href="http://www.slideshare.net/mryufeng/systemtap">Slides</a></li>
-</ul>
-</li>
-</ul>
-
-
-<!-- more -->
-
-
-<h2>Network Inspecting</h2>
-
-<ul>
-<li><a href="http://www.percona.com/docs/wiki/tcprstat:start">tcprstat</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=728">Introduction</a></li>
-</ul>
-</li>
-</ul>
-
-
-<h2>Hardware Inspecting</h2>
-
-<ul>
-<li><a href="http://software.intel.com/en-us/articles/intel-64-architecture-processor-topology-enumeration/">cpu-topology</a>
-
-<ul>
-<li><a href="http://rdc.taobao.com/blog/cs/?p=460">Introduction</a></li>
-</ul>
-</li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[学写hello world之netfilter模块]]></title>
-    <link href="http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module/"/>
-    <updated>2012-07-07T23:16:00+08:00</updated>
-    <id>http://kevinz.github.com/blog/2012/07/07/netfilter-hello-world-module</id>
-    <content type="html"><![CDATA[<p>对于linux网络的学习，学下写netfilter module更有利于理解，下面开始实战。
-<div><script src='https://gist.github.com/3066821.js?file='></script>
-<noscript><pre><code>#define __KERNEL__
-#define MODULE
-
-#include &lt;linux/module.h&gt;
-#include &lt;linux/kernel.h&gt;
-#include &lt;linux/netfilter_ipv4.h&gt;
-#include &lt;linux/skbuff.h&gt;
-#include &lt;linux/udp.h&gt;
-#include &lt;linux/ip.h&gt;
-
-
-static struct nf_hook_ops nfho;      //struct holding set of hook function options
-static struct sk_buff *sock_buff;
-static struct udphdr *udp_header;
-static struct iphdr *ip_header;
-
-//function to be called by hook
-unsigned int hook_func(unsigned int hooknum,struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *))
-{
-    sock_buff = *skb; 
-    ip_header = (struct iphdr *)skb_network_header(sock_buff);    
-    if(!sock_buff){
-        return NF_ACCEPT;
-    }
-    if(ip_header-&gt;protocol == 17) {
-        udp_header = (struct udphdr *)skb_transport_header(sock_buff);
-        printk(KERN_INFO &quot;got udp packet.\n&quot;);
-        return NF_DROP;
-    }else{
-        printk(KERN_INFO &quot;packet accept.\n&quot;);
-        return NF_ACCEPT;
-    }
-}
-
-int init_module(void)
-{
-    printk(KERN_INFO &quot;register hello netfilter module.\n&quot;);
-    nfho.hook = hook_func;
-    nfho.hooknum = 0 ; // NF_IP_PRE_ROUTING
-    nfho.pf = PF_INET;
-    nfho.priority = NF_IP_PRI_FIRST;
-    nf_register_hook(&amp;nfho);
-    return 0;
-}
-
-void cleanup_module(void)
-{
-    printk(KERN_INFO &quot;cleanup hello netfilter module.\n&quot;);
-    nf_unregister_hook(&amp;nfho); 
-}
-</code></pre></noscript></div>
-</p>
-
-<!-- more -->
-
-
-<p><div><script src='https://gist.github.com/3066825.js?file='></script>
-<noscript><pre><code>obj-m := hello.o
-KDIR := /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
-default:
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
-
-</code></pre></noscript></div>
-</p>
-
-<p>然后就是
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>install the module  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;make&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;insmod hello.ko&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
-
-<p>我的环境(archlinux64 3.31-ck)编译加载成功，但貌似会导致kernel crash，
-哈哈，后面再解决吧，have fun。</p>
 ]]></content>
   </entry>
   
