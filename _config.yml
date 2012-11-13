@@ -8,7 +8,7 @@ subtitle: Geek ben's blog about '(Linux Network Programming Kernel Tools Geek)
 author: Kevin Zeng
 simple_search: https://google.com/search
 description: 纸上得来终觉浅，绝知此事要躬行，记录技术成长之路
-keywords: clojure , linux , archlinux , tools ,programming , tcp/ip ,web development , performance
+keywords: clojure , linux , kernel, archlinux , tools ,programming , tcp/ip ,web development , performance
 
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
