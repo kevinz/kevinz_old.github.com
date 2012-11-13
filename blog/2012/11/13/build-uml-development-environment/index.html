@@ -5,12 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Category: tools - Code Mind</title>
+  <title>搭建基于User Mode Linux网络模块开发环境 - Code Mind</title>
   <meta name="author" content="Kevin Zeng">
 
   
-  <meta name="description" content="Category: tools">
-  <meta name="keywords" content="clojure , linux , archlinux , tools ,programming , tcp/ip ,web development , performance">
+  <meta name="description" content="Setup uml network development environment">
+  <meta name="keywords" content="linux, uml, user mode linux,vde">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://gekben.gitcd.comblog/categories/tools/">
+  <link rel="canonical" href="http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -66,40 +66,173 @@
   <div id="main">
     <div id="content">
       <div>
-<article role="article">
+<article class="hentry" role="article">
   
   <header>
-    <h1 class="entry-title">Category: Tools</h1>
+    
+      <h1 class="entry-title">搭建基于User Mode Linux网络模块开发环境</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-13T15:40:00+08:00" pubdate data-updated="true">Nov 13<span>th</span>, 2012</time>
+        
+      </p>
     
   </header>
-  
-  <div id="blog-archives" class="category">
+
+
+<div class="entry-content"><p>最近在写一些内核网络模块，需要一个好用的编译、调试、测试环境，选用了uml，记录一下设置多台uml和host通信，并share fs。
+uml基本安装和使用可以参考<a href="https://wiki.archlinux.org/index.php/User-mode_Linux#Setup_by_rootfs_.2B_tap">archlinux uml</a>。</p>
+
+<figure class='code'><figcaption><span>start uml with vde support  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># 先启动虚拟switch</span>
+</span><span class='line'><span class="c">#vde_switch -s /tmp/switch1 -tap tap0 -m 666</span>
+</span><span class='line'><span class="c"># 启动一台单网卡的uml，已经与之前定义的switch绑定</span>
+</span><span class='line'><span class="c">#vmlinux ubd0=arch_rootfs1  mem=256M eth0=vde,/tmp/switch1</span>
+</span><span class='line'><span class="c"># 启动一台双网卡的uml，已经与之前定义的switch绑定</span>
+</span><span class='line'><span class="c">#vmlinux ubd0=arch_rootfs2  mem=256M eth0=vde,/tmp/switch1 eth1=vde,/tmp/switch1</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 
-  
-  <h2>2012</h2>
 
-<article>
-  
-
-<h1><a href="/blog/2012/08/16/install-systemtap-on-suse/">在SUSE Enterprise上安装Systemtap，解决build-id mismatch</a></h1>
-<time datetime="2012-08-16T20:49:00+08:00" pubdate><span class='month'>Aug</span> <span class='day'>16</span> <span class='year'>2012</span></time>
-
-<footer>
-
-  <span class="categories">posted in <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/tools/'>tools</a></span>
+<!-- more -->
 
 
-</footer>
+<p>启动完成后，在linux里用常规的网络设置方法完成ip地址的分配。</p>
+
+<figure class='code'><figcaption><span>network configuration  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#ifconfig eth0 192.168.0.101 up</span>
+</span><span class='line'><span class="c">#ifconfig eth1 192.168.0.101 up</span>
+</span><span class='line'><span class="c">#确定host上的tap0已经正确设置并启用</span>
+</span><span class='line'><span class="c">#ifconfig tap0 192.168.0.100 up</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
-</article>
+<p>完成后用ping测试下，各个uml和host之间的网络通信是否正常。</p>
 
+<p>接下来设置uml与主机的文件系统共享。</p>
+
+<figure class='code'><figcaption><span>mounting hostfs directory  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#mkdir -p /root/source</span>
+</span><span class='line'><span class="c">#mount none /root/source/ -t hostfs -o /home/yourname/code/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>完成后，应该可以读写hostfs的文件，测试一下，放一份linux源代码在host的<code>/home/yourname/code/</code>下，
+目录结构是<code>/home/yourname/code/linux</code>，自己写的module的目录在<code>/home/yourname/code/my_module</code>，
+对应在uml上的目录就是<code>/root/source/linux</code>和<code>/root/source/my_module</code>。</p>
+
+<figure class='code'><figcaption><span>Makefile of my_module :bash </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>obj-m := test.o #source file is test.c
+</span><span class='line'>KDIR := /root/source/linux
+</span><span class='line'>PWD := $(shell pwd)
+</span><span class='line'>default:
+</span><span class='line'>        $(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在<code>/root/source/my_module</code>下<code>make</code>就可以了，在<code>#insmod test.ko</code>测试，如果crash了就<code>kill</code>掉host上的<code>vmlinux</code>进程，非常方便快速。</p>
+
+<figure class='code'><figcaption><span>kill all vmlinux process  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#killall vmlinux processes if uml can&#39;t be started</span>
+</span><span class='line'><span class="c">#killall vmlinux</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>当然，gdb也是可以用的，可以参考uml gdb调试相关的介绍。</p>
 </div>
 
+
+  <footer>
+    <p class="meta">
+      
   
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Zeng</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-13T15:40:00+08:00" pubdate data-updated="true">Nov 13<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/networking/'>networking</a>
+  
+</span>
+
+
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/" data-via="keving_zz" data-counturl="http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/08/16/install-systemtap-on-suse/" title="Previous Post: 在SUSE Enterprise上安装Systemtap，解决build-id mismatch">&laquo; 在SUSE Enterprise上安装Systemtap，解决build-id mismatch</a>
+      
+      
+    </p>
+  </footer>
 </article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
 
 </div>
 
@@ -191,7 +324,10 @@
       var disqus_shortname = 'codemind';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/';
+        var disqus_url = 'http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

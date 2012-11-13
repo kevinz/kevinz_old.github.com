@@ -4,7 +4,7 @@
   <title><![CDATA[Code Mind]]></title>
   <link href="http://gekben.gitcd.com/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-08-16T22:18:53+08:00</updated>
+  <updated>2012-11-13T17:20:39+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -12,6 +12,92 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[搭建基于User Mode Linux网络模块开发环境]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/"/>
+    <updated>2012-11-13T15:40:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment</id>
+    <content type="html"><![CDATA[<p>最近在写一些内核网络模块，需要一个好用的编译、调试、测试环境，选用了uml，记录一下设置多台uml和host通信，并share fs。
+uml基本安装和使用可以参考<a href="https://wiki.archlinux.org/index.php/User-mode_Linux#Setup_by_rootfs_.2B_tap">archlinux uml</a>。</p>
+
+<figure class='code'><figcaption><span>start uml with vde support  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># 先启动虚拟switch</span>
+</span><span class='line'><span class="c">#vde_switch -s /tmp/switch1 -tap tap0 -m 666</span>
+</span><span class='line'><span class="c"># 启动一台单网卡的uml，已经与之前定义的switch绑定</span>
+</span><span class='line'><span class="c">#vmlinux ubd0=arch_rootfs1  mem=256M eth0=vde,/tmp/switch1</span>
+</span><span class='line'><span class="c"># 启动一台双网卡的uml，已经与之前定义的switch绑定</span>
+</span><span class='line'><span class="c">#vmlinux ubd0=arch_rootfs2  mem=256M eth0=vde,/tmp/switch1 eth1=vde,/tmp/switch1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!-- more -->
+
+
+<p>启动完成后，在linux里用常规的网络设置方法完成ip地址的分配。</p>
+
+<figure class='code'><figcaption><span>network configuration  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#ifconfig eth0 192.168.0.101 up</span>
+</span><span class='line'><span class="c">#ifconfig eth1 192.168.0.101 up</span>
+</span><span class='line'><span class="c">#确定host上的tap0已经正确设置并启用</span>
+</span><span class='line'><span class="c">#ifconfig tap0 192.168.0.100 up</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>完成后用ping测试下，各个uml和host之间的网络通信是否正常。</p>
+
+<p>接下来设置uml与主机的文件系统共享。</p>
+
+<figure class='code'><figcaption><span>mounting hostfs directory  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#mkdir -p /root/source</span>
+</span><span class='line'><span class="c">#mount none /root/source/ -t hostfs -o /home/yourname/code/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>完成后，应该可以读写hostfs的文件，测试一下，放一份linux源代码在host的<code>/home/yourname/code/</code>下，
+目录结构是<code>/home/yourname/code/linux</code>，自己写的module的目录在<code>/home/yourname/code/my_module</code>，
+对应在uml上的目录就是<code>/root/source/linux</code>和<code>/root/source/my_module</code>。</p>
+
+<figure class='code'><figcaption><span>Makefile of my_module :bash </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>obj-m := test.o #source file is test.c
+</span><span class='line'>KDIR := /root/source/linux
+</span><span class='line'>PWD := $(shell pwd)
+</span><span class='line'>default:
+</span><span class='line'>        $(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在<code>/root/source/my_module</code>下<code>make</code>就可以了，在<code>#insmod test.ko</code>测试，如果crash了就<code>kill</code>掉host上的<code>vmlinux</code>进程，非常方便快速。</p>
+
+<figure class='code'><figcaption><span>kill all vmlinux process  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#killall vmlinux processes if uml can&#39;t be started</span>
+</span><span class='line'><span class="c">#killall vmlinux</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>当然，gdb也是可以用的，可以参考uml gdb调试相关的介绍。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[在SUSE Enterprise上安装Systemtap，解决build-id mismatch]]></title>

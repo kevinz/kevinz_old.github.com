@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-08-16T22:18:53+08:00</updated>
+  <updated>2012-11-13T17:20:39+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -12,6 +12,139 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[搭建基于User Mode Linux网络模块开发环境]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment/"/>
+    <updated>2012-11-13T15:40:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment</id>
+    <content type="html"><![CDATA[<p>最近在写一些内核网络模块，需要一个好用的编译、调试、测试环境，选用了uml，记录一下设置多台uml和host通信，并share fs。
+uml基本安装和使用可以参考<a href="https://wiki.archlinux.org/index.php/User-mode_Linux#Setup_by_rootfs_.2B_tap">archlinux uml</a>。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>start uml with vde support  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;先启动虚拟switch&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;vde_switch -s /tmp/switch1 -tap tap0 -m 666&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;启动一台单网卡的uml，已经与之前定义的switch绑定&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;vmlinux <span class="nv">ubd0</span><span class="o">=</span>arch_rootfs1  <span class="nv">mem</span><span class="o">=</span>256M <span class="nv">eth0</span><span class="o">=</span>vde,/tmp/switch1&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;启动一台双网卡的uml，已经与之前定义的switch绑定&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;vmlinux <span class="nv">ubd0</span><span class="o">=</span>arch_rootfs2  <span class="nv">mem</span><span class="o">=</span>256M <span class="nv">eth0</span><span class="o">=</span>vde,/tmp/switch1 <span class="nv">eth1</span><span class="o">=</span>vde,/tmp/switch1&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<!-- more -->
+
+
+<p>启动完成后，在linux里用常规的网络设置方法完成ip地址的分配。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>network configuration  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;ifconfig eth0 192.168.0.101 up&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;ifconfig eth1 192.168.0.101 up&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;确定host上的tap0已经正确设置并启用&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;ifconfig tap0 192.168.0.100 up&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+完成后用ping测试下，各个uml和host之间的网络通信是否正常。</p>
+
+<p>接下来设置uml与主机的文件系统共享。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>mounting hostfs directory  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;mkdir -p /root/source&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;mount none /root/source/ -t hostfs -o /home/yourname/code/&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>完成后，应该可以读写hostfs的文件，测试一下，放一份linux源代码在host的<code>/home/yourname/code/</code>下，
+目录结构是<code>/home/yourname/code/linux</code>，自己写的module的目录在<code>/home/yourname/code/my_module</code>，
+对应在uml上的目录就是<code>/root/source/linux</code>和<code>/root/source/my_module</code>。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Makefile of my_module :bash </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>obj-m := test.o #source file is test.c
+</span><span class='line'>KDIR := /root/source/linux
+</span><span class='line'>PWD := $(shell pwd)
+</span><span class='line'>default:&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>    $(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>在<code>/root/source/my_module</code>下<code>make</code>就可以了，在<code>#insmod test.ko</code>测试，如果crash了就<code>kill</code>掉host上的<code>vmlinux</code>进程，非常方便快速。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>kill all vmlinux process  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;killall vmlinux processes <span class="k">if </span>uml can<span class="err">&#39;</span>t be started&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;killall vmlinux&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>当然，gdb也是可以用的，可以参考uml gdb调试相关的介绍。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[在SUSE Enterprise上安装Systemtap，解决build-id mismatch]]></title>
@@ -235,12 +368,12 @@ HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-11">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-6">
     <img src="/images/post_img/Tcp_state_diagram.svg"
          width="542" height="409"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-11" style="display:none">
+  <div id="image-dialog-6" style="display:none">
     <img src="/images/post_img/Tcp_state_diagram.svg"
          width="1084" height="817"/>
     <br clear="all"/>
@@ -248,8 +381,8 @@ HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-11").hide();
-    jQuery("#image-dialog-11").dialog({
+    jQuery("#image-dialog-6").hide();
+    jQuery("#image-dialog-6").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -259,8 +392,8 @@ HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码
       hide:      'scale'
     });
 
-    jQuery("#image-11").click(function() {
-      jQuery("#image-dialog-11").dialog('open');
+    jQuery("#image-6").click(function() {
+      jQuery("#image-dialog-6").dialog('open');
     });
 
   });
@@ -479,84 +612,6 @@ HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码
 
 <p>好了，方法就差不多是这些了，接下来就边看代码，边测试，边看输出吧。
 have fun.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[学习万兆以太网，硬件和优化方法]]></title>
-    <link href="http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network/"/>
-    <updated>2012-07-15T11:34:00+08:00</updated>
-    <id>http://gekben.gitcd.com/blog/2012/07/15/hardware-and-10gb-network</id>
-    <content type="html"><![CDATA[<p>上周末去杭州参加了<a href="http://adc.taobao.com/">ADC</a>，收获不小，关注的几个
-topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能的要求非常高，
-于是开始关注起10Gbe，记录一些资料和心得。</p>
-
-<h2>个人关注点</h2>
-
-<ul>
-<li><a href="https://speakerdeck.com/u/gekben/p/by-intel">拥抱万兆以太网时代 - 探索英特尔® 至强® 处理器平台上的应用性能优化</a>
-
-<ul>
-<li>图片缩放及gzip的增强</li>
-<li>E5-2600 DDIO这个绝对是重点，对网络收发性能提升明显</li>
-<li>性价比高的10G BASE-T会逐渐成为主流</li>
-</ul>
-</li>
-<li><a href="https://speakerdeck.com/u/gekben/p/lvs-used-in-taobao">LVS在淘宝环境中的应用</a>
-
-<ul>
-<li>FULLNAT模式，对大型网络降低运维难度非常好，但对LVS的改造很大，增加了复杂性</li>
-<li>SynProxy，在lvs上实现syn cookie防御机制，不明白为什么要做在这里</li>
-<li>taobao也没用上sandy bridge，还是E5640+intel 82599万兆卡</li>
-<li>多队列网卡，每个core绑定网卡的一个队列</li>
-<li>KeepAlived增强，select->epoll,localaddr</li>
-<li>Cluster，因为real server本身无状态，水平扩容好做，OSPF</li>
-<li>4/7层结合，lvs+nginx，nginx做7层业务负载</li>
-</ul>
-</li>
-</ul>
-
-
-<h2>硬件</h2>
-
-<ul>
-<li><a href="http://storage.chinabyte.com/447/12275447.shtml">介绍</a>
-
-<ul>
-<li><a href="http://en.wikipedia.org/wiki/Sandy_Bridge_%28microarchitecture%29">sandy bridge</a> cpu列表</li>
-<li><a href="http://www.intel.com/content/www/us/en/network-adapters/gigabit-network-adapters/ethernet-x520.html">x520</a></li>
-<li><a href="http://ark.intel.com/products/58954/Intel-Ethernet-Converged-Network-Adapter-X540-T2">x540</a></li>
-<li><a href="http://www.emulex.com/products/10gbe-network-adapters-nic/emulex-branded/oce11102-nt/overview.html">emulex 手头正好有这块卡</a></li>
-</ul>
-</li>
-</ul>
-
-
-<h2>优化</h2>
-
-<ul>
-<li>intel那个slides里有几个建议
-
-<ul>
-<li>Process affinity - socket</li>
-<li>Interrupts affinity - socket</li>
-<li>Disable LLDPAD,IPTABLES,IP6TABLES,SELINUX,IRQBALANCE</li>
-</ul>
-</li>
-<li><a href="http://timetobleed.com/useful-kernel-and-driver-performance-tweaks-for-your-linux-server/">Linux kernel and driver</a></li>
-<li><a href="http://www.linuxfoundation.org/collaborate/workgroups/networking">GRO,GSO,TSO...</a></li>
-<li>Papers
-
-<ul>
-<li><a href="http://www.google.com.hk/url?sa=t&amp;rct=j&amp;q=10Gbe+linux+optimization&amp;source=web&amp;cd=1&amp;ved=0CFQQFjAA&amp;url=http%3A%2F%2Fdocs.redhat.com%2Fdocs%2Fen-US%2FRed_Hat_Enterprise_Linux%2F6%2Fpdf%2FPerformance_Tuning_Guide%2FRed_Hat_Enterprise_Linux-6-Performance_Tuning_Guide-en-US.pdf&amp;ei=3D4RUKmWJ6O3iQed2YHYCw&amp;usg=AFQjCNGRhggpqYuUP0LQwoQE1uofWlN2dQ">RedHat</a></li>
-<li><a href="http://www.google.com.hk/url?sa=t&amp;rct=j&amp;q=10Gbe+linux+optimization&amp;source=web&amp;cd=5&amp;ved=0CGUQFjAE&amp;url=http%3A%2F%2Fakashi.ci.i.u-tokyo.ac.jp%2Flab%2Fcmsdesigner%2Fdlfile.php%3Fentryname%3Dpublic%26entryid%3D00096%26fileid%3D00000001%26%2Fysn-camera.pdf&amp;ei=3D4RUKmWJ6O3iQed2YHYCw&amp;usg=AFQjCNGXO4wm2DQ8A6cAg1IsVzjbGjzvDg">Google</a></li>
-<li><a href="http://www.kernel.org/doc/ols/2009/ols2009-pages-169-184.pdf">IBM</a></li>
-</ul>
-</li>
-</ul>
-
-
-<p>先记录到这里，边实践边补充。</p>
 ]]></content>
   </entry>
   
