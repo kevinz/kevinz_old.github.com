@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tool | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/tool/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-14T09:35:43+08:00</updated>
+  <updated>2012-11-14T15:53:02+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -53,6 +53,47 @@
 </span><span class='line'><span class="nv">$git</span> remote add origin git@github.com:username/username.github.com.git
 </span><span class='line'><span class="nv">$git</span> push origin master
 </span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>后来又遇到<code>rake generate</code>时报<code>Psych::SyntaxError</code> parse错误，表面看是说<code>_config.yml</code>有
+问题，但实际问题往往出在自己写的<code>_post</code>的markdown文件上，可以在<code>psycn.rb</code>上加调试语句来发现问题。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>my solution  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">parse_stream</span> <span class="n">yaml</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">block</span><span class="o">&lt;</span><span class="sr">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;pre&gt;&lt;code&gt;if block_given?</span>
+</span><span class='line'><span class="sr">  parser = Psych::Parser.new(Handlers::DocumentStream.new(&amp;amp;block))</span>
+</span><span class='line'><span class="sr">  # debug begin</span>
+</span><span class='line'><span class="sr">  if filename == nil</span>
+</span><span class='line'><span class="sr">    p yaml,&quot;\nDebuging&quot;</span>
+</span><span class='line'><span class="sr">  end</span>
+</span><span class='line'><span class="sr">  # debug end</span>
+</span><span class='line'><span class="sr">  parser.parse yaml, filename</span>
+</span><span class='line'><span class="sr">else</span>
+</span><span class='line'><span class="sr">  parser = self.parser</span>
+</span><span class='line'><span class="sr">  parser.parse yaml, filename</span>
+</span><span class='line'><span class="sr">  parser.handler.root</span>
+</span><span class='line'><span class="sr">end </span>
+</span><span class='line'><span class="sr">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;</span><span class="sr">/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;  end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
 ]]></content>
   </entry>
   
@@ -80,6 +121,7 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 </ul>
 </li>
 <li><a href="http://redmine.lighttpd.net/projects/weighttp/wiki">Weighhttp</a></li>
+<li><a href="http://tsung.erlang-projects.org/">tsung</a></li>
 </ul>
 
 
@@ -100,6 +142,7 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 <li><a href="http://www.slideshare.net/mryufeng/systemtap">Slides</a></li>
 </ul>
 </li>
+<li>Ksysguard</li>
 </ul>
 
 
@@ -127,6 +170,7 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 <li><a href="http://rdc.taobao.com/blog/cs/?p=460">Introduction</a></li>
 </ul>
 </li>
+<li><a href="http://software.intel.com/en-us/articles/intel-performance-counter-monitor">intel performance counter monitor</a></li>
 </ul>
 
 ]]></content>
@@ -145,12 +189,12 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-8">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-12">
     <img src="/images/post_img/term.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-8" style="display:none">
+  <div id="image-dialog-12" style="display:none">
     <img src="/images/post_img/term.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -158,8 +202,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-8").hide();
-    jQuery("#image-dialog-8").dialog({
+    jQuery("#image-dialog-12").hide();
+    jQuery("#image-dialog-12").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -169,8 +213,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
       hide:      'scale'
     });
 
-    jQuery("#image-8").click(function() {
-      jQuery("#image-dialog-8").dialog('open');
+    jQuery("#image-12").click(function() {
+      jQuery("#image-dialog-12").dialog('open');
     });
 
   });
@@ -187,12 +231,12 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-9">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-13">
     <img src="/images/post_img/emacs.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-9" style="display:none">
+  <div id="image-dialog-13" style="display:none">
     <img src="/images/post_img/emacs.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -200,8 +244,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-9").hide();
-    jQuery("#image-dialog-9").dialog({
+    jQuery("#image-dialog-13").hide();
+    jQuery("#image-dialog-13").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -211,8 +255,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
       hide:      'scale'
     });
 
-    jQuery("#image-9").click(function() {
-      jQuery("#image-dialog-9").dialog('open');
+    jQuery("#image-13").click(function() {
+      jQuery("#image-dialog-13").dialog('open');
     });
 
   });
@@ -226,12 +270,12 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-10">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-14">
     <img src="/images/post_img/vim.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-10" style="display:none">
+  <div id="image-dialog-14" style="display:none">
     <img src="/images/post_img/vim.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -239,8 +283,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-10").hide();
-    jQuery("#image-dialog-10").dialog({
+    jQuery("#image-dialog-14").hide();
+    jQuery("#image-dialog-14").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -250,8 +294,8 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
       hide:      'scale'
     });
 
-    jQuery("#image-10").click(function() {
-      jQuery("#image-dialog-10").dialog('open');
+    jQuery("#image-14").click(function() {
+      jQuery("#image-dialog-14").dialog('open');
     });
 
   });
@@ -448,12 +492,12 @@ msc{
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-11">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-15">
     <img src="/images/post_img/lvs_transp.png"
          width="600" height="429"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-11" style="display:none">
+  <div id="image-dialog-15" style="display:none">
     <img src="/images/post_img/lvs_transp.png"
          width="1200" height="857"/>
     <br clear="all"/>
@@ -461,8 +505,8 @@ msc{
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-11").hide();
-    jQuery("#image-dialog-11").dialog({
+    jQuery("#image-dialog-15").hide();
+    jQuery("#image-dialog-15").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -472,8 +516,8 @@ msc{
       hide:      'scale'
     });
 
-    jQuery("#image-11").click(function() {
-      jQuery("#image-dialog-11").dialog('open');
+    jQuery("#image-15").click(function() {
+      jQuery("#image-dialog-15").dialog('open');
     });
 
   });

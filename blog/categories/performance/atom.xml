@@ -4,7 +4,7 @@
   <title><![CDATA[Category: performance | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/performance/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-14T09:35:43+08:00</updated>
+  <updated>2012-11-14T15:53:02+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -115,6 +115,7 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 </ul>
 </li>
 <li><a href="http://redmine.lighttpd.net/projects/weighttp/wiki">Weighhttp</a></li>
+<li><a href="http://tsung.erlang-projects.org/">tsung</a></li>
 </ul>
 
 
@@ -135,6 +136,7 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 <li><a href="http://www.slideshare.net/mryufeng/systemtap">Slides</a></li>
 </ul>
 </li>
+<li>Ksysguard</li>
 </ul>
 
 
@@ -162,6 +164,7 @@ sockets).And the author claimed it's better than <a href="http://httpd.apache.or
 <li><a href="http://rdc.taobao.com/blog/cs/?p=460">Introduction</a></li>
 </ul>
 </li>
+<li><a href="http://software.intel.com/en-us/articles/intel-performance-counter-monitor">intel performance counter monitor</a></li>
 </ul>
 
 ]]></content>

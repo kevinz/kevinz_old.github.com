@@ -4,7 +4,7 @@
   <title><![CDATA[Category: kernel | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/kernel/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-14T09:35:43+08:00</updated>
+  <updated>2012-11-14T15:53:02+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -12,6 +12,143 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[基于lvs的全透明传输思考]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/11/13/full-transparent-with-lvs/"/>
+    <updated>2012-11-13T17:28:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/11/13/full-transparent-with-lvs</id>
+    <content type="html"><![CDATA[<p>互联网公司一般使用LB的方式，是把Web App Server作为real server，最简单的情况是请求在这里终结，响应由Web App Server返回，一般web server不用再访问外网了。再复杂的情况，就
+是Web App Server又作为client去请求内网的其它资源，如DB，其它Web Server等，在这种典型的互联网部署模式下，一般可以把Web Server看作终点。</p>
+
+<p>还有一种部署方式，load balancing的对象不是Web App Server，而是firewall系统，比如用linux搭建的firewall，经过firewall的流量需要全透明传输，即不修改layer 2以上的信息，firewall
+对过滤后合格的包做forwarding。在这种部署模式下，LB也需要有全透明传输的能力，画个图解释一下:</p>
+
+<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-9">
+    <img src="/images/post_img/lvs_trans_firewall.png"
+         width="1015" height="402"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-9" style="display:none">
+    <img src="/images/post_img/lvs_trans_firewall.png"
+         width="1450" height="574"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-9").hide();
+    jQuery("#image-dialog-9").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1490,
+      minHeight: 614,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-9").click(function() {
+      jQuery("#image-dialog-9").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/lvs_trans_firewall.png" width="1450" height="574"/>
+</div>
+</notextile></div></p>
+
+<!-- more -->
+
+
+<p>这里所说的LB都是lvs，以http为例，首先client请求WWW Server，client有自己的公网地址，组装好的ip header，source ip是cip，destination ip是www_ip，
+source port是cport，destination port 80，lvs要支持这种destination ip非vip的部署，需要使用到fwmark。
+首先是要mark出这个请求：
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>mark the traffic  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;iptables -t mangle -A PREROUTING -p tcp --dport 80 -j MARK --set-xmark 1&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>然后交由lvs处理：
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>direct traffic to local_in hook  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;ip rule add prio 101 fwmark 1 table 101&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;ip route add <span class="nb">local </span>0/0 dev lo table 10&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>lvs的fwmark service及real server：
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>define lvs fwmark service and real servers hook:bash </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>ipvsadm -A -f 1 -p #default scheduler is wlc,enable persistent&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs1 #default xmit method is direct routing&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs2&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs2&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs2&lt;/h1>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>这样配置后，LB1充当了透明的load balancer，经过LB1的request的layer2以上的信息都没有变化，rs1~rs4都可以接收请求，
+并进行过滤处理，也是全透明的。先考虑没有LB2的情况，request从rs出来，被转发到Router，Router在将request转发至外网，
+直至WWW_Server。从Client到WWW_server，layer2以上的地址和端口信息都没有改变。</p>
+
+<p>Response从WWW_Server出发，source是www_ip：80，destination是cip:cport，发向Router，Router这时候不知道该
+如何进行路由了，因为从rs1出来的request，对应的response也要回到rs1，Router没有rs1的内部ip，也没有连接信息
+参考，response回不到对应real server，连接无法建立起来。</p>
+
+<p>产生这个问题的原因是real server是有状态的，在request经过它时做了记录，例如linux的防火墙的基础conn_track，它期待response
+也必须经过这台real server，tcp/udp以及基于它们的应用层协议都是如此。为了让response能回到正确的real server，需要利用到一种技术，
+所有request和response都要经过它转发，在request进来时，记录它的源mac地址和接收包的device，response回来时，绕过路由直接发送给
+之前记录的源mac，维护连接表+mac地址是必须的。</p>
+
+<p>目前支持这种技术的设备有F5，被称为Auto Last Hop，还有Juniper的某些设备，称作Reverse Route。把这种设备部署在LB2的位置，即可实现
+full transparent，当然，也不是一定要单独搞一台LB2，用一台LB既做Load Balancer又做反向路由也是可以的。使用这种设备的最大缺点就是，
+贵。于是想基于Lvs实现方向路由功能，想想也是非常合理的，lvs本身可以很好的维护管理连接状态，它有一张connection table，连接状态迁移，
+超时机制，垃圾回收都已经非常成熟，再加上source mac和in_dev并不难。需要注意的是，lvs在这种使用模式下，应该定义fwmark service，它的rs只有一个，
+就是下一跳的ip。经过一段时间的开发，对lvs进行修改后，基于lvs的反向路由功能已经OK，准备下一篇来讲讲细节。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[搭建基于User Mode Linux网络模块开发环境]]></title>
@@ -549,335 +686,6 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
 
 
 <p>先记录到这里，边实践边补充。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[在archlinux里定制编译内核]]></title>
-    <link href="http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux/"/>
-    <updated>2012-07-14T16:54:00+08:00</updated>
-    <id>http://gekben.gitcd.com/blog/2012/07/14/customize-kernel-in-arch-linux</id>
-    <content type="html"><![CDATA[<p>心血来潮升级到
-<a href="http://repo-ck.com/x86_64/linux-ck-corex-3.4.4-4-x86_64.pkg.tar.xz">linux-ck_3.4.4-4</a>
-后，发现<code>pm-suspend</code>出问题了，可以<code>suspend</code>，但<code>resume</code>后显示屏亮不起
-来，其它部分都<code>resume</code>成功了，可以隐约看见一些窗口的黑影。于是我又开始
-折腾了，参考了
-<a href="https://bbs.archlinux.org/viewtopic.php?id=143545">这篇</a>，插句题外话，
-不知道不是巧合，好多问题都是在archlinux的相关论坛上找到了答案，都是一帮爱折腾的同好。</p>
-
-<p>不幸的是，<a href="https://bbs.archlinux.org/viewtopic.php?id=143545">这篇</a>把
-我引导向了错误的方向，决定把kernel降级到3.3.x。因为我用的不是官核，不
-好找old archive，必须重新编译3.3.x-ck的内核，官方的old archives可以在
-<a href="http://arm.konnichi.com/search/">这里</a>寻觅到。</p>
-
-<p>拜<a href="https://wiki.archlinux.org/index.php/Arch_Build_System">Arch Build System</a>
-所赐，编译、打包、patch的步骤都可以内置了，对于kernel也是一样。贴一部
-分PKGBUILD文件的内容，是从
-<a href="http://repo-ck.com/PKG_source/linux-ck/linux-ck-3.3.8-1.src.tar.gz">repo-ck的archive</a>
-里找到的。</p>
-
-<!-- more -->
-
-
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>PKGBUILD </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-<span class='line-number'>109</span>
-<span class='line-number'>110</span>
-<span class='line-number'>111</span>
-<span class='line-number'>112</span>
-<span class='line-number'>113</span>
-<span class='line-number'>114</span>
-<span class='line-number'>115</span>
-<span class='line-number'>116</span>
-<span class='line-number'>117</span>
-<span class='line-number'>118</span>
-<span class='line-number'>119</span>
-<span class='line-number'>120</span>
-<span class='line-number'>121</span>
-<span class='line-number'>122</span>
-<span class='line-number'>123</span>
-<span class='line-number'>124</span>
-<span class='line-number'>125</span>
-<span class='line-number'>126</span>
-<span class='line-number'>127</span>
-<span class='line-number'>128</span>
-<span class='line-number'>129</span>
-<span class='line-number'>130</span>
-<span class='line-number'>131</span>
-<span class='line-number'>132</span>
-<span class='line-number'>133</span>
-<span class='line-number'>134</span>
-<span class='line-number'>135</span>
-<span class='line-number'>136</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;h3>PATCH AND BUILD OPTIONS&lt;/h3>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;em>makenconfig="n"    # tweak kernel options prior to a build via nconfig
-</span><span class='line'>&lt;/em>localmodcfg="n"    # compile ONLY probed modules
-</span><span class='line'>&lt;em>use_current="n"    # use the current kernel's .config file
-</span><span class='line'>&lt;/em>BFQ_enable_="n"    # enable BFQ as the default I/O scheduler&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>pkgname=linux-ck
-</span><span class='line'>true &amp;&amp; pkgname=(linux-ck linux-ck-headers)
-</span><span class='line'>&lt;em>kernelname=-ck
-</span><span class='line'>&lt;/em>basekernel=3.3
-</span><span class='line'>pkgver=${&lt;em>basekernel}.8
-</span><span class='line'>pkgrel=1
-</span><span class='line'>arch=('i686' 'x86_64')
-</span><span class='line'>url="https://wiki.archlinux.org/index.php/Linux-ck"
-</span><span class='line'>license=('GPL2')
-</span><span class='line'>options=('!strip')
-</span><span class='line'>&lt;/em>ckpatchversion=1
-</span><span class='line'>&lt;em>ckpatchname="patch-${&lt;/em>basekernel}-ck${&lt;em>ckpatchversion}"
-</span><span class='line'>&lt;/em>bfqpath="http://algo.ing.unimo.it/people/paolo/disk_sched/patches/3.3.0-v3r3"
-</span><span class='line'>source=("http://www.kernel.org/pub/linux/kernel/v3.x/linux-3.3.tar.xz"
-</span><span class='line'>"http://www.kernel.org/pub/linux/kernel/v3.x/patch-${pkgver}.xz"
-</span><span class='line'>"http://ck.kolivas.org/patches/3.0/3.3/${&lt;em>basekernel}-ck${&lt;/em>ckpatchversion}/${&lt;em>ckpatchname}.bz2"
-</span><span class='line'>'linux-ck.preset'
-</span><span class='line'>'config' 'config.x86_64'
-</span><span class='line'>'change-default-console-loglevel.patch'
-</span><span class='line'>'i915-fix-ghost-tv-output.patch'
-</span><span class='line'>'ext4-options.patch'
-</span><span class='line'>'fix-acerhdf-1810T-bios.patch'
-</span><span class='line'>"${&lt;/em>bfqpath}/0001-block-cgroups-kconfig-build-bits-for-BFQ-v3r3-3.3.patch"
-</span><span class='line'>"${_bfqpath}/0002-block-introduce-the-BFQ-v3r3-I-O-sched-for-3.3.patch")
-</span><span class='line'>sha256sums=('355df2085626cdf0083c4bc0fe3017419034b6db5cce6f437ae8234a5e90b40c'&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>        '4bbd173c995f44cb1bc5b002293765e8d8f9f076ae801f35cf456da9f0eba06d'
-</span><span class='line'>        'dd23a8e0fc6cdb393a9659d5d097c27e1ff5a0f30d0fe6a3441512a9bf6d00cb'
-</span><span class='line'>        'c2cf8cc2600502de348f3dc3aae9a3bde5486759db15cb8a93df7aa35bd6e7da'
-</span><span class='line'>        '253b11d36850a9c06ad8861a339da8895ddbb875d4e61579447a26f13423a160'
-</span><span class='line'>        '0f6def8badb9939ddb042657fd767c3a07ea7c291ed795935ebc8f81255231d7'
-</span><span class='line'>        'b9d79ca33b0b51ff4f6976b7cd6dbb0b624ebf4fbf440222217f8ffc50445de4'
-</span><span class='line'>        '9ccadbe3eb30bb283af3eb869c3a4bdb764628854811cc616a2e02e9ef398705'
-</span><span class='line'>        '0f15e7462b5d2650c354580920978228b3092bcf47e20e600242c8ca102df6f5'
-</span><span class='line'>        'f77e1a1f2d955f0499dc2957d1d65a3eb931212a13948b33916332296d0e4a7a'
-</span><span class='line'>        '179e159deaaa3976f5e5e329a640050b9803fef3cc77f8588a949b28c732c5ad'
-</span><span class='line'>        'a401732b5bc36eeccbaab86b216295d0ce0b30b8afdae66d8f59a382689da6a4')
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>build() {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>cd "${srcdir}/linux-${_basekernel}"
-</span><span class='line'>
-</span><span class='line'>msg "Patching with upstream patch ${_basekernel} to ${_basekernel}.4"
-</span><span class='line'># add upstream patch
-</span><span class='line'>#patch -p1 -i "${srcdir}/patch-${pkgver}"
-</span><span class='line'>
-</span><span class='line'># add latest fixes from stable queue, if needed
-</span><span class='line'>#http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git
-</span><span class='line'>
-</span><span class='line'>### Patch with BFQ IO Scheduler
-</span><span class='line'>msg "Patching source with BFQ patches"
-</span><span class='line'>#for p in $(ls ${srcdir}/000{1,2}-block*.patch); do
-</span><span class='line'>#   patch -Np1 -i $p
-</span><span class='line'>#done
-</span><span class='line'>
-</span><span class='line'>### Clean tree and copy ARCH config over
-</span><span class='line'>msg "Running make mrproper to clean source tree"
-</span><span class='line'>make mrproper
-</span><span class='line'>
-</span><span class='line'>if [ "${CARCH}" = "x86_64" ]; then
-</span><span class='line'>    cat "${srcdir}/config.x86_64" &gt; ./.config
-</span><span class='line'>else
-</span><span class='line'>    cat "${srcdir}/config" &gt; ./.config
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'>### Optionally use running kernel's config
-</span><span class='line'># code originally by nous; http://aur.archlinux.org/packages.php?ID=40191
-</span><span class='line'>if [ $_use_current = "y" ]; then
-</span><span class='line'>    if [[ -s /proc/config.gz ]]; then
-</span><span class='line'>        msg "Extracting config from /proc/config.gz..."
-</span><span class='line'>        # modprobe configs
-</span><span class='line'>        zcat /proc/config.gz &gt; ./.config
-</span><span class='line'>    else
-</span><span class='line'>        warning "You kernel was not compiled with IKCONFIG_PROC!"
-</span><span class='line'>        warning "You cannot read the current config!"
-</span><span class='line'>        warning "Aborting!"
-</span><span class='line'>        exit
-</span><span class='line'>    fi
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'>if [ "${_kernelname}" != "" ]; then
-</span><span class='line'>    sed -i "s|CONFIG_LOCALVERSION=.*|CONFIG_LOCALVERSION=\"${_kernelname}\"|g" ./.config
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'>### BFQ to be compiled in but not enabled
-</span><span class='line'>sed -i -e s'/CONFIG_CFQ_GROUP_IOSCHED=y/CONFIG_CFQ_GROUP_IOSCHED=y\nCONFIG_IOSCHED_BFQ=y\nCONFIG_CGROUP_BFQIO=y/' \
-</span><span class='line'>    -i -e s'/CONFIG_DEFAULT_CFQ=y/CONFIG_DEFAULT_CFQ=y\n# CONFIG_DEFAULT_BFQ is not set/' ./.config
-</span><span class='line'>
-</span><span class='line'>### Optionally enable BFQ as the default io scheduler
-</span><span class='line'>if [ $_BFQ_enable_ = "y" ]; then
-</span><span class='line'>    sed -i -e '/CONFIG_DEFAULT_IOSCHED/ s,cfq,bfq,' \
-</span><span class='line'>        -i -e s'/CONFIG_DEFAULT_CFQ=y/# CONFIG_DEFAULT_CFQ is not set\nCONFIG_DEFAULT_BFQ=y/' ./.config
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'># set extraversion to pkgrel
-</span><span class='line'>sed -ri "s|^(EXTRAVERSION =).*|\1 -${pkgrel}|" Makefile
-</span><span class='line'>
-</span><span class='line'># get kernel version
-</span><span class='line'>msg "Running make prepare for you to enable patched options of your choosing"
-</span><span class='line'>make prepare
-</span><span class='line'>
-</span><span class='line'>### Optionally load needed modules for the make localmodconfig
-</span><span class='line'># See http://aur.archlinux.org/packages.php?ID=41689
-</span><span class='line'>if [ $_localmodcfg = "y" ]; then
-</span><span class='line'>    msg "If you have modprobe_db installed, running it in recall mode now"
-</span><span class='line'>    if [ -e /usr/bin/modprobed_db ]; then
-</span><span class='line'>        [[ ! -x /usr/bin/sudo ]] &amp;&amp; echo "Cannot call modprobe with sudo.  Install via pacman -S sudo and configure to work with this user." &amp;&amp; exit 1
-</span><span class='line'>        sudo /usr/bin/modprobed_db recall
-</span><span class='line'>    fi
-</span><span class='line'>    msg "Running Steven Rostedt's make localmodconfig now"
-</span><span class='line'>    make localmodconfig
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'>if [ $_makenconfig = "y" ]; then
-</span><span class='line'>    msg "Running make nconfig"
-</span><span class='line'>    make nconfig
-</span><span class='line'>fi
-</span><span class='line'>
-</span><span class='line'>msg "Running make bzImage and modules"
-</span><span class='line'>make ${MAKEFLAGS} bzImage modules
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>package_linux-ck() {
-</span><span class='line'>...</span></code></pre></td></tr></table></div></figure></notextile></div></p>
-
-<p>比较长，但也很易读懂，验证资源文件，解压资源文件，打patch，获取config，最后<code>make
-bzImage modules</code>，可以在<code>export MAKEFLAGS="-j4"</code>，充分利用多核cpu加快
-编译。读上面的配置文件可以知道，对于32/64的系统，已经提供了默认的
-config文件，可以直接修改config，或者以<code>make menuconfig</code>的方式，这里有
-个小技巧：
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>获取依赖的资源并解压  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$tar</span> -xzvf linux-ck-3.3.8-1.src.tar.gz
-</span><span class='line'><span class="nv">$cd</span> linux-ck
-</span><span class='line'><span class="nv">$makepkg</span> -s
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-ABS会自动按照PKGBUILD的步骤开始执行，可以在编译真正开始时，终止其执行，
-可以在linux-ck目录下，发现src目录，所有patch，kernel源代码都放在这里了，
-进入kernel源码目录，<code>make menuconfig</code>就可以对默认的config进行定制修改
-了，具体步骤就不赘述了，大家慢慢体会，要注意的是，改了config文件后，记
-得把PKGBUILD里相应文件的shasum也更新了。</p>
-
-<p>用这种方法编译出来的kernel，是以<code>.xz</code> package的形式存在，就跟在
-<code>/var/cache/pacman/pkg/</code>下的官方package一样，可以很好管理、跟踪。</p>
-
-<p>最后解决休眠恢复的问题的方法，是降级成nvidia-295.53-2的驱动解决的，可以用在
-最新的3.4.4-4-ck内核上，确实是驱动的问题，期间换用nouveau的开源驱动也
-有同样问题。再之后，升级到更新的nvidia-ck驱动，就没问题了，没有以后了。</p>
 ]]></content>
   </entry>
   

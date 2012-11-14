@@ -10,7 +10,7 @@
 
   
   <meta name="description" content="解决octopress的git自动deploy问题 Fix octopress git deploy issuse">
-  <meta name="keywords" content="octopress, git, _deploy, rake">
+  <meta name="keywords" content="octopress, git, deploy, rake">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -131,6 +131,43 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
+<p>后来又遇到<code>rake generate</code>时报<code>Psych::SyntaxError</code> parse错误，表面看是说<code>_config.yml</code>有
+问题，但实际问题往往出在自己写的<code>_post</code>的markdown文件上，可以在<code>psycn.rb</code>上加调试语句来发现问题。</p>
+
+<figure class='code'><figcaption><span>my solution  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">parse_stream</span> <span class="n">yaml</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nb">block_given?</span>
+</span><span class='line'>      <span class="n">parser</span> <span class="o">=</span> <span class="no">Psych</span><span class="o">::</span><span class="no">Parser</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="no">Handlers</span><span class="o">::</span><span class="no">DocumentStream</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="o">&amp;</span><span class="n">block</span><span class="p">))</span>
+</span><span class='line'>      <span class="c1"># debug begin</span>
+</span><span class='line'>      <span class="k">if</span> <span class="n">filename</span> <span class="o">==</span> <span class="kp">nil</span>
+</span><span class='line'>        <span class="nb">p</span> <span class="n">yaml</span><span class="p">,</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Debuging&quot;</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>      <span class="c1"># debug end</span>
+</span><span class='line'>      <span class="n">parser</span><span class="o">.</span><span class="n">parse</span> <span class="n">yaml</span><span class="p">,</span> <span class="n">filename</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="n">parser</span> <span class="o">=</span> <span class="nb">self</span><span class="o">.</span><span class="n">parser</span>
+</span><span class='line'>      <span class="n">parser</span><span class="o">.</span><span class="n">parse</span> <span class="n">yaml</span><span class="p">,</span> <span class="n">filename</span>
+</span><span class='line'>      <span class="n">parser</span><span class="o">.</span><span class="n">handler</span><span class="o">.</span><span class="n">root</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
 
 </div>
 
@@ -225,7 +262,7 @@
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.45454545454545%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 110.9090909090909%'>C(2)</a> <a href='/blog/categories/c' style='font-size: 105.45454545454545%'>C(1)</a> <a href='/blog/categories/emacs' style='font-size: 110.9090909090909%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.45454545454545%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.45454545454545%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 138.1818181818182%'>Kernel(7)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(11)</a> <a href='/blog/categories/linux-lvs-kernel-network' style='font-size: 105.45454545454545%'>Linux lvs kernel network(1)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.45454545454545%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 105.45454545454545%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 138.1818181818182%'>Network(7)</a> <a href='/blog/categories/networking' style='font-size: 105.45454545454545%'>Networking(1)</a> <a href='/blog/categories/octopress' style='font-size: 110.9090909090909%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.9090909090909%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 127.27272727272728%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.45454545454545%'>Tools(1)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 115.0%'>C(3)</a> <a href='/blog/categories/emacs' style='font-size: 110.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 140.0%'>Kernel(8)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(12)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.0%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 110.0%'>Lvs(2)</a> <a href='/blog/categories/network' style='font-size: 145.0%'>Network(9)</a> <a href='/blog/categories/octopress' style='font-size: 110.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 125.0%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.0%'>Tools(1)</a> </span>
 </section>
 
 <section>

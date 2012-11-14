@@ -4,7 +4,7 @@
   <title><![CDATA[Category: emacs | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/emacs/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-14T09:35:43+08:00</updated>
+  <updated>2012-11-14T15:53:02+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -26,12 +26,12 @@
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-14">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-19">
     <img src="/images/post_img/term.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-14" style="display:none">
+  <div id="image-dialog-19" style="display:none">
     <img src="/images/post_img/term.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -39,8 +39,8 @@
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-14").hide();
-    jQuery("#image-dialog-14").dialog({
+    jQuery("#image-dialog-19").hide();
+    jQuery("#image-dialog-19").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -50,8 +50,8 @@
       hide:      'scale'
     });
 
-    jQuery("#image-14").click(function() {
-      jQuery("#image-dialog-14").dialog('open');
+    jQuery("#image-19").click(function() {
+      jQuery("#image-dialog-19").dialog('open');
     });
 
   });
@@ -68,12 +68,12 @@
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-15">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-20">
     <img src="/images/post_img/emacs.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-15" style="display:none">
+  <div id="image-dialog-20" style="display:none">
     <img src="/images/post_img/emacs.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -81,8 +81,8 @@
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-15").hide();
-    jQuery("#image-dialog-15").dialog({
+    jQuery("#image-dialog-20").hide();
+    jQuery("#image-dialog-20").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -92,8 +92,8 @@
       hide:      'scale'
     });
 
-    jQuery("#image-15").click(function() {
-      jQuery("#image-dialog-15").dialog('open');
+    jQuery("#image-20").click(function() {
+      jQuery("#image-dialog-20").dialog('open');
     });
 
   });
@@ -107,12 +107,12 @@
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-16">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-21">
     <img src="/images/post_img/vim.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-16" style="display:none">
+  <div id="image-dialog-21" style="display:none">
     <img src="/images/post_img/vim.png"
          width="1680" height="1050"/>
     <br clear="all"/>
@@ -120,8 +120,8 @@
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-16").hide();
-    jQuery("#image-dialog-16").dialog({
+    jQuery("#image-dialog-21").hide();
+    jQuery("#image-dialog-21").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -131,8 +131,8 @@
       hide:      'scale'
     });
 
-    jQuery("#image-16").click(function() {
-      jQuery("#image-dialog-16").dialog('open');
+    jQuery("#image-21").click(function() {
+      jQuery("#image-dialog-21").dialog('open');
     });
 
   });

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: octopress | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/octopress/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-14T09:35:43+08:00</updated>
+  <updated>2012-11-14T15:53:02+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -52,6 +52,47 @@
 </span><span class='line'><span class="nv">$git</span> commit -m <span class="s2">&quot;octopress init&quot;</span>
 </span><span class='line'><span class="nv">$git</span> remote add origin git@github.com:username/username.github.com.git
 </span><span class='line'><span class="nv">$git</span> push origin master
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>后来又遇到<code>rake generate</code>时报<code>Psych::SyntaxError</code> parse错误，表面看是说<code>_config.yml</code>有
+问题，但实际问题往往出在自己写的<code>_post</code>的markdown文件上，可以在<code>psycn.rb</code>上加调试语句来发现问题。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>my solution  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">parse_stream</span> <span class="n">yaml</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">block</span><span class="o">&lt;</span><span class="sr">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;pre&gt;&lt;code&gt;if block_given?</span>
+</span><span class='line'><span class="sr">  parser = Psych::Parser.new(Handlers::DocumentStream.new(&amp;amp;block))</span>
+</span><span class='line'><span class="sr">  # debug begin</span>
+</span><span class='line'><span class="sr">  if filename == nil</span>
+</span><span class='line'><span class="sr">    p yaml,&quot;\nDebuging&quot;</span>
+</span><span class='line'><span class="sr">  end</span>
+</span><span class='line'><span class="sr">  # debug end</span>
+</span><span class='line'><span class="sr">  parser.parse yaml, filename</span>
+</span><span class='line'><span class="sr">else</span>
+</span><span class='line'><span class="sr">  parser = self.parser</span>
+</span><span class='line'><span class="sr">  parser.parse yaml, filename</span>
+</span><span class='line'><span class="sr">  parser.handler.root</span>
+</span><span class='line'><span class="sr">end </span>
+</span><span class='line'><span class="sr">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;</span><span class="sr">/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;  end</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div></p>
 ]]></content>
   </entry>
