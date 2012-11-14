@@ -5,12 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>TCP状态迁移及状态码 - Code Mind</title>
+  <title>基于lvs的全透明传输思考 - Code Mind</title>
   <meta name="author" content="Kevin Zeng">
 
   
-  <meta name="description" content="check tcp connections">
-  <meta name="keywords" content="linux, tcp, connection">
+  <meta name="description" content="full transparent with lvs">
+  <meta name="keywords" content="lvs, transparent, firewall">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/">
+  <link rel="canonical" href="http://gekben.gitcd.com/blog/2012/11/13/full-transparent-with-lvs/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -69,7 +69,7 @@
   
   <header>
     
-      <h1 class="entry-title">TCP状态迁移及状态码</h1>
+      <h1 class="entry-title">基于lvs的全透明传输思考</h1>
     
     
       <p class="meta">
@@ -85,101 +85,63 @@
   
 
 
-<time datetime="2012-08-09T11:39:00+08:00" pubdate data-updated="true">Aug 9<span>th</span>, 2012</time>
+<time datetime="2012-11-13T17:28:00+08:00" pubdate data-updated="true">Nov 13<span>th</span>, 2012</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><!-- -*- html -*- -->
+<div class="entry-content"><p>互联网公司一般使用LB的方式，是把Web App Server作为real server，最简单的情况是请求在这里终结，响应由Web App Server返回，一般web server不用再访问外网了。再复杂的情况，就
+是Web App Server又作为client去请求内网的其它资源，如DB，其它Web Server等，在这种典型的互联网部署模式下，一般可以把Web Server看作终点。</p>
+
+<p>还有一种部署方式，load balancing的对象不是Web App Server，而是firewall系统，比如用linux搭建的firewall，经过firewall的流量需要全透明传输，即不修改layer 2以上的信息，firewall
+对过滤后合格的包做forwarding。在这种部署模式下，LB也需要有全透明传输的能力，画个图解释一下:</p>
+
+<!-- -*- html -*- -->
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-5">
-    <img src="/images/post_img/Tcp_state_diagram.svg"
-         width="542" height="409"
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-6">
+    <img src="/images/post_img/lvs_trans_firewall.png"
+         width="1015" height="402"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-5" style="display:none">
-    <img src="/images/post_img/Tcp_state_diagram.svg"
-         width="1084" height="817"/>
+  <div id="image-dialog-6" style="display:none">
+    <img src="/images/post_img/lvs_trans_firewall.png"
+         width="1450" height="574"/>
     <br clear="all"/>
   </div>
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-5").hide();
-    jQuery("#image-dialog-5").dialog({
+    jQuery("#image-dialog-6").hide();
+    jQuery("#image-dialog-6").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
-      minWidth:  1124,
-      minHeight: 857,
+      minWidth:  1490,
+      minHeight: 614,
       show:      'scale',
       hide:      'scale'
     });
 
-    jQuery("#image-5").click(function() {
-      jQuery("#image-dialog-5").dialog('open');
+    jQuery("#image-6").click(function() {
+      jQuery("#image-dialog-6").dialog('open');
     });
 
   });
 </script>
 <div class="illustration print" style="display:none">
-  <img src="/images/post_img/Tcp_state_diagram.svg" width="1084" height="817"/>
+  <img src="/images/post_img/lvs_trans_firewall.png" width="1450" height="574"/>
 </div>
-
-
-
-<p>想必大家对上图都比较熟悉了，补充下内核里对以上状态码的表示，顺便对源代码做了下改动，每个
-状态的代码都补出来了。</p>
-
-<figure class='code'><figcaption><span>tcp_state.h  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">enum</span> <span class="p">{</span>
-</span><span class='line'>  <span class="n">TCP_ESTABLISHED</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-</span><span class='line'>  <span class="n">TCP_SYN_SENT</span>    <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-</span><span class='line'>  <span class="n">TCP_SYN_RECV</span>    <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
-</span><span class='line'>  <span class="n">TCP_FIN_WAIT1</span>   <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
-</span><span class='line'>  <span class="n">TCP_FIN_WAIT2</span>   <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-</span><span class='line'>  <span class="n">TCP_TIME_WAIT</span>   <span class="o">=</span> <span class="mi">6</span>
-</span><span class='line'>  <span class="n">TCP_CLOSE</span>       <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
-</span><span class='line'>  <span class="n">TCP_CLOSE_WAIT</span>  <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
-</span><span class='line'>  <span class="n">TCP_LAST_ACK</span>    <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>
-</span><span class='line'>  <span class="n">TCP_LISTEN</span>      <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
-</span><span class='line'>  <span class="n">TCP_CLOSING</span>     <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>  <span class="cm">/* Now a valid state */</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="n">TCP_MAX_STATES</span>   <span class="cm">/* Leave at the end! */</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
 
 
 
 <!-- more -->
 
 
-<p>用<code>cat /proc/net/tcp</code>打印时，输出所有active connections，
-<a href="%E8%BE%93%E5%87%BA%E6%A0%BC%E5%BC%8F%E4%BB%8B%E7%BB%8D">http://search.cpan.org/~salva/Linux-Proc-Net-TCP-0.03/lib/Linux/Proc/Net/TCP.pm#The_/proc/net/tcp_documentation</a>。</p>
 
-<p><code>st</code>这一列即代表连接状态，下面该怎么做，你懂的。</p>
-
-<p>Have fun.</p>
 </div>
 
 
@@ -202,12 +164,12 @@
   
 
 
-<time datetime="2012-08-09T11:39:00+08:00" pubdate data-updated="true">Aug 9<span>th</span>, 2012</time>
+<time datetime="2012-11-13T17:28:00+08:00" pubdate data-updated="true">Nov 13<span>th</span>, 2012</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/c/'>c</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/network/'>network</a>
+    <a class='category' href='/blog/categories/linux-lvs-kernel-network/'>linux lvs kernel network</a>
   
 </span>
 
@@ -226,10 +188,8 @@
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2012/07/29/virtualbox-work-with-linux-ck/" title="Previous Post: how virtualbox work with linux-ck">&laquo; how virtualbox work with linux-ck</a>
+        <a class="basic-alignment left" href="/blog/2012/11/13/build-uml-development-environment/" title="Previous Post: 搭建基于User Mode Linux网络模块开发环境">&laquo; 搭建基于User Mode Linux网络模块开发环境</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2012/08/16/upgrade-the-netxen-nic/" title="Next Post: 升级Netxen网卡驱动及firmware">升级Netxen网卡驱动及firmware &raquo;</a>
       
     </p>
   </footer>
@@ -304,8 +264,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/';
-        var disqus_url = 'http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/';
+        var disqus_identifier = 'http://gekben.gitcd.com/blog/2012/11/13/full-transparent-with-lvs/';
+        var disqus_url = 'http://gekben.gitcd.com/blog/2012/11/13/full-transparent-with-lvs/';
         var disqus_script = 'embed.js';
       
     (function () {

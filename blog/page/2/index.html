@@ -10,7 +10,7 @@
 
   
   <meta name="description" content="纸上得来终觉浅，绝知此事要躬行，记录技术成长之路">
-  <meta name="keywords" content="clojure , linux , archlinux , tools ,programming , tcp/ip ,web development , performance">
+  <meta name="keywords" content="clojure , linux , kernel, archlinux , tools ,programming , tcp/ip ,web development , performance">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -25,11 +25,10 @@
   <script src="/javascripts/ender.js"></script>
   <script src="/javascripts/octopress.js" type="text/javascript"></script>
   <link href="/atom.xml" rel="alternate" title="Code Mind" type="application/atom+xml">
-  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
-<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
+  <link href="/stylesheets/google_fonts.css" rel="stylesheet" type="text/css">
+ <script src="/javascripts/libs/jquery.min.js" type="text/javascript"></script>
+ <script src="/javascripts/libs/jquery-ui.min.js" type="text/javascript"></script>
+
 
   
 
@@ -67,6 +66,70 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/07/11/study-on-lvs-kernel-code/">LVS Peristent代码分析</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-11T12:24:00+08:00" pubdate data-updated="true">Jul 11<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>一直纠结于LVS使用persistent时，是以何为依据，决定一个新的连接请求的命运的：是被persistent管理，去到之前的real server，还是被调度算法重新调度，去到新的real server。
+代码里其实写得非常清楚：</p>
+
+<h2>Persistent in LVS(ipvs)</h2>
+
+<ul>
+<li>fwmark
+
+<ul>
+<li>&lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0> 这个六元组，最开始是写死的
+ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dport，
+这个daddr值得一提，经过debug发现，这个值为<code>0.0.0.fwmark</code>。</li>
+</ul>
+</li>
+<li>Port zero service &lt;protocol,caddr,0,vaddr,0,daddr,0></li>
+<li>non Port zero service
+
+<ul>
+<li>FTP &lt;caddr,0,vaddr,0,daddr,0></li>
+<li>NON-FTP &lt;caddr,0,vaddr,vport,daddr,dport></li>
+</ul>
+</li>
+</ul>
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/07/11/study-on-lvs-kernel-code/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -487,6 +550,10 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/11/13/full-transparent-with-lvs/">基于lvs的全透明传输思考</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/11/13/build-uml-development-environment/">搭建基于User Mode Linux网络模块开发环境</a>
       </li>
     
@@ -502,15 +569,11 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
         <a href="/blog/2012/08/09/check-tcp-connections/">TCP状态迁移及状态码</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2012/07/29/virtualbox-work-with-linux-ck/">how virtualbox work with linux-ck</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.45454545454545%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 110.9090909090909%'>C(2)</a> <a href='/blog/categories/c' style='font-size: 105.45454545454545%'>C(1)</a> <a href='/blog/categories/emacs' style='font-size: 110.9090909090909%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.45454545454545%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.45454545454545%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 138.1818181818182%'>Kernel(7)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(11)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.45454545454545%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 105.45454545454545%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 138.1818181818182%'>Network(7)</a> <a href='/blog/categories/networking' style='font-size: 105.45454545454545%'>Networking(1)</a> <a href='/blog/categories/octopress' style='font-size: 110.9090909090909%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.9090909090909%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 127.27272727272728%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.45454545454545%'>Tools(1)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.45454545454545%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 110.9090909090909%'>C(2)</a> <a href='/blog/categories/c' style='font-size: 105.45454545454545%'>C(1)</a> <a href='/blog/categories/emacs' style='font-size: 110.9090909090909%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.45454545454545%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.45454545454545%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 138.1818181818182%'>Kernel(7)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(11)</a> <a href='/blog/categories/linux-lvs-kernel-network' style='font-size: 105.45454545454545%'>Linux lvs kernel network(1)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.45454545454545%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 105.45454545454545%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 138.1818181818182%'>Network(7)</a> <a href='/blog/categories/networking' style='font-size: 105.45454545454545%'>Networking(1)</a> <a href='/blog/categories/octopress' style='font-size: 110.9090909090909%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.9090909090909%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 127.27272727272728%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.45454545454545%'>Tools(1)</a> </span>
 </section>
 
 <section>
@@ -521,34 +584,6 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
 </section>
 
 <iframe width="100%" height="550" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=550&fansRow=2&ptype=1&speed=0&skin=10&isTitle=0&noborder=0&isWeibo=1&isFans=0&uid=1652588700&verifier=275352cd&dpc=1"></iframe>
-
-<section class="googleplus">
-  <h1>
-    <a href="https://plus.google.com/kevintech08@gmail.com?rel=author">
-      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
-      Google+
-    </a>
-  </h1>
-</section>
-
-
-
-<section>
-  <h1>Latest Tweets</h1>
-  <ul id="tweets">
-    <li class="loading">Status updating&#8230;</li>
-  </ul>
-  <script type="text/javascript">
-    $.domReady(function(){
-      getTwitterFeed("keving_zz", 0, false);
-    });
-  </script>
-  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
-  
-    <a href="http://twitter.com/keving_zz" class="twitter-follow-button" data-show-count="false">Follow @keving_zz</a>
-  
-</section>
-
 
   
 </aside>
@@ -580,25 +615,7 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
 
 
 
-  <script type="text/javascript">
-    (function() {
-      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
-      script.src = 'https://apis.google.com/js/plusone.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
-    })();
-  </script>
 
-
-
-  <script type="text/javascript">
-    (function(){
-      var twitterWidgets = document.createElement('script');
-      twitterWidgets.type = 'text/javascript';
-      twitterWidgets.async = true;
-      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
-      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
-    })();
-  </script>
 
 
 

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: linux lvs kernel network | Code Mind]]></title>
+  <link href="http://gekben.gitcd.com/blog/categories/linux-lvs-kernel-network/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2012-11-14T09:35:43+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
+  <author>
+    <name><![CDATA[Kevin Zeng]]></name>
+    <email><![CDATA[kevintech08@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[基于lvs的全透明传输思考]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/11/13/full-transparent-with-lvs/"/>
+    <updated>2012-11-13T17:28:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/11/13/full-transparent-with-lvs</id>
+    <content type="html"><![CDATA[<p>互联网公司一般使用LB的方式，是把Web App Server作为real server，最简单的情况是请求在这里终结，响应由Web App Server返回，一般web server不用再访问外网了。再复杂的情况，就
+是Web App Server又作为client去请求内网的其它资源，如DB，其它Web Server等，在这种典型的互联网部署模式下，一般可以把Web Server看作终点。</p>
+
+<p>还有一种部署方式，load balancing的对象不是Web App Server，而是firewall系统，比如用linux搭建的firewall，经过firewall的流量需要全透明传输，即不修改layer 2以上的信息，firewall
+对过滤后合格的包做forwarding。在这种部署模式下，LB也需要有全透明传输的能力，画个图解释一下:</p>
+
+<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-17">
+    <img src="/images/post_img/lvs_trans_firewall.png"
+         width="1015" height="402"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-17" style="display:none">
+    <img src="/images/post_img/lvs_trans_firewall.png"
+         width="1450" height="574"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-17").hide();
+    jQuery("#image-dialog-17").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1490,
+      minHeight: 614,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-17").click(function() {
+      jQuery("#image-dialog-17").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/lvs_trans_firewall.png" width="1450" height="574"/>
+</div>
+</notextile></div></p>
+
+<!-- more -->
+
+
+
+]]></content>
+  </entry>
+  
+</feed>

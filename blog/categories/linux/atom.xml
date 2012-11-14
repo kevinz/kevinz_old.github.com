@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-13T17:20:39+08:00</updated>
+  <updated>2012-11-14T09:35:43+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -368,12 +368,12 @@ HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-6">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-7">
     <img src="/images/post_img/Tcp_state_diagram.svg"
          width="542" height="409"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-6" style="display:none">
+  <div id="image-dialog-7" style="display:none">
     <img src="/images/post_img/Tcp_state_diagram.svg"
          width="1084" height="817"/>
     <br clear="all"/>
@@ -381,8 +381,8 @@ HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-6").hide();
-    jQuery("#image-dialog-6").dialog({
+    jQuery("#image-dialog-7").hide();
+    jQuery("#image-dialog-7").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -392,8 +392,8 @@ HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码
       hide:      'scale'
     });
 
-    jQuery("#image-6").click(function() {
-      jQuery("#image-dialog-6").dialog('open');
+    jQuery("#image-7").click(function() {
+      jQuery("#image-dialog-7").dialog('open');
     });
 
   });

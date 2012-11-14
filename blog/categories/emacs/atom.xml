@@ -4,7 +4,7 @@
   <title><![CDATA[Category: emacs | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/emacs/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-13T17:20:39+08:00</updated>
+  <updated>2012-11-14T09:35:43+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -26,55 +26,13 @@
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-13">
-    <img src="/images/post_img/term.png"
-         width="840" height="525"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-13" style="display:none">
-    <img src="/images/post_img/term.png"
-         width="1680" height="1050"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-13").hide();
-    jQuery("#image-dialog-13").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1720,
-      minHeight: 1090,
-      show:      'scale',
-      hide:      'scale'
-    });
-
-    jQuery("#image-13").click(function() {
-      jQuery("#image-dialog-13").dialog('open');
-    });
-
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/term.png" width="1680" height="1050"/>
-</div>
-</notextile></div></p>
-
-<!-- more -->
-
-
-<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
-
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
   <a href='javascript:void(0)' style="text-decoration: none" id="image-14">
-    <img src="/images/post_img/emacs.png"
+    <img src="/images/post_img/term.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
   <div id="image-dialog-14" style="display:none">
-    <img src="/images/post_img/emacs.png"
+    <img src="/images/post_img/term.png"
          width="1680" height="1050"/>
     <br clear="all"/>
   </div>
@@ -99,21 +57,24 @@
   });
 </script>
 <div class="illustration print" style="display:none">
-  <img src="/images/post_img/emacs.png" width="1680" height="1050"/>
+  <img src="/images/post_img/term.png" width="1680" height="1050"/>
 </div>
 </notextile></div></p>
+
+<!-- more -->
+
 
 <p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
   <a href='javascript:void(0)' style="text-decoration: none" id="image-15">
-    <img src="/images/post_img/vim.png"
+    <img src="/images/post_img/emacs.png"
          width="840" height="525"
          alt="Click me."/>
   </a>
   <div id="image-dialog-15" style="display:none">
-    <img src="/images/post_img/vim.png"
+    <img src="/images/post_img/emacs.png"
          width="1680" height="1050"/>
     <br clear="all"/>
   </div>
@@ -133,6 +94,45 @@
 
     jQuery("#image-15").click(function() {
       jQuery("#image-dialog-15").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/emacs.png" width="1680" height="1050"/>
+</div>
+</notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-16">
+    <img src="/images/post_img/vim.png"
+         width="840" height="525"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-16" style="display:none">
+    <img src="/images/post_img/vim.png"
+         width="1680" height="1050"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-16").hide();
+    jQuery("#image-dialog-16").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1720,
+      minHeight: 1090,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-16").click(function() {
+      jQuery("#image-dialog-16").dialog('open');
     });
 
   });
