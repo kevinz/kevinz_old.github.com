@@ -5,7 +5,7 @@ date: 2012-07-12 07:05
 comments: true
 categories: [tool,octopress,git]
 title: "解决octopress的git自动deploy问题"
-keywords: "octopress, git, _deploy, rake"
+keywords: "octopress, git, deploy, rake"
 ---
 已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
 不怕麻烦了。昨天晚上为了解决octopress不能`rake deploy`的问题，搞了几个
@@ -29,5 +29,25 @@ $git branch -m master
 $git commit -m "octopress init"
 $git remote add origin git@github.com:username/username.github.com.git
 $git push origin master
+{% endcodeblock %}
+
+后来又遇到`rake generate`时报`Psych::SyntaxError` parse错误，表面看是说`_config.yml`有
+问题，但实际问题往往出在自己写的`_post`的markdown文件上，可以在`psycn.rb`上加调试语句来发现问题。
+{% codeblock my solution lang:ruby %}
+  def self.parse_stream yaml, filename = nil, &block
+    if block_given?
+      parser = Psych::Parser.new(Handlers::DocumentStream.new(&block))
+      # debug begin
+      if filename == nil
+        p yaml,"\nDebuging"
+      end
+      # debug end
+      parser.parse yaml, filename
+    else
+      parser = self.parser
+      parser.parse yaml, filename
+      parser.handler.root
+    end 
+  end
 {% endcodeblock %}
 

@@ -16,6 +16,7 @@ title: "寻找揭示linux网络及系统性能的工具"
       - It is an online TCP duplication tool and can be used for testing (using netlink and raw
         sockets).And the author claimed it's better than [ab](http://httpd.apache.org/docs/2.0/programs/ab.html).
   * [Weighhttp](http://redmine.lighttpd.net/projects/weighttp/wiki)
+  * [tsung](http://tsung.erlang-projects.org/)
   
 ##System Inspecting##
   * [PowerTop](https://www.linuxpowertop.org/powertop/)
@@ -24,6 +25,7 @@ title: "寻找揭示linux网络及系统性能的工具"
   * [Systemtap](http://sourceware.org/systemtap/)
       - [Introduction](http://rdc.taobao.com/blog/cs/?p=477)
       - [Slides](http://www.slideshare.net/mryufeng/systemtap)
+  * Ksysguard
 <!-- more -->
 ##Network Inspecting##
   * [tcprstat](http://www.percona.com/docs/wiki/tcprstat:start)
@@ -32,3 +34,4 @@ title: "寻找揭示linux网络及系统性能的工具"
 ##Hardware Inspecting##
   * [cpu-topology](http://software.intel.com/en-us/articles/intel-64-architecture-processor-topology-enumeration/)
       - [Introduction](http://rdc.taobao.com/blog/cs/?p=460)
+  * [intel performance counter monitor](http://software.intel.com/en-us/articles/intel-performance-counter-monitor)

@@ -3,7 +3,7 @@ layout: post
 description: "check tcp connections"
 date: 2012-08-09 11:39
 comments: true
-categories: [network,c,linux]
+categories: [network,C,linux]
 title: TCP状态迁移及状态码
 keywords: linux, tcp, connection
 ---
@@ -39,4 +39,5 @@ enum {
 
 `st`这一列即代表连接状态，下面该怎么做，你懂的。
 
+要想快速高效的显示连接状态信息，推荐用(ss)[http://stackoverflow.com/questions/11763376/difference-between-netstat-and-ss-in-linux]。
 Have fun.
