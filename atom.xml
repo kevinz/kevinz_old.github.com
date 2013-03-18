@@ -4,7 +4,7 @@
   <title><![CDATA[Code Mind]]></title>
   <link href="http://gekben.gitcd.com/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-13T17:20:39+08:00</updated>
+  <updated>2012-11-14T15:53:02+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -12,6 +12,116 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[基于lvs的全透明传输思考]]></title>
+    <link href="http://gekben.gitcd.com/blog/2012/11/13/full-transparent-with-lvs/"/>
+    <updated>2012-11-13T17:28:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2012/11/13/full-transparent-with-lvs</id>
+    <content type="html"><![CDATA[<p>互联网公司一般使用LB的方式，是把Web App Server作为real server，最简单的情况是请求在这里终结，响应由Web App Server返回，一般web server不用再访问外网了。再复杂的情况，就
+是Web App Server又作为client去请求内网的其它资源，如DB，其它Web Server等，在这种典型的互联网部署模式下，一般可以把Web Server看作终点。</p>
+
+<p>还有一种部署方式，load balancing的对象不是Web App Server，而是firewall系统，比如用linux搭建的firewall，经过firewall的流量需要全透明传输，即不修改layer 2以上的信息，firewall
+对过滤后合格的包做forwarding。在这种部署模式下，LB也需要有全透明传输的能力，画个图解释一下:</p>
+
+<!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-6">
+    <img src="http://gekben.gitcd.com/images/post_img/lvs_trans_firewall.png"
+         width="1015" height="402"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-6" style="display:none">
+    <img src="http://gekben.gitcd.com/images/post_img/lvs_trans_firewall.png"
+         width="1450" height="574"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-6").hide();
+    jQuery("#image-dialog-6").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1490,
+      minHeight: 614,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-6").click(function() {
+      jQuery("#image-dialog-6").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="http://gekben.gitcd.com/images/post_img/lvs_trans_firewall.png" width="1450" height="574"/>
+</div>
+
+
+
+<!-- more -->
+
+
+<p>这里所说的LB都是lvs，以http为例，首先client请求WWW Server，client有自己的公网地址，组装好的ip header，source ip是cip，destination ip是www_ip，
+source port是cport，destination port 80，lvs要支持这种destination ip非vip的部署，需要使用到fwmark。
+首先是要mark出这个请求：</p>
+
+<figure class='code'><figcaption><span>mark the traffic  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#iptables -t mangle -A PREROUTING -p tcp --dport 80 -j MARK --set-xmark 1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>然后交由lvs处理：</p>
+
+<figure class='code'><figcaption><span>direct traffic to local_in hook  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#ip rule add prio 101 fwmark 1 table 101</span>
+</span><span class='line'><span class="c">#ip route add local 0/0 dev lo table 10</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>lvs的fwmark service及real server：</p>
+
+<figure class='code'><figcaption><span>define lvs fwmark service and real servers hook:bash </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>#ipvsadm -A -f 1 -p #default scheduler is wlc,enable persistent
+</span><span class='line'>#ipvsadm -a -f 1 -r rs1 #default xmit method is direct routing 
+</span><span class='line'>#ipvsadm -a -f 1 -r rs2
+</span><span class='line'>#ipvsadm -a -f 1 -r rs2
+</span><span class='line'>#ipvsadm -a -f 1 -r rs2</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这样配置后，LB1充当了透明的load balancer，经过LB1的request的layer2以上的信息都没有变化，rs1~rs4都可以接收请求，
+并进行过滤处理，也是全透明的。先考虑没有LB2的情况，request从rs出来，被转发到Router，Router在将request转发至外网，
+直至WWW_Server。从Client到WWW_server，layer2以上的地址和端口信息都没有改变。</p>
+
+<p>Response从WWW_Server出发，source是www_ip：80，destination是cip:cport，发向Router，Router这时候不知道该
+如何进行路由了，因为从rs1出来的request，对应的response也要回到rs1，Router没有rs1的内部ip，也没有连接信息
+参考，response回不到对应real server，连接无法建立起来。</p>
+
+<p>产生这个问题的原因是real server是有状态的，在request经过它时做了记录，例如linux的防火墙的基础conn_track，它期待response
+也必须经过这台real server，tcp/udp以及基于它们的应用层协议都是如此。为了让response能回到正确的real server，需要利用到一种技术，
+所有request和response都要经过它转发，在request进来时，记录它的源mac地址和接收包的device，response回来时，绕过路由直接发送给
+之前记录的源mac，维护连接表+mac地址是必须的。</p>
+
+<p>目前支持这种技术的设备有F5，被称为Auto Last Hop，还有Juniper的某些设备，称作Reverse Route。把这种设备部署在LB2的位置，即可实现
+full transparent，当然，也不是一定要单独搞一台LB2，用一台LB既做Load Balancer又做反向路由也是可以的。使用这种设备的最大缺点就是，
+贵。于是想基于Lvs实现方向路由功能，想想也是非常合理的，lvs本身可以很好的维护管理连接状态，它有一张connection table，连接状态迁移，
+超时机制，垃圾回收都已经非常成熟，再加上source mac和in_dev并不难。需要注意的是，lvs在这种使用模式下，应该定义fwmark service，它的rs只有一个，
+就是下一跳的ip。经过一段时间的开发，对lvs进行修改后，基于lvs的反向路由功能已经OK，准备下一篇来讲讲细节。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[搭建基于User Mode Linux网络模块开发环境]]></title>
@@ -370,7 +480,8 @@ HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码
 
 <p><code>st</code>这一列即代表连接状态，下面该怎么做，你懂的。</p>
 
-<p>Have fun.</p>
+<p>要想快速高效的显示连接状态信息，推荐用(ss)[http://stackoverflow.com/questions/11763376/difference-between-netstat-and-ss-in-linux]。
+Have fun.</p>
 ]]></content>
   </entry>
   
@@ -969,6 +1080,43 @@ config文件，可以直接修改config，或者以<code>make menuconfig</code>�
 </span></code></pre></td></tr></table></div></figure>
 
 
+<p>后来又遇到<code>rake generate</code>时报<code>Psych::SyntaxError</code> parse错误，表面看是说<code>_config.yml</code>有
+问题，但实际问题往往出在自己写的<code>_post</code>的markdown文件上，可以在<code>psycn.rb</code>上加调试语句来发现问题。</p>
+
+<figure class='code'><figcaption><span>my solution  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">parse_stream</span> <span class="n">yaml</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nb">block_given?</span>
+</span><span class='line'>      <span class="n">parser</span> <span class="o">=</span> <span class="no">Psych</span><span class="o">::</span><span class="no">Parser</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="no">Handlers</span><span class="o">::</span><span class="no">DocumentStream</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="o">&amp;</span><span class="n">block</span><span class="p">))</span>
+</span><span class='line'>      <span class="c1"># debug begin</span>
+</span><span class='line'>      <span class="k">if</span> <span class="n">filename</span> <span class="o">==</span> <span class="kp">nil</span>
+</span><span class='line'>        <span class="nb">p</span> <span class="n">yaml</span><span class="p">,</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Debuging&quot;</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>      <span class="c1"># debug end</span>
+</span><span class='line'>      <span class="n">parser</span><span class="o">.</span><span class="n">parse</span> <span class="n">yaml</span><span class="p">,</span> <span class="n">filename</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="n">parser</span> <span class="o">=</span> <span class="nb">self</span><span class="o">.</span><span class="n">parser</span>
+</span><span class='line'>      <span class="n">parser</span><span class="o">.</span><span class="n">parse</span> <span class="n">yaml</span><span class="p">,</span> <span class="n">filename</span>
+</span><span class='line'>      <span class="n">parser</span><span class="o">.</span><span class="n">handler</span><span class="o">.</span><span class="n">root</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
 
 ]]></content>
   </entry>
@@ -1297,6 +1445,7 @@ sockets).And the author claimed it&#8217;s better than <a href="http://httpd.apa
 </ul>
 </li>
 <li><a href="http://redmine.lighttpd.net/projects/weighttp/wiki">Weighhttp</a></li>
+<li><a href="http://tsung.erlang-projects.org/">tsung</a></li>
 </ul>
 
 
@@ -1317,6 +1466,7 @@ sockets).And the author claimed it&#8217;s better than <a href="http://httpd.apa
 <li><a href="http://www.slideshare.net/mryufeng/systemtap">Slides</a></li>
 </ul>
 </li>
+<li>Ksysguard</li>
 </ul>
 
 
@@ -1344,6 +1494,7 @@ sockets).And the author claimed it&#8217;s better than <a href="http://httpd.apa
 <li><a href="http://rdc.taobao.com/blog/cs/?p=460">Introduction</a></li>
 </ul>
 </li>
+<li><a href="http://software.intel.com/en-us/articles/intel-performance-counter-monitor">intel performance counter monitor</a></li>
 </ul>
 
 ]]></content>

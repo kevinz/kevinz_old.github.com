@@ -10,7 +10,7 @@
 
   
   <meta name="description" content="纸上得来终觉浅，绝知此事要躬行，记录技术成长之路">
-  <meta name="keywords" content="clojure , linux , archlinux , tools ,programming , tcp/ip ,web development , performance">
+  <meta name="keywords" content="clojure , linux , kernel, archlinux , tools ,programming , tcp/ip ,web development , performance">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -25,11 +25,10 @@
   <script src="/javascripts/ender.js"></script>
   <script src="/javascripts/octopress.js" type="text/javascript"></script>
   <link href="/atom.xml" rel="alternate" title="Code Mind" type="application/atom+xml">
-  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
-<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
+  <link href="/stylesheets/google_fonts.css" rel="stylesheet" type="text/css">
+ <script src="/javascripts/libs/jquery.min.js" type="text/javascript"></script>
+ <script src="/javascripts/libs/jquery-ui.min.js" type="text/javascript"></script>
+
 
   
 
@@ -67,6 +66,91 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/11/13/full-transparent-with-lvs/">基于lvs的全透明传输思考</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-13T17:28:00+08:00" pubdate data-updated="true">Nov 13<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>互联网公司一般使用LB的方式，是把Web App Server作为real server，最简单的情况是请求在这里终结，响应由Web App Server返回，一般web server不用再访问外网了。再复杂的情况，就
+是Web App Server又作为client去请求内网的其它资源，如DB，其它Web Server等，在这种典型的互联网部署模式下，一般可以把Web Server看作终点。</p>
+
+<p>还有一种部署方式，load balancing的对象不是Web App Server，而是firewall系统，比如用linux搭建的firewall，经过firewall的流量需要全透明传输，即不修改layer 2以上的信息，firewall
+对过滤后合格的包做forwarding。在这种部署模式下，LB也需要有全透明传输的能力，画个图解释一下:</p>
+
+<!-- -*- html -*- -->
+
+<div class="imgpopup screen">
+  <div class="caption">Click the image for a larger view.</div>
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-6">
+    <img src="/images/post_img/lvs_trans_firewall.png"
+         width="1015" height="402"
+         alt="Click me."/>
+  </a>
+  <div id="image-dialog-6" style="display:none">
+    <img src="/images/post_img/lvs_trans_firewall.png"
+         width="1450" height="574"/>
+    <br clear="all"/>
+  </div>
+</div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery("#image-dialog-6").hide();
+    jQuery("#image-dialog-6").dialog({
+      autoOpen:  false,
+      modal:     true,
+      draggable: false,
+      minWidth:  1490,
+      minHeight: 614,
+      show:      'scale',
+      hide:      'scale'
+    });
+
+    jQuery("#image-6").click(function() {
+      jQuery("#image-dialog-6").dialog('open');
+    });
+
+  });
+</script>
+<div class="illustration print" style="display:none">
+  <img src="/images/post_img/lvs_trans_firewall.png" width="1450" height="574"/>
+</div>
+
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/11/13/full-transparent-with-lvs/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -758,70 +842,6 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/07/11/study-on-lvs-kernel-code/">LVS Peristent代码分析</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-07-11T12:24:00+08:00" pubdate data-updated="true">Jul 11<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>一直纠结于LVS使用persistent时，是以何为依据，决定一个新的连接请求的命运的：是被persistent管理，去到之前的real server，还是被调度算法重新调度，去到新的real server。
-代码里其实写得非常清楚：</p>
-
-<h2>Persistent in LVS(ipvs)</h2>
-
-<ul>
-<li>fwmark
-
-<ul>
-<li>&lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0> 这个六元组，最开始是写死的
-ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dport，
-这个daddr值得一提，经过debug发现，这个值为<code>0.0.0.fwmark</code>。</li>
-</ul>
-</li>
-<li>Port zero service &lt;protocol,caddr,0,vaddr,0,daddr,0></li>
-<li>non Port zero service
-
-<ul>
-<li>FTP &lt;caddr,0,vaddr,0,daddr,0></li>
-<li>NON-FTP &lt;caddr,0,vaddr,vport,daddr,dport></li>
-</ul>
-</li>
-</ul>
-
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2012/07/11/study-on-lvs-kernel-code/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -835,6 +855,10 @@ ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dpor
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/11/13/full-transparent-with-lvs/">基于lvs的全透明传输思考</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2012/11/13/build-uml-development-environment/">搭建基于User Mode Linux网络模块开发环境</a>
@@ -852,15 +876,11 @@ ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dpor
         <a href="/blog/2012/08/09/check-tcp-connections/">TCP状态迁移及状态码</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2012/07/29/virtualbox-work-with-linux-ck/">how virtualbox work with linux-ck</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.45454545454545%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 110.9090909090909%'>C(2)</a> <a href='/blog/categories/c' style='font-size: 105.45454545454545%'>C(1)</a> <a href='/blog/categories/emacs' style='font-size: 110.9090909090909%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.45454545454545%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.45454545454545%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 138.1818181818182%'>Kernel(7)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(11)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.45454545454545%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 105.45454545454545%'>Lvs(1)</a> <a href='/blog/categories/network' style='font-size: 138.1818181818182%'>Network(7)</a> <a href='/blog/categories/networking' style='font-size: 105.45454545454545%'>Networking(1)</a> <a href='/blog/categories/octopress' style='font-size: 110.9090909090909%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.9090909090909%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 127.27272727272728%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.45454545454545%'>Tools(1)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 115.0%'>C(3)</a> <a href='/blog/categories/emacs' style='font-size: 110.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 140.0%'>Kernel(8)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(12)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.0%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 110.0%'>Lvs(2)</a> <a href='/blog/categories/network' style='font-size: 145.0%'>Network(9)</a> <a href='/blog/categories/octopress' style='font-size: 110.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 125.0%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.0%'>Tools(1)</a> </span>
 </section>
 
 <section>
@@ -871,34 +891,6 @@ ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dpor
 </section>
 
 <iframe width="100%" height="550" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=550&fansRow=2&ptype=1&speed=0&skin=10&isTitle=0&noborder=0&isWeibo=1&isFans=0&uid=1652588700&verifier=275352cd&dpc=1"></iframe>
-
-<section class="googleplus">
-  <h1>
-    <a href="https://plus.google.com/kevintech08@gmail.com?rel=author">
-      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
-      Google+
-    </a>
-  </h1>
-</section>
-
-
-
-<section>
-  <h1>Latest Tweets</h1>
-  <ul id="tweets">
-    <li class="loading">Status updating&#8230;</li>
-  </ul>
-  <script type="text/javascript">
-    $.domReady(function(){
-      getTwitterFeed("keving_zz", 0, false);
-    });
-  </script>
-  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
-  
-    <a href="http://twitter.com/keving_zz" class="twitter-follow-button" data-show-count="false">Follow @keving_zz</a>
-  
-</section>
-
 
   
 </aside>
@@ -930,25 +922,7 @@ ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dpor
 
 
 
-  <script type="text/javascript">
-    (function() {
-      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
-      script.src = 'https://apis.google.com/js/plusone.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
-    })();
-  </script>
 
-
-
-  <script type="text/javascript">
-    (function(){
-      var twitterWidgets = document.createElement('script');
-      twitterWidgets.type = 'text/javascript';
-      twitterWidgets.async = true;
-      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
-      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
-    })();
-  </script>
 
 
 

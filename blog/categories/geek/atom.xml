@@ -4,7 +4,7 @@
   <title><![CDATA[Category: geek | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/geek/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-13T17:20:39+08:00</updated>
+  <updated>2012-11-14T15:53:02+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -72,12 +72,12 @@ msc{
 
 <div class="imgpopup screen">
   <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-11">
+  <a href='javascript:void(0)' style="text-decoration: none" id="image-16">
     <img src="/images/post_img/lvs_transp.png"
          width="600" height="429"
          alt="Click me."/>
   </a>
-  <div id="image-dialog-11" style="display:none">
+  <div id="image-dialog-16" style="display:none">
     <img src="/images/post_img/lvs_transp.png"
          width="1200" height="857"/>
     <br clear="all"/>
@@ -85,8 +85,8 @@ msc{
 </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery("#image-dialog-11").hide();
-    jQuery("#image-dialog-11").dialog({
+    jQuery("#image-dialog-16").hide();
+    jQuery("#image-dialog-16").dialog({
       autoOpen:  false,
       modal:     true,
       draggable: false,
@@ -96,8 +96,8 @@ msc{
       hide:      'scale'
     });
 
-    jQuery("#image-11").click(function() {
-      jQuery("#image-dialog-11").dialog('open');
+    jQuery("#image-16").click(function() {
+      jQuery("#image-dialog-16").dialog('open');
     });
 
   });
