@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-14T15:53:02+08:00</updated>
+  <updated>2013-03-19T08:31:40+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -24,44 +24,7 @@
 <p>还有一种部署方式，load balancing的对象不是Web App Server，而是firewall系统，比如用linux搭建的firewall，经过firewall的流量需要全透明传输，即不修改layer 2以上的信息，firewall
 对过滤后合格的包做forwarding。在这种部署模式下，LB也需要有全透明传输的能力，画个图解释一下:</p>
 
-<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
-
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-7">
-    <img src="/images/post_img/lvs_trans_firewall.png"
-         width="1015" height="402"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-7" style="display:none">
-    <img src="/images/post_img/lvs_trans_firewall.png"
-         width="1450" height="574"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-7").hide();
-    jQuery("#image-dialog-7").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1490,
-      minHeight: 614,
-      show:      'scale',
-      hide:      'scale'
-    });
-
-    jQuery("#image-7").click(function() {
-      jQuery("#image-dialog-7").dialog('open');
-    });
-
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/lvs_trans_firewall.png" width="1450" height="574"/>
-</div>
-</notextile></div></p>
+<p>{% imgpopup /images/post_img/lvs_trans_firewall.png 70%  %}</p>
 
 <!-- more -->
 
@@ -69,65 +32,35 @@
 <p>这里所说的LB都是lvs，以http为例，首先client请求WWW Server，client有自己的公网地址，组装好的ip header，source ip是cip，destination ip是www_ip，
 source port是cport，destination port 80，lvs要支持这种destination ip非vip的部署，需要使用到fwmark。
 首先是要mark出这个请求：
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>mark the traffic  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;iptables -t mangle -A PREROUTING -p tcp --dport 80 -j MARK --set-xmark 1&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock mark the traffic lang:bash %}</p>
+
+<h1>iptables -t mangle -A PREROUTING -p tcp --dport 80 -j MARK --set-xmark 1</h1>
+
+<p>{% endcodeblock %}</p>
 
 <p>然后交由lvs处理：
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>direct traffic to local_in hook  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;ip rule add prio 101 fwmark 1 table 101&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;ip route add <span class="nb">local </span>0/0 dev lo table 10&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock direct traffic to local_in hook lang:bash %}</p>
+
+<h1>ip rule add prio 101 fwmark 1 table 101</h1>
+
+<h1>ip route add local 0/0 dev lo table 10</h1>
+
+<p>{% endcodeblock %}</p>
 
 <p>lvs的fwmark service及real server：
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>define lvs fwmark service and real servers hook:bash </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;h1>ipvsadm -A -f 1 -p #default scheduler is wlc,enable persistent&lt;/h1>
-</span><span class='line'>
-</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs1 #default xmit method is direct routing&lt;/h1>
-</span><span class='line'>
-</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs2&lt;/h1>
-</span><span class='line'>
-</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs2&lt;/h1>
-</span><span class='line'>
-</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs2&lt;/h1>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock define lvs fwmark service and real servers hook:bash %}</p>
+
+<h1>ipvsadm -A -f 1 -p #default scheduler is wlc,enable persistent</h1>
+
+<h1>ipvsadm -a -f 1 -r rs1 #default xmit method is direct routing</h1>
+
+<h1>ipvsadm -a -f 1 -r rs2</h1>
+
+<h1>ipvsadm -a -f 1 -r rs2</h1>
+
+<h1>ipvsadm -a -f 1 -r rs2</h1>
+
+<p>{% endcodeblock %}</p>
 
 <p>这样配置后，LB1充当了透明的load balancer，经过LB1的request的layer2以上的信息都没有变化，rs1~rs4都可以接收请求，
 并进行过滤处理，也是全透明的。先考虑没有LB2的情况，request从rs出来，被转发到Router，Router在将request转发至外网，
@@ -157,127 +90,70 @@ full transparent，当然，也不是一定要单独搞一台LB2，用一台LB�
     <id>http://gekben.gitcd.com/blog/2012/11/13/build-uml-development-environment</id>
     <content type="html"><![CDATA[<p>最近在写一些内核网络模块，需要一个好用的编译、调试、测试环境，选用了uml，记录一下设置多台uml和host通信，并share fs。
 uml基本安装和使用可以参考<a href="https://wiki.archlinux.org/index.php/User-mode_Linux#Setup_by_rootfs_.2B_tap">archlinux uml</a>。
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>start uml with vde support  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;先启动虚拟switch&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;vde_switch -s /tmp/switch1 -tap tap0 -m 666&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;启动一台单网卡的uml，已经与之前定义的switch绑定&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;vmlinux <span class="nv">ubd0</span><span class="o">=</span>arch_rootfs1  <span class="nv">mem</span><span class="o">=</span>256M <span class="nv">eth0</span><span class="o">=</span>vde,/tmp/switch1&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;启动一台双网卡的uml，已经与之前定义的switch绑定&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;vmlinux <span class="nv">ubd0</span><span class="o">=</span>arch_rootfs2  <span class="nv">mem</span><span class="o">=</span>256M <span class="nv">eth0</span><span class="o">=</span>vde,/tmp/switch1 <span class="nv">eth1</span><span class="o">=</span>vde,/tmp/switch1&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock start uml with vde support lang:bash %}</p>
+
+<h1>先启动虚拟switch</h1>
+
+<h1>vde_switch -s /tmp/switch1 -tap tap0 -m 666</h1>
+
+<h1>启动一台单网卡的uml，已经与之前定义的switch绑定</h1>
+
+<h1>vmlinux ubd0=arch_rootfs1  mem=256M eth0=vde,/tmp/switch1</h1>
+
+<h1>启动一台双网卡的uml，已经与之前定义的switch绑定</h1>
+
+<h1>vmlinux ubd0=arch_rootfs2  mem=256M eth0=vde,/tmp/switch1 eth1=vde,/tmp/switch1</h1>
+
+<p>{% endcodeblock %}</p>
 
 <!-- more -->
 
 
 <p>启动完成后，在linux里用常规的网络设置方法完成ip地址的分配。
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>network configuration  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;ifconfig eth0 192.168.0.101 up&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;ifconfig eth1 192.168.0.101 up&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;确定host上的tap0已经正确设置并启用&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;ifconfig tap0 192.168.0.100 up&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+{% codeblock network configuration lang:bash %}</p>
+
+<h1>ifconfig eth0 192.168.0.101 up</h1>
+
+<h1>ifconfig eth1 192.168.0.101 up</h1>
+
+<h1>确定host上的tap0已经正确设置并启用</h1>
+
+<h1>ifconfig tap0 192.168.0.100 up</h1>
+
+<p>{% endcodeblock %}
 完成后用ping测试下，各个uml和host之间的网络通信是否正常。</p>
 
 <p>接下来设置uml与主机的文件系统共享。
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>mounting hostfs directory  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;mkdir -p /root/source&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;mount none /root/source/ -t hostfs -o /home/yourname/code/&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock mounting hostfs directory lang:bash %}</p>
+
+<h1>mkdir -p /root/source</h1>
+
+<h1>mount none /root/source/ -t hostfs -o /home/yourname/code/</h1>
+
+<p>{% endcodeblock %}</p>
 
 <p>完成后，应该可以读写hostfs的文件，测试一下，放一份linux源代码在host的<code>/home/yourname/code/</code>下，
 目录结构是<code>/home/yourname/code/linux</code>，自己写的module的目录在<code>/home/yourname/code/my_module</code>，
 对应在uml上的目录就是<code>/root/source/linux</code>和<code>/root/source/my_module</code>。
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Makefile of my_module :bash </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>obj-m := test.o #source file is test.c
-</span><span class='line'>KDIR := /root/source/linux
-</span><span class='line'>PWD := $(shell pwd)
-</span><span class='line'>default:&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>    $(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock Makefile of my_module :bash %}
+obj-m := test.o #source file is test.c
+KDIR := /root/source/linux
+PWD := $(shell pwd)
+default:</p>
+
+<pre><code>    $(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
+</code></pre>
+
+<p>{% endcodeblock %}</p>
 
 <p>在<code>/root/source/my_module</code>下<code>make</code>就可以了，在<code>#insmod test.ko</code>测试，如果crash了就<code>kill</code>掉host上的<code>vmlinux</code>进程，非常方便快速。
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>kill all vmlinux process  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;killall vmlinux processes <span class="k">if </span>uml can<span class="err">&#39;</span>t be started&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;killall vmlinux&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock kill all vmlinux process lang:bash %}</p>
+
+<h1>killall vmlinux processes if uml can't be started</h1>
+
+<h1>killall vmlinux</h1>
+
+<p>{% endcodeblock %}</p>
 
 <p>当然，gdb也是可以用的，可以参考uml gdb调试相关的介绍。</p>
 ]]></content>
@@ -304,20 +180,18 @@ kernel，可以search到的suse上安装systemtap的内容不多，碰到问题�
 
 <p>当我做完了以上这些，运行一个简单的脚本时:</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>systemtap hello_world  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo stap -ve <span class="s1">&#39;probe begin { log(&quot;hello world&quot;) exit() }&#39;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>{% codeblock systemtap hello_world lang:bash %}
+sudo stap -ve 'probe begin { log("hello world") exit() }'
+{% endcodeblock  %}</p>
 
 <!-- more -->
 
 
 <p>这个简单的例子是ok的，因为它不会涉及到systemtap的pass5，与kernel
 module交互。跑下面这个的时候，就不行了:
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>systemtap hello_world  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>stap -v -e <span class="s1">&#39;probe vfs.read {printf(&quot;has VFS read()\n&quot;); exit()}&#39;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+{% codeblock systemtap hello_world lang:bash %}
+stap -v -e 'probe vfs.read {printf("has VFS read()\n"); exit()}'
+{% endcodeblock  %}
 会报出类似<code>ERROR: Build-id mismatch: "kernel" vs. "vmlinux" byte 0 (0xf9 vs 0xa2)</code>的问题，关于build-id mismatch这个问题，还是可以
 搜索到不少资料的，不过告诉如何解决的也不多。先说明下这个问题，
 <code>kernel-default-debuginfo</code>里面是附赠了一个kernel elf文件的，在SUSE里，
@@ -328,12 +202,10 @@ module交互。跑下面这个的时候，就不行了:
 build-id，执行结果的第一个字节是<code>f9</code>，那另外一个<code>a2</code>是从哪里得出来的，猜想应该和当
 前运行的kernel有关，于是拿到当前运行的vmlinux的压缩文件，解压后检查
 build-id：
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>check build-id  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>   gunzip /boot/vmlinux-3.0.13-0.27-default.gz
-</span><span class='line'>   eu-readelf -n /boot/vmlinux-3.0.13-0.27-default
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+{% codeblock check build-id lang:bash %}
+   gunzip /boot/vmlinux-3.0.13-0.27-default.gz
+   eu-readelf -n /boot/vmlinux-3.0.13-0.27-default
+{% endcodeblock %}
 执行结果也是<code>f9</code>，是对得上的啊。</p>
 
 <p>但是注意，这份.gz文件是SUSE附赠的，跟当前跑的vmlinz文件没有关系，于是
@@ -345,108 +217,57 @@ build-id：
 
 <p>只能另外想办法，其实systemtap做kernel mismatch判断的关键代码，就在:</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>systemtap/runtime/sym.c  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">stp_build_id_check</span> <span class="p">(</span><span class="k">struct</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">stp_module</span> <span class="o">*</span><span class="n">m</span><span class="p">,</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">notes_addr</span><span class="p">,</span>
-</span><span class='line'>        <span class="k">struct</span> <span class="n">task_struct</span> <span class="o">*</span><span class="n">tsk</span><span class="p">)</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">{</span>
-</span><span class='line'><span class="p">...</span>
-</span><span class='line'><span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="n">just</span> <span class="n">hack</span> <span class="n">it</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
-</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">rc</span> <span class="o">||</span> <span class="p">(</span><span class="n">theory</span> <span class="o">!=</span> <span class="n">practice</span><span class="p">))</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">basename</span><span class="p">;</span>
-</span><span class='line'>  <span class="n">basename</span> <span class="o">=</span> <span class="n">strrchr</span><span class="p">(</span><span class="n">m</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">path</span><span class="p">,</span> <span class="sc">&#39;/&#39;</span><span class="p">);</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">basename</span><span class="p">)</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="n">basename</span><span class="o">++</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">else</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="n">basename</span> <span class="o">=</span> <span class="n">m</span><span class="o">-&gt;</span><span class="n">path</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">if</span> <span class="n">LINUX_VERSION_CODE</span> <span class="o">&gt;=</span> <span class="n">KERNEL_VERSION</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">27</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="n">_stp_error</span> <span class="p">(</span><span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) address %#lx rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="o">|</span>     <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">notes_addr</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">else</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="cm">/* This branch is a surrogate for kernels affected by Fedora bug</span>
-</span><span class='line'><span class="cm">   * #465873. */</span>
-</span><span class='line'>  <span class="n">_stp_warn</span> <span class="p">(</span><span class="n">KERN_WARNING</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;|</span>   <span class="o">|</span>    <span class="s">&quot;Build-id mismatch: </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> vs. </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;</span><span class="s"> byte %d (0x%02x vs 0x%02x) rc %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
-</span><span class='line'><span class="o">|</span>   <span class="o">|</span>    <span class="n">m</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">practice</span><span class="p">,</span> <span class="n">rc</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">endif</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">break</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span> <span class="cm">/* end mismatch */</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>{% codeblock systemtap/runtime/sym.c lang:c %}
+static int <em>stp_build_id_check (struct </em>stp_module *m,</p>
+
+<pre><code>        unsigned long notes_addr,
+        struct task_struct *tsk)
+</code></pre>
+
+<p>{
+...
+/<em> just hack it </em>/
+if (rc || (theory != practice)) {</p>
+
+<pre><code>  const char *basename;
+  basename = strrchr(m-&gt;path, '/');
+  if (basename)
+</code></pre>
+
+<p>|   basename++;</p>
+
+<pre><code>  else
+</code></pre>
+
+<p>|   basename = m->path;</p>
+
+<h1>if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)</h1>
+
+<pre><code>  _stp_error ("Build-id mismatch: \"%s\" vs. \"%s\" byte %d (0x%02x vs 0x%02x) address %#lx rc %d\n",
+</code></pre>
+
+<p>|   |     m->name, basename, j, theory, practice, notes_addr, rc);</p>
+
+<pre><code>  return 1;
+</code></pre>
+
+<h1>else</h1>
+
+<pre><code>  /* This branch is a surrogate for kernels affected by Fedora bug
+   * #465873. */
+  _stp_warn (KERN_WARNING
+</code></pre>
+
+<p>|   |    "Build-id mismatch: \"%s\" vs. \"%s\" byte %d (0x%02x vs 0x%02x) rc %d\n",
+|   |    m->name, basename, j, theory, practice, rc);</p>
+
+<h1>endif</h1>
+
+<pre><code>  break;
+} /* end mismatch */
+</code></pre>
+
+<p>{% endcodeblock %}</p>
 
 <p>关键就在于<code>if (rc || (theory != practice))</code>，小小修改的一下，写成:
 <code>if (0 &amp;&amp; (rc || (theory != practice)))</code>就OK了，绕过了检查。然后重新编
@@ -501,94 +322,33 @@ HP的网卡实在是无力吐嘈。之后研究下再驱动代码吧，有代码
     <link href="http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections/"/>
     <updated>2012-08-09T11:39:00+08:00</updated>
     <id>http://gekben.gitcd.com/blog/2012/08/09/check-tcp-connections</id>
-    <content type="html"><![CDATA[<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
-
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-8">
-    <img src="/images/post_img/Tcp_state_diagram.svg"
-         width="542" height="409"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-8" style="display:none">
-    <img src="/images/post_img/Tcp_state_diagram.svg"
-         width="1084" height="817"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-8").hide();
-    jQuery("#image-dialog-8").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1124,
-      minHeight: 857,
-      show:      'scale',
-      hide:      'scale'
-    });
-
-    jQuery("#image-8").click(function() {
-      jQuery("#image-dialog-8").dialog('open');
-    });
-
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/Tcp_state_diagram.svg" width="1084" height="817"/>
-</div>
-</notextile></div></p>
+    <content type="html"><![CDATA[<p>{% imgpopup /images/post_img/Tcp_state_diagram.svg  50%  %}</p>
 
 <p>想必大家对上图都比较熟悉了，补充下内核里对以上状态码的表示，顺便对源代码做了下改动，每个
 状态的代码都补出来了。</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>tcp_state.h  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">enum</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">TCP_ESTABLISHED</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-</span><span class='line'><span class="n">TCP_SYN_SENT</span>    <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-</span><span class='line'><span class="n">TCP_SYN_RECV</span>    <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
-</span><span class='line'><span class="n">TCP_FIN_WAIT1</span>   <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
-</span><span class='line'><span class="n">TCP_FIN_WAIT2</span>   <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-</span><span class='line'><span class="n">TCP_TIME_WAIT</span>   <span class="o">=</span> <span class="mi">6</span>
-</span><span class='line'><span class="n">TCP_CLOSE</span>       <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
-</span><span class='line'><span class="n">TCP_CLOSE_WAIT</span>  <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
-</span><span class='line'><span class="n">TCP_LAST_ACK</span>    <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>
-</span><span class='line'><span class="n">TCP_LISTEN</span>      <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
-</span><span class='line'><span class="n">TCP_CLOSING</span>     <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>   <span class="cm">/* Now a valid state */</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">TCP_MAX_STATES</span>  <span class="cm">/* Leave at the end! */</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">};</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>{% codeblock tcp_state.h lang:c %}</p>
+
+<p>enum {</p>
+
+<pre><code>TCP_ESTABLISHED = 1,
+TCP_SYN_SENT    = 2,
+TCP_SYN_RECV    = 3,
+TCP_FIN_WAIT1   = 4,
+TCP_FIN_WAIT2   = 5,
+TCP_TIME_WAIT   = 6
+TCP_CLOSE       = 7, 
+TCP_CLOSE_WAIT  = 8,
+TCP_LAST_ACK    = 9,
+TCP_LISTEN      = 10,
+TCP_CLOSING     = 11,   /* Now a valid state */
+
+TCP_MAX_STATES  /* Leave at the end! */
+</code></pre>
+
+<p>};</p>
+
+<p>{% endcodeblock   %}</p>
 
 <!-- more -->
 

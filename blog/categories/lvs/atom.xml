@@ -4,7 +4,7 @@
   <title><![CDATA[Category: lvs | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/lvs/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-14T15:53:02+08:00</updated>
+  <updated>2013-03-19T08:31:40+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -24,44 +24,7 @@
 <p>还有一种部署方式，load balancing的对象不是Web App Server，而是firewall系统，比如用linux搭建的firewall，经过firewall的流量需要全透明传输，即不修改layer 2以上的信息，firewall
 对过滤后合格的包做forwarding。在这种部署模式下，LB也需要有全透明传输的能力，画个图解释一下:</p>
 
-<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
-
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-17">
-    <img src="/images/post_img/lvs_trans_firewall.png"
-         width="1015" height="402"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-17" style="display:none">
-    <img src="/images/post_img/lvs_trans_firewall.png"
-         width="1450" height="574"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-17").hide();
-    jQuery("#image-dialog-17").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1490,
-      minHeight: 614,
-      show:      'scale',
-      hide:      'scale'
-    });
-
-    jQuery("#image-17").click(function() {
-      jQuery("#image-dialog-17").dialog('open');
-    });
-
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/lvs_trans_firewall.png" width="1450" height="574"/>
-</div>
-</notextile></div></p>
+<p>{% imgpopup /images/post_img/lvs_trans_firewall.png 70%  %}</p>
 
 <!-- more -->
 
@@ -69,65 +32,35 @@
 <p>这里所说的LB都是lvs，以http为例，首先client请求WWW Server，client有自己的公网地址，组装好的ip header，source ip是cip，destination ip是www_ip，
 source port是cport，destination port 80，lvs要支持这种destination ip非vip的部署，需要使用到fwmark。
 首先是要mark出这个请求：
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>mark the traffic  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;iptables -t mangle -A PREROUTING -p tcp --dport 80 -j MARK --set-xmark 1&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock mark the traffic lang:bash %}</p>
+
+<h1>iptables -t mangle -A PREROUTING -p tcp --dport 80 -j MARK --set-xmark 1</h1>
+
+<p>{% endcodeblock %}</p>
 
 <p>然后交由lvs处理：
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>direct traffic to local_in hook  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;ip rule add prio 101 fwmark 1 table 101&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;ip route add <span class="nb">local </span>0/0 dev lo table 10&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock direct traffic to local_in hook lang:bash %}</p>
+
+<h1>ip rule add prio 101 fwmark 1 table 101</h1>
+
+<h1>ip route add local 0/0 dev lo table 10</h1>
+
+<p>{% endcodeblock %}</p>
 
 <p>lvs的fwmark service及real server：
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>define lvs fwmark service and real servers hook:bash </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;h1>ipvsadm -A -f 1 -p #default scheduler is wlc,enable persistent&lt;/h1>
-</span><span class='line'>
-</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs1 #default xmit method is direct routing&lt;/h1>
-</span><span class='line'>
-</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs2&lt;/h1>
-</span><span class='line'>
-</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs2&lt;/h1>
-</span><span class='line'>
-</span><span class='line'>&lt;h1>ipvsadm -a -f 1 -r rs2&lt;/h1>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock define lvs fwmark service and real servers hook:bash %}</p>
+
+<h1>ipvsadm -A -f 1 -p #default scheduler is wlc,enable persistent</h1>
+
+<h1>ipvsadm -a -f 1 -r rs1 #default xmit method is direct routing</h1>
+
+<h1>ipvsadm -a -f 1 -r rs2</h1>
+
+<h1>ipvsadm -a -f 1 -r rs2</h1>
+
+<h1>ipvsadm -a -f 1 -r rs2</h1>
+
+<p>{% endcodeblock %}</p>
 
 <p>这样配置后，LB1充当了透明的load balancer，经过LB1的request的layer2以上的信息都没有变化，rs1~rs4都可以接收请求，
 并进行过滤处理，也是全透明的。先考虑没有LB2的情况，request从rs出来，被转发到Router，Router在将request转发至外网，
@@ -189,270 +122,137 @@ ip协议，第一个0是cport，第二个0是dport，就是不在乎cport和dpor
 http://sina.com.cn时，<code>daddr</code>就是<code>0.0.0.3</code>。</p>
 
 <p>见代码17，21，77，80行。
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/net/netfilter/ipvs/ip_vs_core.c  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-<span class='line-number'>109</span>
-<span class='line-number'>110</span>
-<span class='line-number'>111</span>
-<span class='line-number'>112</span>
-<span class='line-number'>113</span>
-<span class='line-number'>114</span>
-<span class='line-number'>115</span>
-<span class='line-number'>116</span>
-<span class='line-number'>117</span>
-<span class='line-number'>118</span>
-<span class='line-number'>119</span>
-<span class='line-number'>120</span>
-<span class='line-number'>121</span>
-<span class='line-number'>122</span>
-<span class='line-number'>123</span>
-<span class='line-number'>124</span>
-<span class='line-number'>125</span>
-<span class='line-number'>126</span>
-<span class='line-number'>127</span>
-<span class='line-number'>128</span>
-<span class='line-number'>129</span>
-<span class='line-number'>130</span>
-<span class='line-number'>131</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="cm">/*</span>
-</span><span class='line'><span class="cm"> * As far as we know, FTP is a very complicated network protocol, and</span>
-</span><span class='line'><span class="cm"> * it uses control connection and data connections. For active FTP,</span>
-</span><span class='line'><span class="cm"> * FTP server initialize data connection to the client, its source port</span>
-</span><span class='line'><span class="cm"> * is often 20. For passive FTP, FTP server tells the clients the port</span>
-</span><span class='line'><span class="cm"> * that it passively listens to,  and the client issues the data</span>
-</span><span class='line'><span class="cm"> * connection. In the tunneling or direct routing mode, the load</span>
-</span><span class='line'><span class="cm"> * balancer is on the client-to-server half of connection, the port</span>
-</span><span class='line'><span class="cm"> * number is unknown to the load balancer. So, a conn template like</span>
-</span><span class='line'><span class="cm"> * &amp;lt;caddr, 0, vaddr, 0, daddr, 0&amp;gt; is created for persistent FTP</span>
-</span><span class='line'><span class="cm"> * service, and a template like &amp;lt;caddr, 0, vaddr, vport, daddr, dport&amp;gt;</span>
-</span><span class='line'><span class="cm"> * is created for other persistent services.</span>
-</span><span class='line'><span class="cm"> */</span>
-</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="cm">/* Check if a template already exists */</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span> <span class="o">!=</span> <span class="n">FTPPORT</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span> <span class="cm">/* &amp;lt;caddr,0,vaddr,vport,daddr,dport&amp;gt; */</span>
-</span><span class='line'>    <span class="k">else</span>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>        <span class="cm">/* &amp;lt;caddr,0,vaddr,0,daddr,0&amp;gt; */</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ct</span> <span class="o">||</span> <span class="o">!</span><span class="n">ip_vs_check_template</span><span class="p">(</span><span class="n">ct</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * No template found or the dest of the connection</span>
-</span><span class='line'><span class="cm">         * template is not available.</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">scheduler</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">schedule</span><span class="p">(</span><span class="n">svc</span><span class="p">,</span> <span class="n">skb</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">dest</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;p-schedule: no dest found.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * Create a template like &amp;lt;protocol,caddr,0,</span>
-</span><span class='line'><span class="cm">         * vaddr,vport,daddr,dport&amp;gt; for non-ftp service,</span>
-</span><span class='line'><span class="cm">         * and &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt;</span>
-</span><span class='line'><span class="cm">         * for ftp service.</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span> <span class="o">!=</span> <span class="n">FTPPORT</span><span class="p">)</span>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">else</span>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">ct</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/* set destination with the found template */</span>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">dest</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">dport</span> <span class="o">=</span> <span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>    <span class="cm">/*</span>
-</span><span class='line'><span class="cm">     * Note: persistent fwmark-based services and persistent</span>
-</span><span class='line'><span class="cm">     * port zero service are handled here.</span>
-</span><span class='line'><span class="cm">     * fwmark template: &amp;lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&amp;gt;</span>
-</span><span class='line'><span class="cm">     * port zero template: &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt;</span>
-</span><span class='line'><span class="cm">     */</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">union</span> <span class="n">nf_inet_addr</span> <span class="n">fwmark</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class='line'>            <span class="p">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">htonl</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">IPPROTO_IP</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">fwmark</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="cm">/* &amp;lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&amp;gt; */</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span>
-</span><span class='line'>        <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_ct_in_get</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                     <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="cm">/* &amp;lt;protocol,caddr,0,vaddr,0,daddr,0&amp;gt; */</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ct</span> <span class="o">||</span> <span class="o">!</span><span class="n">ip_vs_check_template</span><span class="p">(</span><span class="n">ct</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * If it is not persistent port zero, return NULL,</span>
-</span><span class='line'><span class="cm">         * otherwise create a connection template.</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">port</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">scheduler</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">schedule</span><span class="p">(</span><span class="n">svc</span><span class="p">,</span> <span class="n">skb</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">dest</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">IP_VS_DBG</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;p-schedule: no dest found.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="cm">/*</span>
-</span><span class='line'><span class="cm">         * Create a template according to the service</span>
-</span><span class='line'><span class="cm">         */</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="k">union</span> <span class="n">nf_inet_addr</span> <span class="n">fwmark</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class='line'>                <span class="p">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">htonl</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fwmark</span><span class="p">)</span>
-</span><span class='line'>            <span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">IPPROTO_IP</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">fwmark</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span>
-</span><span class='line'>            <span class="n">ct</span> <span class="o">=</span> <span class="n">ip_vs_conn_new</span><span class="p">(</span><span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">af</span><span class="p">,</span> <span class="n">iph</span><span class="p">.</span><span class="n">protocol</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">snet</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">iph</span><span class="p">.</span><span class="n">daddr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">IP_VS_CONN_F_TEMPLATE</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">dest</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">ct</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">svc</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">timeout</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/* set destination with the found template */</span>
-</span><span class='line'>        <span class="n">dest</span> <span class="o">=</span> <span class="n">ct</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">dest</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">dport</span> <span class="o">=</span> <span class="n">ports</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+{% codeblock /net/netfilter/ipvs/ip_vs_core.c lang:c %}</p>
+
+<pre><code>/*
+ * As far as we know, FTP is a very complicated network protocol, and
+ * it uses control connection and data connections. For active FTP,
+ * FTP server initialize data connection to the client, its source port
+ * is often 20. For passive FTP, FTP server tells the clients the port
+ * that it passively listens to,  and the client issues the data
+ * connection. In the tunneling or direct routing mode, the load
+ * balancer is on the client-to-server half of connection, the port
+ * number is unknown to the load balancer. So, a conn template like
+ * &lt;caddr, 0, vaddr, 0, daddr, 0&gt; is created for persistent FTP
+ * service, and a template like &lt;caddr, 0, vaddr, vport, daddr, dport&gt;
+ * is created for other persistent services.
+ */
+if (ports[1] == svc-&gt;port) {
+    /* Check if a template already exists */
+    if (svc-&gt;port != FTPPORT)
+        ct = ip_vs_ct_in_get(svc-&gt;af, iph.protocol, &amp;snet, 0,
+                     &amp;iph.daddr, ports[1]); /* &lt;caddr,0,vaddr,vport,daddr,dport&gt; */
+    else
+        ct = ip_vs_ct_in_get(svc-&gt;af, iph.protocol, &amp;snet, 0,
+                     &amp;iph.daddr, 0);        /* &lt;caddr,0,vaddr,0,daddr,0&gt; */
+
+    if (!ct || !ip_vs_check_template(ct)) {
+        /*
+         * No template found or the dest of the connection
+         * template is not available.
+         */
+        dest = svc-&gt;scheduler-&gt;schedule(svc, skb);
+        if (dest == NULL) {
+            IP_VS_DBG(1, "p-schedule: no dest found.\n");
+            return NULL;
+        }
+
+        /*
+         * Create a template like &lt;protocol,caddr,0,
+         * vaddr,vport,daddr,dport&gt; for non-ftp service,
+         * and &lt;protocol,caddr,0,vaddr,0,daddr,0&gt;
+         * for ftp service.
+         */
+        if (svc-&gt;port != FTPPORT)
+            ct = ip_vs_conn_new(svc-&gt;af, iph.protocol,
+                        &amp;snet, 0,
+                        &amp;iph.daddr,
+                        ports[1],
+                        &amp;dest-&gt;addr, dest-&gt;port,
+                        IP_VS_CONN_F_TEMPLATE,
+                        dest);
+        else
+            ct = ip_vs_conn_new(svc-&gt;af, iph.protocol,
+                        &amp;snet, 0,
+                        &amp;iph.daddr, 0,
+                        &amp;dest-&gt;addr, 0,
+                        IP_VS_CONN_F_TEMPLATE,
+                        dest);
+        if (ct == NULL)
+            return NULL;
+
+        ct-&gt;timeout = svc-&gt;timeout;
+    } else {
+        /* set destination with the found template */
+        dest = ct-&gt;dest;
+    }
+    dport = dest-&gt;port;
+} else {
+    /*
+     * Note: persistent fwmark-based services and persistent
+     * port zero service are handled here.
+     * fwmark template: &lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&gt;
+     * port zero template: &lt;protocol,caddr,0,vaddr,0,daddr,0&gt;
+     */
+    if (svc-&gt;fwmark) {
+        union nf_inet_addr fwmark = {
+            .ip = htonl(svc-&gt;fwmark)
+        };
+
+        ct = ip_vs_ct_in_get(svc-&gt;af, IPPROTO_IP, &amp;snet, 0,
+                     &amp;fwmark, 0); /* &lt;IPPROTO_IP,caddr,0,fwmark,0,daddr,0&gt; */
+    } else
+        ct = ip_vs_ct_in_get(svc-&gt;af, iph.protocol, &amp;snet, 0,
+                     &amp;iph.daddr, 0); /* &lt;protocol,caddr,0,vaddr,0,daddr,0&gt; */
+
+    if (!ct || !ip_vs_check_template(ct)) {
+        /*
+         * If it is not persistent port zero, return NULL,
+         * otherwise create a connection template.
+         */
+        if (svc-&gt;port)
+            return NULL;
+
+        dest = svc-&gt;scheduler-&gt;schedule(svc, skb);
+        if (dest == NULL) {
+            IP_VS_DBG(1, "p-schedule: no dest found.\n");
+            return NULL;
+        }
+
+        /*
+         * Create a template according to the service
+         */
+        if (svc-&gt;fwmark) {
+            union nf_inet_addr fwmark = {
+                .ip = htonl(svc-&gt;fwmark)
+            };
+
+            ct = ip_vs_conn_new(svc-&gt;af, IPPROTO_IP,
+                        &amp;snet, 0,
+                        &amp;fwmark, 0,
+                        &amp;dest-&gt;addr, 0,
+                        IP_VS_CONN_F_TEMPLATE,
+                        dest);
+        } else
+            ct = ip_vs_conn_new(svc-&gt;af, iph.protocol,
+                        &amp;snet, 0,
+                        &amp;iph.daddr, 0,
+                        &amp;dest-&gt;addr, 0,
+                        IP_VS_CONN_F_TEMPLATE,
+                        dest);
+        if (ct == NULL)
+            return NULL;
+
+        ct-&gt;timeout = svc-&gt;timeout;
+    } else {
+        /* set destination with the found template */
+        dest = ct-&gt;dest;
+    }
+    dport = ports[1];
+}
+</code></pre>
+
+<p>{% endcodeblock %}</p>
 ]]></content>
   </entry>
   

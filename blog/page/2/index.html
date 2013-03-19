@@ -72,6 +72,57 @@
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2012/07/12/fix-octopress-git-issuse/">解决octopress的git自动deploy问题</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-12T07:05:00+08:00" pubdate data-updated="true">Jul 12<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
+不怕麻烦了。昨天晚上为了解决octopress不能<code>rake deploy</code>的问题，搞了几个
+小时，搞完了对git的分支的理解得到了提升。</p>
+
+<p>解决完了再回头看，其实我的问题很sb，master branch本来只应该包括<em>deploy
+目录里的内容，但我因为误操作把上层目录都变成了master branch，这样就会
+在github上自己的blog项目内，看到很多本来不属于blog的文件。当然使用
+<code>rake deploy</code>也会出现问题。之前瞎折腾了很久，浪费好多时间，结果还是读
+源码解决了问题，Rakefile里<code>setup_github_page</code>和<code>push</code>任务看看，就知道
+咋回事了。需要注意的是，除了</em>deploy的其它文件都在source branch里，因为
+<code>setup_github_page</code>初始化时把master重命名成了source。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/07/12/fix-octopress-git-issuse/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2012/07/11/study-on-lvs-kernel-code/">LVS Peristent代码分析</a></h1>
     
     
@@ -552,6 +603,10 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/03/18/rp-filter-and-martian-packet/">火星包: rp_filter and martian packet</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/11/13/full-transparent-with-lvs/">基于lvs的全透明传输思考</a>
       </li>
     
@@ -567,15 +622,11 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
         <a href="/blog/2012/08/16/upgrade-the-netxen-nic/">升级Netxen网卡驱动及firmware</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2012/08/09/check-tcp-connections/">TCP状态迁移及状态码</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 115.0%'>C(3)</a> <a href='/blog/categories/emacs' style='font-size: 110.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 140.0%'>Kernel(8)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(12)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.0%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 110.0%'>Lvs(2)</a> <a href='/blog/categories/network' style='font-size: 145.0%'>Network(9)</a> <a href='/blog/categories/octopress' style='font-size: 110.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 125.0%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.0%'>Tools(1)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 115.0%'>C(3)</a> <a href='/blog/categories/emacs' style='font-size: 110.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 140.0%'>Kernel(8)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(12)</a> <a href='/blog/categories/linux-kernel' style='font-size: 105.0%'>Linux kernel(1)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.0%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 110.0%'>Lvs(2)</a> <a href='/blog/categories/network' style='font-size: 145.0%'>Network(9)</a> <a href='/blog/categories/octopress' style='font-size: 110.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 125.0%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.0%'>Tools(1)</a> </span>
 </section>
 
 <section>
@@ -593,7 +644,7 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2012 - Kevin Zeng -
+  Copyright &copy; 2013 - Kevin Zeng -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

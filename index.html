@@ -72,6 +72,121 @@
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2013/03/18/rp-filter-and-martian-packet/">火星包: Rp_filter and Martian Packet</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-18T22:53:00+08:00" pubdate data-updated="true">Mar 18<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>经常在&#8217;/var/log/messages&#8217;里发现这种消息，它是对流入的包进行路由检查失败后，发出的警告。</p>
+
+<figure class='code'><figcaption><span>martian source  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>martian <span class="nb">source </span>192.168.1.1 from 10.0.0.1, on dev eth1
+</span><span class='line'>ll header: 52:54:00:98:99:d0:52:54:00:de:d8:10:08:00
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>代码出处在此</p>
+
+<figure class='code'><figcaption><span>kernel_source/net/ipv4/route.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="nf">ip_handle_martian_source</span><span class="p">(</span><span class="k">struct</span> <span class="n">net_device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span>
+</span><span class='line'>                   <span class="k">struct</span> <span class="n">in_device</span> <span class="o">*</span><span class="n">in_dev</span><span class="p">,</span>
+</span><span class='line'>                   <span class="k">struct</span> <span class="n">sk_buff</span> <span class="o">*</span><span class="n">skb</span><span class="p">,</span>
+</span><span class='line'>                   <span class="n">__be32</span> <span class="n">daddr</span><span class="p">,</span>
+</span><span class='line'>                   <span class="n">__be32</span> <span class="n">saddr</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">RT_CACHE_STAT_INC</span><span class="p">(</span><span class="n">in_martian_src</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#ifdef CONFIG_IP_ROUTE_VERBOSE</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">IN_DEV_LOG_MARTIANS</span><span class="p">(</span><span class="n">in_dev</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">net_ratelimit</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>      <span class="cm">/*</span>
+</span><span class='line'><span class="cm">      *  RFC1812 recommendation, if source is martian,</span>
+</span><span class='line'><span class="cm">      *  the only hint is MAC header.</span>
+</span><span class='line'><span class="cm">      */</span>
+</span><span class='line'>      <span class="n">printk</span><span class="p">(</span><span class="n">KERN_WARNING</span> <span class="s">&quot;martian source %pI4 from %pI4, on dev %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'>          <span class="o">&amp;</span><span class="n">daddr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">saddr</span><span class="p">,</span> <span class="n">dev</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">hard_header_len</span> <span class="o">&amp;&amp;</span> <span class="n">skb_mac_header_was_set</span><span class="p">(</span><span class="n">skb</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>          <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</span><span class='line'>          <span class="k">const</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">skb_mac_header</span><span class="p">(</span><span class="n">skb</span><span class="p">);</span>
+</span><span class='line'>          <span class="n">printk</span><span class="p">(</span><span class="n">KERN_WARNING</span> <span class="s">&quot;ll header: &quot;</span><span class="p">);</span>
+</span><span class='line'>          <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">dev</span><span class="o">-&gt;</span><span class="n">hard_header_len</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">,</span> <span class="n">p</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>              <span class="n">printk</span><span class="p">(</span><span class="s">&quot;%02x&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">);</span>
+</span><span class='line'>              <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">hard_header_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+</span><span class='line'>                  <span class="n">printk</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>          <span class="n">printk</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2013/03/18/rp-filter-and-martian-packet/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2012/11/13/full-transparent-with-lvs/">基于lvs的全透明传输思考</a></h1>
     
     
@@ -791,57 +906,6 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/07/12/fix-octopress-git-issuse/">解决octopress的git自动deploy问题</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-07-12T07:05:00+08:00" pubdate data-updated="true">Jul 12<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>已经习惯了在折腾中学习，把遇到的问题看成是学习的机会，有了这种心态，就
-不怕麻烦了。昨天晚上为了解决octopress不能<code>rake deploy</code>的问题，搞了几个
-小时，搞完了对git的分支的理解得到了提升。</p>
-
-<p>解决完了再回头看，其实我的问题很sb，master branch本来只应该包括<em>deploy
-目录里的内容，但我因为误操作把上层目录都变成了master branch，这样就会
-在github上自己的blog项目内，看到很多本来不属于blog的文件。当然使用
-<code>rake deploy</code>也会出现问题。之前瞎折腾了很久，浪费好多时间，结果还是读
-源码解决了问题，Rakefile里<code>setup_github_page</code>和<code>push</code>任务看看，就知道
-咋回事了。需要注意的是，除了</em>deploy的其它文件都在source branch里，因为
-<code>setup_github_page</code>初始化时把master重命名成了source。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2012/07/12/fix-octopress-git-issuse/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -855,6 +919,10 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/03/18/rp-filter-and-martian-packet/">火星包: rp_filter and martian packet</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2012/11/13/full-transparent-with-lvs/">基于lvs的全透明传输思考</a>
@@ -872,15 +940,11 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
         <a href="/blog/2012/08/16/upgrade-the-netxen-nic/">升级Netxen网卡驱动及firmware</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2012/08/09/check-tcp-connections/">TCP状态迁移及状态码</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 115.0%'>C(3)</a> <a href='/blog/categories/emacs' style='font-size: 110.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 140.0%'>Kernel(8)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(12)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.0%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 110.0%'>Lvs(2)</a> <a href='/blog/categories/network' style='font-size: 145.0%'>Network(9)</a> <a href='/blog/categories/octopress' style='font-size: 110.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 125.0%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.0%'>Tools(1)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 115.0%'>C(3)</a> <a href='/blog/categories/emacs' style='font-size: 110.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 140.0%'>Kernel(8)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(12)</a> <a href='/blog/categories/linux-kernel' style='font-size: 105.0%'>Linux kernel(1)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.0%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 110.0%'>Lvs(2)</a> <a href='/blog/categories/network' style='font-size: 145.0%'>Network(9)</a> <a href='/blog/categories/octopress' style='font-size: 110.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 125.0%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.0%'>Tools(1)</a> </span>
 </section>
 
 <section>
@@ -898,7 +962,7 @@ topic都和万兆网有关。最近也在做用LVS替换F5的调研，对性能�
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2012 - Kevin Zeng -
+  Copyright &copy; 2013 - Kevin Zeng -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

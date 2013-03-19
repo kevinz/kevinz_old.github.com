@@ -4,7 +4,7 @@
   <title><![CDATA[Category: emacs | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/emacs/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2012-11-14T15:53:02+08:00</updated>
+  <updated>2013-03-19T08:31:40+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -22,251 +22,81 @@
 经多么想调整下awesome的focus配色，让它不那么黯然，发现很难，现在终于可以轻松搞定
 了。说实话，看不太懂官方网站上的说明，也没力气去了解，发挥下拿来主义吧。</p>
 
-<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
-
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-19">
-    <img src="/images/post_img/term.png"
-         width="840" height="525"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-19" style="display:none">
-    <img src="/images/post_img/term.png"
-         width="1680" height="1050"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-19").hide();
-    jQuery("#image-dialog-19").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1720,
-      minHeight: 1090,
-      show:      'scale',
-      hide:      'scale'
-    });
-
-    jQuery("#image-19").click(function() {
-      jQuery("#image-dialog-19").dialog('open');
-    });
-
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/term.png" width="1680" height="1050"/>
-</div>
-</notextile></div></p>
+<p>{% imgpopup /images/post_img/term.png 50%  %}</p>
 
 <!-- more -->
 
 
-<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
+<p>{% imgpopup /images/post_img/emacs.png 50%  %}</p>
 
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-20">
-    <img src="/images/post_img/emacs.png"
-         width="840" height="525"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-20" style="display:none">
-    <img src="/images/post_img/emacs.png"
-         width="1680" height="1050"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-20").hide();
-    jQuery("#image-dialog-20").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1720,
-      minHeight: 1090,
-      show:      'scale',
-      hide:      'scale'
-    });
+<p>{% imgpopup /images/post_img/vim.png 50%  %}</p>
 
-    jQuery("#image-20").click(function() {
-      jQuery("#image-dialog-20").dialog('open');
-    });
+<p>{% codeblock Put into .Xresources lang:bash https://raw.github.com/altercation/solarized/master/xresources-colors-solarized/Xresources Xresources %}
+!! drop in Solarized colorscheme for Xresources/Xdefaults</p>
 
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/emacs.png" width="1680" height="1050"/>
-</div>
-</notextile></div></p>
+<p>!!SOLARIZED HEX     16/8 TERMCOL  XTERM/HEX   L<em>A</em>B      RGB         HSB
+!!--------- ------- ---- -------  ----------- ---------- ----------- -----------
+!!base03    #002b36  8/4 brblack  234 #1c1c1c 15 -12 -12   0  43  54 193 100  21
+!!base02    #073642  0/4 black    235 #262626 20 -12 -12   7  54  66 192  90  26
+!!base01    #586e75 10/7 brgreen  240 #585858 45 -07 -07  88 110 117 194  25  46
+!!base00    #657b83 11/7 bryellow 241 #626262 50 -07 -07 101 123 131 195  23  51
+!!base0     #839496 12/6 brblue   244 #808080 60 -06 -03 131 148 150 186  13  59
+!!base1     #93a1a1 14/4 brcyan   245 #8a8a8a 65 -05 -02 147 161 161 180   9  63
+!!base2     #eee8d5  7/7 white    254 #e4e4e4 92 -00  10 238 232 213  44  11  93
+!!base3     #fdf6e3 15/7 brwhite  230 #ffffd7 97  00  10 253 246 227  44  10  99
+!!yellow    #b58900  3/3 yellow   136 #af8700 60  10  65 181 137   0  45 100  71
+!!orange    #cb4b16  9/3 brred    166 #d75f00 50  50  55 203  75  22  18  89  80
+!!red       #dc322f  1/1 red      160 #d70000 50  65  45 220  50  47   1  79  86
+!!magenta   #d33682  5/5 magenta  125 #af005f 50  65 -05 211  54 130 331  74  83
+!!violet    #6c71c4 13/5 brmagenta 61 #5f5faf 50  15 -45 108 113 196 237  45  77
+!!blue      #268bd2  4/4 blue      33 #0087ff 55 -10 -45  38 139 210 205  82  82
+!!cyan      #2aa198  6/6 cyan      37 #00afaf 60 -35 -05  42 161 152 175  74  63
+!!green     #859900  2/2 green     64 #5f8700 60 -20  65 133 153   0  68 100  60</p>
 
-<p><div class='bogus-wrapper'><notextile><!-- -*- html -*- -->
+<h1>define S_base03        #002b36</h1>
 
-<div class="imgpopup screen">
-  <div class="caption">Click the image for a larger view.</div>
-  <a href='javascript:void(0)' style="text-decoration: none" id="image-21">
-    <img src="/images/post_img/vim.png"
-         width="840" height="525"
-         alt="Click me."/>
-  </a>
-  <div id="image-dialog-21" style="display:none">
-    <img src="/images/post_img/vim.png"
-         width="1680" height="1050"/>
-    <br clear="all"/>
-  </div>
-</div>
-<script type="text/javascript">
-  jQuery(document).ready(function() {
-    jQuery("#image-dialog-21").hide();
-    jQuery("#image-dialog-21").dialog({
-      autoOpen:  false,
-      modal:     true,
-      draggable: false,
-      minWidth:  1720,
-      minHeight: 1090,
-      show:      'scale',
-      hide:      'scale'
-    });
+<h1>define S_base02        #073642</h1>
 
-    jQuery("#image-21").click(function() {
-      jQuery("#image-dialog-21").dialog('open');
-    });
+<h1>define S_base01        #586e75</h1>
 
-  });
-</script>
-<div class="illustration print" style="display:none">
-  <img src="/images/post_img/vim.png" width="1680" height="1050"/>
-</div>
-</notextile></div></p>
+<h1>define S_base00        #657b83</h1>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Put into .Xresources </span><a href='https://raw.github.com/altercation/solarized/master/xresources-colors-solarized/Xresources'>Xresources </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>!! drop in Solarized colorscheme <span class="k">for </span>Xresources/Xdefaults&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;!!SOLARIZED HEX     16/8 TERMCOL  XTERM/HEX   L&lt;em&gt;A&lt;/em&gt;B      RGB         HSB
-</span><span class='line'>!!--------- ------- ---- -------  ----------- ---------- ----------- -----------
-</span><span class='line'>!!base03    <span class="c">#002b36  8/4 brblack  234 #1c1c1c 15 -12 -12   0  43  54 193 100  21</span>
-</span><span class='line'>!!base02    <span class="c">#073642  0/4 black    235 #262626 20 -12 -12   7  54  66 192  90  26</span>
-</span><span class='line'>!!base01    <span class="c">#586e75 10/7 brgreen  240 #585858 45 -07 -07  88 110 117 194  25  46</span>
-</span><span class='line'>!!base00    <span class="c">#657b83 11/7 bryellow 241 #626262 50 -07 -07 101 123 131 195  23  51</span>
-</span><span class='line'>!!base0     <span class="c">#839496 12/6 brblue   244 #808080 60 -06 -03 131 148 150 186  13  59</span>
-</span><span class='line'>!!base1     <span class="c">#93a1a1 14/4 brcyan   245 #8a8a8a 65 -05 -02 147 161 161 180   9  63</span>
-</span><span class='line'>!!base2     <span class="c">#eee8d5  7/7 white    254 #e4e4e4 92 -00  10 238 232 213  44  11  93</span>
-</span><span class='line'>!!base3     <span class="c">#fdf6e3 15/7 brwhite  230 #ffffd7 97  00  10 253 246 227  44  10  99</span>
-</span><span class='line'>!!yellow    <span class="c">#b58900  3/3 yellow   136 #af8700 60  10  65 181 137   0  45 100  71</span>
-</span><span class='line'>!!orange    <span class="c">#cb4b16  9/3 brred    166 #d75f00 50  50  55 203  75  22  18  89  80</span>
-</span><span class='line'>!!red       <span class="c">#dc322f  1/1 red      160 #d70000 50  65  45 220  50  47   1  79  86</span>
-</span><span class='line'>!!magenta   <span class="c">#d33682  5/5 magenta  125 #af005f 50  65 -05 211  54 130 331  74  83</span>
-</span><span class='line'>!!violet    <span class="c">#6c71c4 13/5 brmagenta 61 #5f5faf 50  15 -45 108 113 196 237  45  77</span>
-</span><span class='line'>!!blue      <span class="c">#268bd2  4/4 blue      33 #0087ff 55 -10 -45  38 139 210 205  82  82</span>
-</span><span class='line'>!!cyan      <span class="c">#2aa198  6/6 cyan      37 #00afaf 60 -35 -05  42 161 152 175  74  63</span>
-</span><span class='line'>!!green     <span class="c">#859900  2/2 green     64 #5f8700 60 -20  65 133 153   0  68 100  60&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base03        <span class="c">#002b36&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base02        <span class="c">#073642&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base01        <span class="c">#586e75&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base00        <span class="c">#657b83&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base0         <span class="c">#839496&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base1         <span class="c">#93a1a1&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base2         <span class="c">#eee8d5&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_base3         <span class="c">#fdf6e3&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_yellow        <span class="c">#b58900&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_orange        <span class="c">#cb4b16&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_red           <span class="c">#dc322f&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_magenta       <span class="c">#d33682&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_violet        <span class="c">#6c71c4&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_blue          <span class="c">#268bd2&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_cyan          <span class="c">#2aa198&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;define S_green         <span class="c">#859900&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;*background:            S_base03
-</span><span class='line'>...
-</span><span class='line'>URxvt.
-</span><span class='line'>...
-</span><span class='line'>Emacs.
-</span><span class='line'>...
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<h1>define S_base0         #839496</h1>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Use solarized in emacs </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>(require 'color-theme-solarized)
-</span><span class='line'>(color-theme-solarized-light)</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<h1>define S_base1         #93a1a1</h1>
+
+<h1>define S_base2         #eee8d5</h1>
+
+<h1>define S_base3         #fdf6e3</h1>
+
+<h1>define S_yellow        #b58900</h1>
+
+<h1>define S_orange        #cb4b16</h1>
+
+<h1>define S_red           #dc322f</h1>
+
+<h1>define S_magenta       #d33682</h1>
+
+<h1>define S_violet        #6c71c4</h1>
+
+<h1>define S_blue          #268bd2</h1>
+
+<h1>define S_cyan          #2aa198</h1>
+
+<h1>define S_green         #859900</h1>
+
+<p>*background:            S_base03
+...
+URxvt.
+...
+Emacs.
+...
+{% endcodeblock %}</p>
+
+<p>{% codeblock Use solarized in emacs %}
+(require 'color-theme-solarized)
+(color-theme-solarized-light)
+{% endcodeblock %}</p>
 ]]></content>
   </entry>
   
@@ -283,64 +113,42 @@ blog的感觉应该很棒。</p>
 mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
 一个方便了得。</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>install ibus-el  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>yaourt -S ibus-el
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>{% codeblock install ibus-el lang:bash %}
+$ yaourt -S ibus-el
+{% endcodeblock %}</p>
 
 <!-- more -->
 
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ibus-mode configuration </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>(require 'ibus)
-</span><span class='line'>(add-hook 'after-init-hook 'ibus-mode-on)
-</span><span class='line'>(global-set-key (kbd "C-\") 'ibus-toggle)</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>{% codeblock ibus-mode configuration %}
+(require 'ibus)
+(add-hook 'after-init-hook 'ibus-mode-on)
+(global-set-key (kbd "C-\") 'ibus-toggle)
+{% endcodeblock %}
 备注：因为ibus-mode很恼人的context warning问题，已经抛弃它了，直接把
 emacs可执行文件包装一下，放在shell里:
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>my emacs wrapper script </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;!/bin/sh&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;emacs-real is the real original emacs executable&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;LC_CTYPE<span class="o">=</span>zh_CN.UTF-8 /usr/bin/emacs-real
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+{% codeblock my emacs wrapper script lang:bash%}</p>
+
+<h1>!/bin/sh</h1>
+
+<h1>emacs-real is the real original emacs executable</h1>
+
+<p>LC_CTYPE=zh_CN.UTF-8 /usr/bin/emacs-real
+{% endcodeblock %}
 就可以直接使用系统的ibus了，低碳环保还不闹心。</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>Enable markdown mode </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>(autoload 'markdown-mode "markdown-mode.el"
-</span><span class='line'>   "Major mode for editing Markdown files" t)
-</span><span class='line'>(setq auto-mode-alist
-</span><span class='line'>   (cons '("\.text"  . markdown-mode) auto-mode-alist))&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>(setq auto-mode-alist&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>  (cons '("\\.md"  . markdown-mode) auto-mode-alist))
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>{% codeblock Enable markdown mode %}
+(autoload 'markdown-mode "markdown-mode.el"
+   "Major mode for editing Markdown files" t)
+(setq auto-mode-alist
+   (cons '("\.text"  . markdown-mode) auto-mode-alist))</p>
+
+<p>(setq auto-mode-alist</p>
+
+<pre><code>  (cons '("\\.md"  . markdown-mode) auto-mode-alist))
+</code></pre>
+
+<p>{% endcodeblock %}</p>
 ]]></content>
   </entry>
   

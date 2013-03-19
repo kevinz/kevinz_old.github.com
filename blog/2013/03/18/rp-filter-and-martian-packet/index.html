@@ -1,0 +1,480 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>火星包: rp_filter and martian packet - Code Mind</title>
+  <meta name="author" content="Kevin Zeng">
+
+  
+  <meta name="description" content="how rp_filter working with linux route and related to martian packet">
+  <meta name="keywords" content="linux, martian, route">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://gekben.gitcd.com/blog/2013/03/18/rp-filter-and-martian-packet/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Code Mind" type="application/atom+xml">
+  <link href="/stylesheets/google_fonts.css" rel="stylesheet" type="text/css">
+ <script src="/javascripts/libs/jquery.min.js" type="text/javascript"></script>
+ <script src="/javascripts/libs/jquery-ui.min.js" type="text/javascript"></script>
+
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Code Mind</a></h1>
+  
+    <h2>Geek ben's blog about '(Linux Network Programming Kernel Tools Geek)</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:gekben.gitcd.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">火星包: Rp_filter and Martian Packet</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-18T22:53:00+08:00" pubdate data-updated="true">Mar 18<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>经常在&#8217;/var/log/messages&#8217;里发现这种消息，它是对流入的包进行路由检查失败后，发出的警告。</p>
+
+<figure class='code'><figcaption><span>martian source  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>martian <span class="nb">source </span>192.168.1.1 from 10.0.0.1, on dev eth1
+</span><span class='line'>ll header: 52:54:00:98:99:d0:52:54:00:de:d8:10:08:00
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>代码出处在此</p>
+
+<figure class='code'><figcaption><span>kernel_source/net/ipv4/route.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="nf">ip_handle_martian_source</span><span class="p">(</span><span class="k">struct</span> <span class="n">net_device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span>
+</span><span class='line'>                   <span class="k">struct</span> <span class="n">in_device</span> <span class="o">*</span><span class="n">in_dev</span><span class="p">,</span>
+</span><span class='line'>                   <span class="k">struct</span> <span class="n">sk_buff</span> <span class="o">*</span><span class="n">skb</span><span class="p">,</span>
+</span><span class='line'>                   <span class="n">__be32</span> <span class="n">daddr</span><span class="p">,</span>
+</span><span class='line'>                   <span class="n">__be32</span> <span class="n">saddr</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">RT_CACHE_STAT_INC</span><span class="p">(</span><span class="n">in_martian_src</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#ifdef CONFIG_IP_ROUTE_VERBOSE</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">IN_DEV_LOG_MARTIANS</span><span class="p">(</span><span class="n">in_dev</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">net_ratelimit</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>      <span class="cm">/*</span>
+</span><span class='line'><span class="cm">      *  RFC1812 recommendation, if source is martian,</span>
+</span><span class='line'><span class="cm">      *  the only hint is MAC header.</span>
+</span><span class='line'><span class="cm">      */</span>
+</span><span class='line'>      <span class="n">printk</span><span class="p">(</span><span class="n">KERN_WARNING</span> <span class="s">&quot;martian source %pI4 from %pI4, on dev %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'>          <span class="o">&amp;</span><span class="n">daddr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">saddr</span><span class="p">,</span> <span class="n">dev</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">hard_header_len</span> <span class="o">&amp;&amp;</span> <span class="n">skb_mac_header_was_set</span><span class="p">(</span><span class="n">skb</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>          <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</span><span class='line'>          <span class="k">const</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">skb_mac_header</span><span class="p">(</span><span class="n">skb</span><span class="p">);</span>
+</span><span class='line'>          <span class="n">printk</span><span class="p">(</span><span class="n">KERN_WARNING</span> <span class="s">&quot;ll header: &quot;</span><span class="p">);</span>
+</span><span class='line'>          <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">dev</span><span class="o">-&gt;</span><span class="n">hard_header_len</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">,</span> <span class="n">p</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>              <span class="n">printk</span><span class="p">(</span><span class="s">&quot;%02x&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">);</span>
+</span><span class='line'>              <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">hard_header_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+</span><span class='line'>                  <span class="n">printk</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>          <span class="n">printk</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!-- more -->
+
+
+<p>其中，10.0.0.1表示src ip,192.168.0.1表示dst ip,eth1表示实际收包的设备，来看看为什么会有错误。</p>
+
+<figure class='code'><figcaption><span>kernel_source/net/ipv4/fib_frontend.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="n">fib_validate_source</span><span class="p">(){</span>
+</span><span class='line'>    <span class="c1">// 代码有选择性省略</span>
+</span><span class='line'>    <span class="c1">// 反转src和dst</span>
+</span><span class='line'>  <span class="k">struct</span> <span class="n">flowi</span> <span class="n">fl</span> <span class="o">=</span> <span class="p">{</span> <span class="p">.</span><span class="n">nl_u</span> <span class="o">=</span> <span class="p">{</span> <span class="p">.</span><span class="n">ip4_u</span> <span class="o">=</span>
+</span><span class='line'>                    <span class="p">{</span> <span class="p">.</span><span class="n">daddr</span> <span class="o">=</span> <span class="n">src</span><span class="p">,</span>
+</span><span class='line'>                  <span class="p">.</span><span class="n">saddr</span> <span class="o">=</span> <span class="n">dst</span><span class="p">,</span>
+</span><span class='line'>                  <span class="p">.</span><span class="n">tos</span> <span class="o">=</span> <span class="n">tos</span> <span class="p">}</span> <span class="p">},</span>
+</span><span class='line'>              <span class="p">.</span><span class="n">mark</span> <span class="o">=</span> <span class="n">mark</span><span class="p">,</span>
+</span><span class='line'>              <span class="p">.</span><span class="n">iif</span> <span class="o">=</span> <span class="n">oif</span> <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">in_dev</span> <span class="o">=</span> <span class="n">__in_dev_get_rcu</span><span class="p">(</span><span class="n">dev</span><span class="p">);</span>
+</span><span class='line'>    <span class="c1">// 拿到收包的设备，顺便取出该设备上rp_filter的flag</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">in_dev</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="n">no_addr</span> <span class="o">=</span> <span class="n">in_dev</span><span class="o">-&gt;</span><span class="n">ifa_list</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'>      <span class="n">rpf</span> <span class="o">=</span> <span class="n">IN_DEV_RPFILTER</span><span class="p">(</span><span class="n">in_dev</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">mark</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">IN_DEV_SRC_VMARK</span><span class="p">(</span><span class="n">in_dev</span><span class="p">))</span>
+</span><span class='line'>          <span class="n">fl</span><span class="p">.</span><span class="n">mark</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="n">rcu_read_unlock</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">in_dev</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">goto</span> <span class="n">e_inval</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">net</span> <span class="o">=</span> <span class="n">dev_net</span><span class="p">(</span><span class="n">dev</span><span class="p">);</span>
+</span><span class='line'>    <span class="c1">// 以src为dst，查fib</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">fib_lookup</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">fl</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">res</span><span class="p">))</span>
+</span><span class='line'>      <span class="k">goto</span> <span class="n">last_resort</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">res</span><span class="p">.</span><span class="n">type</span> <span class="o">!=</span> <span class="n">RTN_UNICAST</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">goto</span> <span class="n">e_inval_res</span><span class="p">;</span>
+</span><span class='line'>  <span class="o">*</span><span class="n">spec_dst</span> <span class="o">=</span> <span class="n">FIB_RES_PREFSRC</span><span class="p">(</span><span class="n">res</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">fib_combine_itag</span><span class="p">(</span><span class="n">itag</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">res</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#ifdef CONFIG_IP_ROUTE_MULTIPATH</span>
+</span><span class='line'>    <span class="c1">// 以src作为dst，查到的发送dev和当前收包的dev相同，一切ok</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">FIB_RES_DEV</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">==</span> <span class="n">dev</span> <span class="o">||</span> <span class="n">res</span><span class="p">.</span><span class="n">fi</span><span class="o">-&gt;</span><span class="n">fib_nhs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="cp">#else</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">FIB_RES_DEV</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">==</span> <span class="n">dev</span><span class="p">)</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>      <span class="n">ret</span> <span class="o">=</span> <span class="n">FIB_RES_NH</span><span class="p">(</span><span class="n">res</span><span class="p">).</span><span class="n">nh_scope</span> <span class="o">&gt;=</span> <span class="n">RT_SCOPE_HOST</span><span class="p">;</span>
+</span><span class='line'>      <span class="n">fib_res_put</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="n">fib_res_put</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">no_addr</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">goto</span> <span class="n">last_resort</span><span class="p">;</span>
+</span><span class='line'>    <span class="c1">// 如果dev不相同，并且rp_filter置为on，则检查失败</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">rpf</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">goto</span> <span class="n">e_inval</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>给一些的配置</p>
+
+<figure class='code'><figcaption><span>sysctl.conf  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>// 0 means off,1 means on
+</span><span class='line'>net.ipv4.conf.all.rp_filter <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.default.rp_filter <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.eth0.rp_filter <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.lo.rp_filter <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.vboxnet0.rp_filter <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.wlan0.rp_filter <span class="o">=</span> 0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>&#8216;net.ipv4.conf.all.rp_filter&#8217;是总开关，一开全开。</p>
+
+<figure class='code'><figcaption><span>sysctl.conf  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>// 0 means off
+</span><span class='line'>net.ipv4.conf.all.log_martians <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.default.log_martians <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.eth0.log_martians <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.lo.log_martians <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.vboxnet0.log_martians <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.wlan0.log_martians <span class="o">=</span> 0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>是否记录martian的开关，对应于代码里的&#8217;IN_DEV_LOG_MARTIANS(in_dev)&#8217;。</p>
+
+<p>小结一下，这个错误提示是很常见的，以至于常常被忽略，大多数情况它是做了正确的事情，不过当发现有意外的丢包，可以想想是否是遭遇了火星包，排查方法是：先做tcpdump，发现有traffic(tcpdump不受火星包的影响)，但kernel hook或者app收不到包，应怀疑是martian source导致丢包，用dmesg看下是否有相关提示。</p>
+
+<figure class='code'><figcaption><span>martian source  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>martian <span class="nb">source </span>192.168.1.1 from 10.0.0.1, on dev eth1
+</span><span class='line'>ll header: 52:54:00:98:99:d0:52:54:00:de:d8:10:08:00
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>做一下翻译:eth1上收到了src=10.0.0.1,dst=192.168.1.1的包，但是按照本机的路由设置对10.0.0.1进行路由计算，得出的out dev不是eth1。
+一般遇到这种还是保持rp_filter=1吧，毕竟这个开关能让系统免受很多火星来客的干扰，研究下路由配置应该能解决问题；如果确实很复杂的使用场景，比如这台server有好多个网口，需要在不同网口之间转发，放开rp_filter的限制也无妨。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Zeng</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-18T22:53:00+08:00" pubdate data-updated="true">Mar 18<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/linux-kernel/'>linux kernel</a>
+  
+</span>
+
+
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/11/13/full-transparent-with-lvs/" title="Previous Post: 基于lvs的全透明传输思考">&laquo; 基于lvs的全透明传输思考</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/03/18/rp-filter-and-martian-packet/">火星包: rp_filter and martian packet</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/11/13/full-transparent-with-lvs/">基于lvs的全透明传输思考</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/11/13/build-uml-development-environment/">搭建基于User Mode Linux网络模块开发环境</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/16/install-systemtap-on-suse/">在SUSE Enterprise上安装Systemtap，解决build-id mismatch</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/16/upgrade-the-netxen-nic/">升级Netxen网卡驱动及firmware</a>
+      </li>
+    
+  </ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 115.0%'>C(3)</a> <a href='/blog/categories/emacs' style='font-size: 110.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 140.0%'>Kernel(8)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(12)</a> <a href='/blog/categories/linux-kernel' style='font-size: 105.0%'>Linux kernel(1)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.0%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 110.0%'>Lvs(2)</a> <a href='/blog/categories/network' style='font-size: 145.0%'>Network(9)</a> <a href='/blog/categories/octopress' style='font-size: 110.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 125.0%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.0%'>Tools(1)</a> </span>
+</section>
+
+<section>
+<h2>Reading List</h2>
+<div>
+<script type="text/javascript" src="http://www.douban.com/service/badge/2898110/?show=dolist&amp;n=10&amp;columns=2&amp;hidelogo=yes&amp;hideself=yes&amp;cat=book" ></script> 
+</div>
+</section>
+
+<iframe width="100%" height="550" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=550&fansRow=2&ptype=1&speed=0&skin=10&isTitle=0&noborder=0&isWeibo=1&isFans=0&uid=1652588700&verifier=275352cd&dpc=1"></iframe>
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Zeng -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'codemind';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://gekben.gitcd.com/blog/2013/03/18/rp-filter-and-martian-packet/';
+        var disqus_url = 'http://gekben.gitcd.com/blog/2013/03/18/rp-filter-and-martian-packet/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
