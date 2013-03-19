@@ -92,7 +92,7 @@
   </header>
 
 
-<div class="entry-content"><p>经常在&#8217;/var/log/messages&#8217;里发现这种消息，它是对流入的包进行路由检查失败后，发出的警告。</p>
+<div class="entry-content"><p>经常在<code>/var/log/messages</code>里发现这种消息，它是对流入的包进行路由检查失败后，发出的警告。</p>
 
 <figure class='code'><figcaption><span>martian source  </span></figcaption>
  <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -299,7 +299,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>&#8216;net.ipv4.conf.all.rp_filter&#8217;是总开关，一开全开。</p>
+<p><code>net.ipv4.conf.all.rp_filter</code>是总开关，一开全开。</p>
 
 <figure class='code'><figcaption><span>sysctl.conf  </span></figcaption>
  <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -319,7 +319,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>是否记录martian的开关，对应于代码里的&#8217;IN_DEV_LOG_MARTIANS(in_dev)&#8217;。</p>
+<p>是否记录martian的开关，对应于代码里的<code>IN_DEV_LOG_MARTIANS(in_dev)</code>。</p>
 
 <p>小结一下，这个错误提示是很常见的，以至于常常被忽略，大多数情况它是做了正确的事情，不过当发现有意外的丢包，可以想想是否是遭遇了火星包，排查方法是：先做tcpdump，发现有traffic(tcpdump不受火星包的影响)，但kernel hook或者app收不到包，应怀疑是martian source导致丢包，用dmesg看下是否有相关提示。</p>
 
@@ -382,6 +382,8 @@
         <a class="basic-alignment left" href="/blog/2012/11/13/full-transparent-with-lvs/" title="Previous Post: 基于lvs的全透明传输思考">&laquo; 基于lvs的全透明传输思考</a>
       
       
+        <a class="basic-alignment right" href="/blog/2013/03/19/kernel-dynamic-debugging/" title="Next Post: Kernel dynamic debugging and taints">Kernel dynamic debugging and taints &raquo;</a>
+      
     </p>
   </footer>
 </article>
@@ -401,6 +403,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/03/19/kernel-dynamic-debugging/">Kernel dynamic debugging and taints</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/03/18/rp-filter-and-martian-packet/">火星包: rp_filter and martian packet</a>
       </li>
     
@@ -416,15 +422,11 @@
         <a href="/blog/2012/08/16/install-systemtap-on-suse/">在SUSE Enterprise上安装Systemtap，解决build-id mismatch</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2012/08/16/upgrade-the-netxen-nic/">升级Netxen网卡驱动及firmware</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 115.0%'>C(3)</a> <a href='/blog/categories/emacs' style='font-size: 110.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 140.0%'>Kernel(8)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(12)</a> <a href='/blog/categories/linux-kernel' style='font-size: 105.0%'>Linux kernel(1)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.0%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 110.0%'>Lvs(2)</a> <a href='/blog/categories/network' style='font-size: 145.0%'>Network(9)</a> <a href='/blog/categories/octopress' style='font-size: 110.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 125.0%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.0%'>Tools(1)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 104.61538461538461%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 113.84615384615384%'>C(3)</a> <a href='/blog/categories/debug' style='font-size: 104.61538461538461%'>Debug(1)</a> <a href='/blog/categories/emacs' style='font-size: 109.23076923076923%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 104.61538461538461%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 104.61538461538461%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 141.53846153846155%'>Kernel(9)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(13)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.61538461538461%'>Linux kernel(1)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 104.61538461538461%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 109.23076923076923%'>Lvs(2)</a> <a href='/blog/categories/network' style='font-size: 141.53846153846155%'>Network(9)</a> <a href='/blog/categories/octopress' style='font-size: 109.23076923076923%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 109.23076923076923%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 123.07692307692308%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 104.61538461538461%'>Tools(1)</a> </span>
 </section>
 
 <section>

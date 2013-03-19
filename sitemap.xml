@@ -72,7 +72,11 @@
     </url>
     <url>
         <loc>http://gekben.gitcd.com/blog/2013/03/18/rp-filter-and-martian-packet/</loc>
-        <lastmod>2013-03-19T08:29:58+08:00</lastmod>
+        <lastmod>2013-03-19T17:46:18+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://gekben.gitcd.com/blog/2013/03/19/kernel-dynamic-debugging/</loc>
+        <lastmod>2013-03-19T17:42:10+08:00</lastmod>
     </url>
     <url>
         <loc>http://gekben.gitcd.com/about/</loc>
@@ -80,10 +84,10 @@
     </url>
     <url>
         <loc>http://gekben.gitcd.com/</loc>
-        <lastmod>2013-03-19T08:29:58+08:00</lastmod>
+        <lastmod>2013-03-19T17:46:18+08:00</lastmod>
     </url>
     <url>
         <loc>http://gekben.gitcd.com/blog/archives/</loc>
-        <lastmod>2013-03-19T08:29:58+08:00</lastmod>
+        <lastmod>2013-03-19T17:46:18+08:00</lastmod>
     </url>
 </urlset>

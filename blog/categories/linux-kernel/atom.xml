@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux kernel | Code Mind]]></title>
   <link href="http://gekben.gitcd.com/blog/categories/linux-kernel/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2013-03-19T08:31:40+08:00</updated>
+  <updated>2013-03-19T17:47:33+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -18,151 +18,269 @@
     <link href="http://gekben.gitcd.com/blog/2013/03/18/rp-filter-and-martian-packet/"/>
     <updated>2013-03-18T22:53:00+08:00</updated>
     <id>http://gekben.gitcd.com/blog/2013/03/18/rp-filter-and-martian-packet</id>
-    <content type="html"><![CDATA[<p>经常在'/var/log/messages'里发现这种消息，它是对流入的包进行路由检查失败后，发出的警告。
-{% codeblock martian source lang:bash %}
-martian source 192.168.1.1 from 10.0.0.1, on dev eth1
-ll header: 52:54:00:98:99:d0:52:54:00:de:d8:10:08:00
-{% endcodeblock %}</p>
+    <content type="html"><![CDATA[<p>经常在<code>/var/log/messages</code>里发现这种消息，它是对流入的包进行路由检查失败后，发出的警告。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>martian source  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>martian <span class="nb">source </span>192.168.1.1 from 10.0.0.1, on dev eth1
+</span><span class='line'>ll header: 52:54:00:98:99:d0:52:54:00:de:d8:10:08:00
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
 
 <p>代码出处在此
-{% codeblock kernel_source/net/ipv4/route.c lang:c %}
-static void ip_handle_martian_source(struct net_device *dev,</p>
-
-<pre><code>                 struct in_device *in_dev,
-                 struct sk_buff *skb,
-                 __be32 daddr,
-                 __be32 saddr)
-</code></pre>
-
-<p>{</p>
-
-<pre><code>RT_CACHE_STAT_INC(in_martian_src);
-</code></pre>
-
-<h1>ifdef CONFIG_IP_ROUTE_VERBOSE</h1>
-
-<pre><code>if (IN_DEV_LOG_MARTIANS(in_dev) &amp;&amp; net_ratelimit()) {
-    /*
-     *  RFC1812 recommendation, if source is martian,
-     *  the only hint is MAC header.
-     */
-    printk(KERN_WARNING "martian source %pI4 from %pI4, on dev %s\n",
-        &amp;daddr, &amp;saddr, dev-&gt;name);
-    if (dev-&gt;hard_header_len &amp;&amp; skb_mac_header_was_set(skb)) {
-        int i;
-        const unsigned char *p = skb_mac_header(skb);
-        printk(KERN_WARNING "ll header: ");
-        for (i = 0; i &lt; dev-&gt;hard_header_len; i++, p++) {
-            printk("%02x", *p);
-            if (i &lt; (dev-&gt;hard_header_len - 1))
-                printk(":");
-        }
-        printk("\n");
-    }
-}
-</code></pre>
-
-<h1>endif</h1>
-
-<p>}
-{% endcodeblock %}</p>
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>kernel_source/net/ipv4/route.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="n">ip_handle_martian_source</span><span class="p">(</span><span class="k">struct</span> <span class="n">net_device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>                 <span class="k">struct</span> <span class="n">in_device</span> <span class="o">*</span><span class="n">in_dev</span><span class="p">,</span>
+</span><span class='line'>                 <span class="k">struct</span> <span class="n">sk_buff</span> <span class="o">*</span><span class="n">skb</span><span class="p">,</span>
+</span><span class='line'>                 <span class="n">__be32</span> <span class="n">daddr</span><span class="p">,</span>
+</span><span class='line'>                 <span class="n">__be32</span> <span class="n">saddr</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">RT_CACHE_STAT_INC</span><span class="p">(</span><span class="n">in_martian_src</span><span class="p">);</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">ifdef</span> <span class="n">CONFIG_IP_ROUTE_VERBOSE</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">if</span> <span class="p">(</span><span class="n">IN_DEV_LOG_MARTIANS</span><span class="p">(</span><span class="n">in_dev</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">net_ratelimit</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>    <span class="cm">/*</span>
+</span><span class='line'><span class="cm">     *  RFC1812 recommendation, if source is martian,</span>
+</span><span class='line'><span class="cm">     *  the only hint is MAC header.</span>
+</span><span class='line'><span class="cm">     */</span>
+</span><span class='line'>    <span class="n">printk</span><span class="p">(</span><span class="n">KERN_WARNING</span> <span class="s">&quot;martian source %pI4 from %pI4, on dev %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">daddr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">saddr</span><span class="p">,</span> <span class="n">dev</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">name</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">dev</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">hard_header_len</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">skb_mac_header_was_set</span><span class="p">(</span><span class="n">skb</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">const</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">skb_mac_header</span><span class="p">(</span><span class="n">skb</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">printk</span><span class="p">(</span><span class="n">KERN_WARNING</span> <span class="s">&quot;ll header: &quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">dev</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">hard_header_len</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">,</span> <span class="n">p</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">printk</span><span class="p">(</span><span class="s">&quot;%02x&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">);</span>
+</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="p">(</span><span class="n">dev</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">hard_header_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+</span><span class='line'>                <span class="n">printk</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="n">printk</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">endif</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
 
 <!-- more -->
 
 
 <p>其中，10.0.0.1表示src ip,192.168.0.1表示dst ip,eth1表示实际收包的设备，来看看为什么会有错误。</p>
 
-<p>{% codeblock kernel_source/net/ipv4/fib_frontend.c lang:c %}
-int fib_validate_source(){</p>
-
-<pre><code>// 代码有选择性省略
-// 反转src和dst
-struct flowi fl = { .nl_u = { .ip4_u =
-                  { .daddr = src,
-                .saddr = dst,
-                .tos = tos } },
-            .mark = mark,
-            .iif = oif };
-
-
-in_dev = __in_dev_get_rcu(dev);
-// 拿到收包的设备，顺便取出该设备上rp_filter的flag
-if (in_dev) {
-    no_addr = in_dev-&gt;ifa_list == NULL;
-    rpf = IN_DEV_RPFILTER(in_dev);
-    if (mark &amp;&amp; !IN_DEV_SRC_VMARK(in_dev))
-        fl.mark = 0;
-}
-rcu_read_unlock();
-
-if (in_dev == NULL)
-    goto e_inval;
-net = dev_net(dev);
-// 以src为dst，查fib
-if (fib_lookup(net, &amp;fl, &amp;res))
-    goto last_resort;
-if (res.type != RTN_UNICAST)
-    goto e_inval_res;
-*spec_dst = FIB_RES_PREFSRC(res);
-fib_combine_itag(itag, &amp;res);
-</code></pre>
-
-<h1>ifdef CONFIG_IP_ROUTE_MULTIPATH</h1>
-
-<pre><code>// 以src作为dst，查到的发送dev和当前收包的dev相同，一切ok
-if (FIB_RES_DEV(res) == dev || res.fi-&gt;fib_nhs &gt; 1)
-</code></pre>
-
-<h1>else</h1>
-
-<pre><code>if (FIB_RES_DEV(res) == dev)
-</code></pre>
-
-<h1>endif</h1>
-
-<pre><code>{
-    ret = FIB_RES_NH(res).nh_scope &gt;= RT_SCOPE_HOST;
-    fib_res_put(&amp;res);
-    return ret;
-}
-fib_res_put(&amp;res);
-if (no_addr)
-    goto last_resort;
-// 如果dev不相同，并且rp_filter置为on，则检查失败
-if (rpf == 1)
-    goto e_inval;
-</code></pre>
-
-<p>}
-{% endcodeblock %}
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>kernel_source/net/ipv4/fib_frontend.c  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="n">fib_validate_source</span><span class="p">(){</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c1">// 代码有选择性省略</span>
+</span><span class='line'><span class="c1">// 反转src和dst</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">flowi</span> <span class="n">fl</span> <span class="o">=</span> <span class="p">{</span> <span class="p">.</span><span class="n">nl_u</span> <span class="o">=</span> <span class="p">{</span> <span class="p">.</span><span class="n">ip4_u</span> <span class="o">=</span>
+</span><span class='line'>                  <span class="p">{</span> <span class="p">.</span><span class="n">daddr</span> <span class="o">=</span> <span class="n">src</span><span class="p">,</span>
+</span><span class='line'>                <span class="p">.</span><span class="n">saddr</span> <span class="o">=</span> <span class="n">dst</span><span class="p">,</span>
+</span><span class='line'>                <span class="p">.</span><span class="n">tos</span> <span class="o">=</span> <span class="n">tos</span> <span class="p">}</span> <span class="p">},</span>
+</span><span class='line'>            <span class="p">.</span><span class="n">mark</span> <span class="o">=</span> <span class="n">mark</span><span class="p">,</span>
+</span><span class='line'>            <span class="p">.</span><span class="n">iif</span> <span class="o">=</span> <span class="n">oif</span> <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="n">in_dev</span> <span class="o">=</span> <span class="n">__in_dev_get_rcu</span><span class="p">(</span><span class="n">dev</span><span class="p">);</span>
+</span><span class='line'><span class="c1">// 拿到收包的设备，顺便取出该设备上rp_filter的flag</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">in_dev</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">no_addr</span> <span class="o">=</span> <span class="n">in_dev</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">ifa_list</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">rpf</span> <span class="o">=</span> <span class="n">IN_DEV_RPFILTER</span><span class="p">(</span><span class="n">in_dev</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">mark</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="o">!</span><span class="n">IN_DEV_SRC_VMARK</span><span class="p">(</span><span class="n">in_dev</span><span class="p">))</span>
+</span><span class='line'>        <span class="n">fl</span><span class="p">.</span><span class="n">mark</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="n">rcu_read_unlock</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">in_dev</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">goto</span> <span class="n">e_inval</span><span class="p">;</span>
+</span><span class='line'><span class="n">net</span> <span class="o">=</span> <span class="n">dev_net</span><span class="p">(</span><span class="n">dev</span><span class="p">);</span>
+</span><span class='line'><span class="c1">// 以src为dst，查fib</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">fib_lookup</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">fl</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">res</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">goto</span> <span class="n">last_resort</span><span class="p">;</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">res</span><span class="p">.</span><span class="n">type</span> <span class="o">!=</span> <span class="n">RTN_UNICAST</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">goto</span> <span class="n">e_inval_res</span><span class="p">;</span>
+</span><span class='line'><span class="o">*</span><span class="n">spec_dst</span> <span class="o">=</span> <span class="n">FIB_RES_PREFSRC</span><span class="p">(</span><span class="n">res</span><span class="p">);</span>
+</span><span class='line'><span class="n">fib_combine_itag</span><span class="p">(</span><span class="n">itag</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">res</span><span class="p">);</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">ifdef</span> <span class="n">CONFIG_IP_ROUTE_MULTIPATH</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c1">// 以src作为dst，查到的发送dev和当前收包的dev相同，一切ok</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">FIB_RES_DEV</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">==</span> <span class="n">dev</span> <span class="o">||</span> <span class="n">res</span><span class="p">.</span><span class="n">fi</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">fib_nhs</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">else</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">if</span> <span class="p">(</span><span class="n">FIB_RES_DEV</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">==</span> <span class="n">dev</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">endif</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="p">{</span>
+</span><span class='line'>    <span class="n">ret</span> <span class="o">=</span> <span class="n">FIB_RES_NH</span><span class="p">(</span><span class="n">res</span><span class="p">).</span><span class="n">nh_scope</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">=</span> <span class="n">RT_SCOPE_HOST</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">fib_res_put</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">res</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="n">fib_res_put</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">res</span><span class="p">);</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">no_addr</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">goto</span> <span class="n">last_resort</span><span class="p">;</span>
+</span><span class='line'><span class="c1">// 如果dev不相同，并且rp_filter置为on，则检查失败</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">rpf</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">goto</span> <span class="n">e_inval</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 给一些的配置
-{% codeblock sysctl.conf lang:bash %}
-// 0 means off,1 means on
-net.ipv4.conf.all.rp_filter = 0
-net.ipv4.conf.default.rp_filter = 0
-net.ipv4.conf.eth0.rp_filter = 0
-net.ipv4.conf.lo.rp_filter = 0
-net.ipv4.conf.vboxnet0.rp_filter = 0
-net.ipv4.conf.wlan0.rp_filter = 0
-{% endcodeblock %}
-'net.ipv4.conf.all.rp_filter'是总开关，一开全开。</p>
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>sysctl.conf  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>// 0 means off,1 means on
+</span><span class='line'>net.ipv4.conf.all.rp_filter <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.default.rp_filter <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.eth0.rp_filter <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.lo.rp_filter <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.vboxnet0.rp_filter <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.wlan0.rp_filter <span class="o">=</span> 0
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<code>net.ipv4.conf.all.rp_filter</code>是总开关，一开全开。</p>
 
-<p>{% codeblock sysctl.conf lang:bash %}
-// 0 means off
-net.ipv4.conf.all.log_martians = 0
-net.ipv4.conf.default.log_martians = 0
-net.ipv4.conf.eth0.log_martians = 0
-net.ipv4.conf.lo.log_martians = 0
-net.ipv4.conf.vboxnet0.log_martians = 0
-net.ipv4.conf.wlan0.log_martians = 0
-{% endcodeblock %}
-是否记录martian的开关，对应于代码里的'IN_DEV_LOG_MARTIANS(in_dev)'。</p>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>sysctl.conf  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>// 0 means off
+</span><span class='line'>net.ipv4.conf.all.log_martians <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.default.log_martians <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.eth0.log_martians <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.lo.log_martians <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.vboxnet0.log_martians <span class="o">=</span> 0
+</span><span class='line'>net.ipv4.conf.wlan0.log_martians <span class="o">=</span> 0
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+是否记录martian的开关，对应于代码里的<code>IN_DEV_LOG_MARTIANS(in_dev)</code>。</p>
 
 <p>小结一下，这个错误提示是很常见的，以至于常常被忽略，大多数情况它是做了正确的事情，不过当发现有意外的丢包，可以想想是否是遭遇了火星包，排查方法是：先做tcpdump，发现有traffic(tcpdump不受火星包的影响)，但kernel hook或者app收不到包，应怀疑是martian source导致丢包，用dmesg看下是否有相关提示。
-{% codeblock martian source lang:bash %}
-martian source 192.168.1.1 from 10.0.0.1, on dev eth1
-ll header: 52:54:00:98:99:d0:52:54:00:de:d8:10:08:00
-{% endcodeblock %}
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>martian source  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>martian <span class="nb">source </span>192.168.1.1 from 10.0.0.1, on dev eth1
+</span><span class='line'>ll header: 52:54:00:98:99:d0:52:54:00:de:d8:10:08:00
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 做一下翻译:eth1上收到了src=10.0.0.1,dst=192.168.1.1的包，但是按照本机的路由设置对10.0.0.1进行路由计算，得出的out dev不是eth1。
 一般遇到这种还是保持rp_filter=1吧，毕竟这个开关能让系统免受很多火星来客的干扰，研究下路由配置应该能解决问题；如果确实很复杂的使用场景，比如这台server有好多个网口，需要在不同网口之间转发，放开rp_filter的限制也无妨。</p>
 ]]></content>

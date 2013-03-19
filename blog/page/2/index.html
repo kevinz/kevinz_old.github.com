@@ -72,6 +72,64 @@
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2012/07/14/customize-kernel-in-arch-linux/">在archlinux里定制编译内核</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-14T16:54:00+08:00" pubdate data-updated="true">Jul 14<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>心血来潮升级到
+<a href="http://repo-ck.com/x86_64/linux-ck-corex-3.4.4-4-x86_64.pkg.tar.xz">linux-ck_3.4.4-4</a>
+后，发现<code>pm-suspend</code>出问题了，可以<code>suspend</code>，但<code>resume</code>后显示屏亮不起
+来，其它部分都<code>resume</code>成功了，可以隐约看见一些窗口的黑影。于是我又开始
+折腾了，参考了
+<a href="https://bbs.archlinux.org/viewtopic.php?id=143545">这篇</a>，插句题外话，
+不知道不是巧合，好多问题都是在archlinux的相关论坛上找到了答案，都是一帮爱折腾的同好。</p>
+
+<p>不幸的是，<a href="https://bbs.archlinux.org/viewtopic.php?id=143545">这篇</a>把
+我引导向了错误的方向，决定把kernel降级到3.3.x。因为我用的不是官核，不
+好找old archive，必须重新编译3.3.x-ck的内核，官方的old archives可以在
+<a href="http://arm.konnichi.com/search/">这里</a>寻觅到。</p>
+
+<p>拜<a href="https://wiki.archlinux.org/index.php/Arch_Build_System">Arch Build System</a>
+所赐，编译、打包、patch的步骤都可以内置了，对于kernel也是一样。贴一部
+分PKGBUILD文件的内容，是从
+<a href="http://repo-ck.com/PKG_source/linux-ck/linux-ck-3.3.8-1.src.tar.gz">repo-ck的archive</a>
+里找到的。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/07/14/customize-kernel-in-arch-linux/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2012/07/12/fix-octopress-git-issuse/">解决octopress的git自动deploy问题</a></h1>
     
     
@@ -603,6 +661,10 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/03/19/kernel-dynamic-debugging/">Kernel dynamic debugging and taints</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/03/18/rp-filter-and-martian-packet/">火星包: rp_filter and martian packet</a>
       </li>
     
@@ -618,15 +680,11 @@ mardown-mode,非常爽的组合。因为我是用archlinux，用yaourt怎么
         <a href="/blog/2012/08/16/install-systemtap-on-suse/">在SUSE Enterprise上安装Systemtap，解决build-id mismatch</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2012/08/16/upgrade-the-netxen-nic/">升级Netxen网卡驱动及firmware</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 105.0%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 115.0%'>C(3)</a> <a href='/blog/categories/emacs' style='font-size: 110.0%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 105.0%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 105.0%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 140.0%'>Kernel(8)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(12)</a> <a href='/blog/categories/linux-kernel' style='font-size: 105.0%'>Linux kernel(1)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 105.0%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 110.0%'>Lvs(2)</a> <a href='/blog/categories/network' style='font-size: 145.0%'>Network(9)</a> <a href='/blog/categories/octopress' style='font-size: 110.0%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 110.0%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 125.0%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 105.0%'>Tools(1)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arch' style='font-size: 104.61538461538461%'>Arch(1)</a> <a href='/blog/categories/c' style='font-size: 113.84615384615384%'>C(3)</a> <a href='/blog/categories/debug' style='font-size: 104.61538461538461%'>Debug(1)</a> <a href='/blog/categories/emacs' style='font-size: 109.23076923076923%'>Emacs(2)</a> <a href='/blog/categories/geek' style='font-size: 104.61538461538461%'>Geek(1)</a> <a href='/blog/categories/git' style='font-size: 104.61538461538461%'>Git(1)</a> <a href='/blog/categories/kernel' style='font-size: 141.53846153846155%'>Kernel(9)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>Linux(13)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.61538461538461%'>Linux kernel(1)</a> <a href='/blog/categories/linux-tools-arch' style='font-size: 104.61538461538461%'>Linux tools arch(1)</a> <a href='/blog/categories/lvs' style='font-size: 109.23076923076923%'>Lvs(2)</a> <a href='/blog/categories/network' style='font-size: 141.53846153846155%'>Network(9)</a> <a href='/blog/categories/octopress' style='font-size: 109.23076923076923%'>Octopress(2)</a> <a href='/blog/categories/performance' style='font-size: 109.23076923076923%'>Performance(2)</a> <a href='/blog/categories/tool' style='font-size: 123.07692307692308%'>Tool(5)</a> <a href='/blog/categories/tools' style='font-size: 104.61538461538461%'>Tools(1)</a> </span>
 </section>
 
 <section>

@@ -5,12 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>how virtualbox work with linux-ck - Code Mind</title>
+  <title>Kernel dynamic debugging and taints - Code Mind</title>
   <meta name="author" content="Kevin Zeng">
 
   
-  <meta name="description" content="how virtualbox work with linux-ck">
-  <meta name="keywords" content="linux-ck, virtualbox">
+  <meta name="description" content="how to apply kernel dynamic debugging">
+  <meta name="keywords" content="config_dynamic_debug, kernel debug, kernel printk">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://gekben.gitcd.com/blog/2012/07/29/virtualbox-work-with-linux-ck/">
+  <link rel="canonical" href="http://gekben.gitcd.com/blog/2013/03/19/kernel-dynamic-debugging/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -69,7 +69,7 @@
   
   <header>
     
-      <h1 class="entry-title">How Virtualbox Work With Linux-ck</h1>
+      <h1 class="entry-title">Kernel Dynamic Debugging and Taints</h1>
     
     
       <p class="meta">
@@ -85,45 +85,85 @@
   
 
 
-<time datetime="2012-07-29T18:29:00+08:00" pubdate data-updated="true">Jul 29<span>th</span>, 2012</time>
+<time datetime="2013-03-19T09:41:00+08:00" pubdate data-updated="true">Mar 19<span>th</span>, 2013</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>解决了virtualbox在linux-ck里使用的问题，做一下记录。我用的是
-linux-ck-corex内核，直接通过
-<a href="https://wiki.archlinux.org/index.php/Repo-ck">repo-ck</a>装好，不过也可
-以通过<a href="http://aur.archlinux.org/packages.php?ID=50911">aur</a>来折腾下，
-调整下内核参数啥的。这里主要记录下如何让virtualbox正常工作，<a href="https://wiki.archlinux.org/index.php/Linux-ck#Running_Virtualbox_with_Linux-ck">这篇</a>提到了
-一些相关内容，做一点补充:</p>
+<div class="entry-content"><p>最近在为自己写的LKM添加调试功能时，发现了一个比printk更好的选择，就是<a href="http://lwn.net/Articles/434833/">dynamic debugging</a>。</p>
+
+<figure class='code'><figcaption><span>list all dynamic_debug enabled items  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#mkdir /debug</span>
+</span><span class='line'><span class="c">#mount -t debugfs debugfs /debug</span>
+</span><span class='line'>// 看下哪些地方使用了dynamic_debug机制
+</span><span class='line'><span class="c">#cat /debug/dynamic_debug/control</span>
+</span><span class='line'><span class="c">#echo &#39; +p&#39; &gt; /sys/kernel/debug/dynamic_debug/control</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这样就能打开所有的dynmaic_debug items，对于Linux kernel source tree里的代码，dynamic_debug是适用的，但自己写的LKM似乎用不了这个机制，于是花了些时间想一探究竟。</p>
+
+<p>来看下pr_debug或者dev_dbg的定义:</p>
+
+<figure class='code'><figcaption><span>/include/linux/printk.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cm">/* If you are writing a driver, please use dev_dbg instead */</span>
+</span><span class='line'><span class="cp">#if defined(DEBUG)</span>
+</span><span class='line'><span class="cp">#define pr_debug(fmt, ...) \</span>
+</span><span class='line'><span class="cp">        printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)</span>
+</span><span class='line'><span class="cp">#elif defined(CONFIG_DYNAMIC_DEBUG)</span>
+</span><span class='line'><span class="cm">/* dynamic_pr_debug() uses pr_fmt() internally so we don&#39;t need it here */</span>
+</span><span class='line'><span class="cp">#define pr_debug(fmt, ...) \</span>
+</span><span class='line'><span class="cp">        dynamic_pr_debug(fmt, ##__VA_ARGS__)</span>
+</span><span class='line'><span class="cp">#else</span>
+</span><span class='line'><span class="cp">#define pr_debug(fmt, ...) \</span>
+</span><span class='line'><span class="cp">        no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)</span>
+</span><span class='line'><span class="cp">#end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
 
 <!-- more -->
 
 
-<h2>编译vboxdrv及其它模块</h2>
+<p>可见<code>CONFIG_DYNAMIC_DEBUG</code>是必须开的,<code>zcat /proc/config.gz|grep -i dynamic_debug</code>可查。</p>
 
-<ul>
-<li>记得装对应的linux-ck-headers，我装的是linux-ck-corex-headers，可能
-要先fuck gfw。</li>
-<li>编译方法有所变化，老版的virtualbox是用<code>vboxbuild</code>，新版改成了<code>dkms
-install vboxhost/4.1.18</code>。</li>
-<li>解决编译vboxdrv报错问题。
+<p>做了调试后发现，关键是在加载LKM时被识别为对kernel有taint的模块。</p>
 
-<ul>
-<li>headers安装目录默认是在<code>/usr/src/kernel_full_name</code>，在
-<code>/lib/modules/kernel_full_name</code>下，执行<code>ln -s
-/usr/src/kernel_full_name build</code>，编译应该就ok了。</li>
-</ul>
-</li>
-<li>老版本的virtualbox编译好的modules是存在于<code>/lib/modules/extramodules</code>
-下，新的是在<code>/lib/modules/kernel/misc</code>下。</li>
-<li>add/append your user into vboxusers group</li>
-</ul>
+<figure class='code'><figcaption><span>/include/linux/printk.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">err</span> <span class="o">=</span> <span class="n">check_module_license_and_versions</span><span class="p">(</span><span class="n">mod</span><span class="p">);</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="c1">// 只对安全的LKM开启dynamic_debug</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">mod</span><span class="o">-&gt;</span><span class="n">taints</span> <span class="o">||</span> <span class="n">mod</span><span class="o">-&gt;</span><span class="n">taints</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1U</span><span class="o">&lt;&lt;</span><span class="n">TAINT_CRAP</span><span class="p">)){</span>
+</span><span class='line'>    <span class="n">dynamic_debug_setup</span><span class="p">(</span><span class="n">info</span><span class="p">.</span><span class="n">debug</span><span class="p">,</span> <span class="n">info</span><span class="p">.</span><span class="n">num_debug</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
-<p>Have fun.</p>
+<p>写了个最简单的LKM，license是GPL，加载时还是有问题，不知道是不是必须编译进Kernel才可以，等做了实验再更新一下。</p>
 </div>
 
 
@@ -146,12 +186,12 @@ install vboxhost/4.1.18</code>。</li>
   
 
 
-<time datetime="2012-07-29T18:29:00+08:00" pubdate data-updated="true">Jul 29<span>th</span>, 2012</time>
+<time datetime="2013-03-19T09:41:00+08:00" pubdate data-updated="true">Mar 19<span>th</span>, 2013</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/linux-tools-arch/'>linux tools arch</a>
+    <a class='category' href='/blog/categories/debug/'>debug</a>, <a class='category' href='/blog/categories/kernel/'>kernel</a>, <a class='category' href='/blog/categories/linux/'>linux</a>
   
 </span>
 
@@ -170,10 +210,8 @@ install vboxhost/4.1.18</code>。</li>
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2012/07/26/lvs-debug-howto/" title="Previous Post: 了解lvs调试">&laquo; 了解lvs调试</a>
+        <a class="basic-alignment left" href="/blog/2013/03/18/rp-filter-and-martian-packet/" title="Previous Post: 火星包: rp_filter and martian packet">&laquo; 火星包: rp_filter and martian packet</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2012/08/09/check-tcp-connections/" title="Next Post: TCP状态迁移及状态码">TCP状态迁移及状态码 &raquo;</a>
       
     </p>
   </footer>
@@ -248,8 +286,8 @@ install vboxhost/4.1.18</code>。</li>
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://gekben.gitcd.com/blog/2012/07/29/virtualbox-work-with-linux-ck/';
-        var disqus_url = 'http://gekben.gitcd.com/blog/2012/07/29/virtualbox-work-with-linux-ck/';
+        var disqus_identifier = 'http://gekben.gitcd.com/blog/2013/03/19/kernel-dynamic-debugging/';
+        var disqus_url = 'http://gekben.gitcd.com/blog/2013/03/19/kernel-dynamic-debugging/';
         var disqus_script = 'embed.js';
       
     (function () {

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: debug | Code Mind]]></title>
+  <link href="http://gekben.gitcd.com/blog/categories/debug/atom.xml" rel="self"/>
+  <link href="http://gekben.gitcd.com/"/>
+  <updated>2013-03-19T17:47:33+08:00</updated>
+  <id>http://gekben.gitcd.com/</id>
+  <author>
+    <name><![CDATA[Kevin Zeng]]></name>
+    <email><![CDATA[kevintech08@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Kernel dynamic debugging and taints]]></title>
+    <link href="http://gekben.gitcd.com/blog/2013/03/19/kernel-dynamic-debugging/"/>
+    <updated>2013-03-19T09:41:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2013/03/19/kernel-dynamic-debugging</id>
+    <content type="html"><![CDATA[<p>最近在为自己写的LKM添加调试功能时，发现了一个比printk更好的选择，就是<a href="http://lwn.net/Articles/434833/">dynamic debugging</a>。</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>list all dynamic_debug enabled items  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;mkdir /debug&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;mount -t debugfs debugfs /debug&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;// 看下哪些地方使用了dynamic_debug机制&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;cat /debug/dynamic_debug/control&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;echo <span class="s1">&#39; +p&#39;</span> &gt; /sys/kernel/debug/dynamic_debug/control&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+这样就能打开所有的dynmaic_debug items，对于Linux kernel source tree里的代码，dynamic_debug是适用的，但自己写的LKM似乎用不了这个机制，于是花了些时间想一探究竟。</p>
+
+<p>来看下pr_debug或者dev_dbg的定义:
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/include/linux/printk.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="n">If</span> <span class="n">you</span> <span class="n">are</span> <span class="n">writing</span> <span class="n">a</span> <span class="n">driver</span><span class="p">,</span> <span class="n">please</span> <span class="n">use</span> <span class="n">dev_dbg</span> <span class="n">instead</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">if</span> <span class="n">defined</span><span class="p">(</span><span class="n">DEBUG</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">pr_debug</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="p">...)</span> <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>    <span class="n">printk</span><span class="p">(</span><span class="n">KERN_DEBUG</span> <span class="n">pr_fmt</span><span class="p">(</span><span class="n">fmt</span><span class="p">),</span> <span class="err">##</span><span class="n">__VA_ARGS__</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">elif</span> <span class="n">defined</span><span class="p">(</span><span class="n">CONFIG_DYNAMIC_DEBUG</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="n">dynamic_pr_debug</span><span class="p">()</span> <span class="n">uses</span> <span class="n">pr_fmt</span><span class="p">()</span> <span class="n">internally</span> <span class="n">so</span> <span class="n">we</span> <span class="n">don</span><span class="err">&#39;</span><span class="n">t</span> <span class="n">need</span> <span class="n">it</span> <span class="n">here</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">pr_debug</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="p">...)</span> <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>    <span class="n">dynamic_pr_debug</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="err">##</span><span class="n">__VA_ARGS__</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="k">else</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">define</span> <span class="n">pr_debug</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="p">...)</span> <span class="err">\</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>    <span class="n">no_printk</span><span class="p">(</span><span class="n">KERN_DEBUG</span> <span class="n">pr_fmt</span><span class="p">(</span><span class="n">fmt</span><span class="p">),</span> <span class="err">##</span><span class="n">__VA_ARGS__</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">end</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<!-- more -->
+
+
+<p>可见<code>CONFIG_DYNAMIC_DEBUG</code>是必须开的,<code>zcat /proc/config.gz|grep -i dynamic_debug</code>可查。</p>
+
+<p>做了调试后发现，关键是在加载LKM时被识别为对kernel有taint的模块。
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>/include/linux/printk.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">err</span> <span class="o">=</span> <span class="n">check_module_license_and_versions</span><span class="p">(</span><span class="n">mod</span><span class="p">);</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="c1">// 只对安全的LKM开启dynamic_debug</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">mod</span><span class="o">-&gt;</span><span class="n">taints</span> <span class="o">||</span> <span class="n">mod</span><span class="o">-&gt;</span><span class="n">taints</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1U</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">TAINT_CRAP</span><span class="p">)){</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">dynamic_debug_setup</span><span class="p">(</span><span class="n">info</span><span class="p">.</span><span class="n">debug</span><span class="p">,</span> <span class="n">info</span><span class="p">.</span><span class="n">num_debug</span><span class="p">);</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>写了个最简单的LKM，license是GPL，加载时还是有问题，不知道是不是必须编译进Kernel才可以，等做了实验再更新一下。</p>
+]]></content>
+  </entry>
+  
+</feed>

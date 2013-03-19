@@ -4,7 +4,7 @@
   <title><![CDATA[Code Mind]]></title>
   <link href="http://gekben.gitcd.com/atom.xml" rel="self"/>
   <link href="http://gekben.gitcd.com/"/>
-  <updated>2013-03-19T08:30:41+08:00</updated>
+  <updated>2013-03-19T17:47:33+08:00</updated>
   <id>http://gekben.gitcd.com/</id>
   <author>
     <name><![CDATA[Kevin Zeng]]></name>
@@ -14,11 +14,91 @@
 
   
   <entry>
+    <title type="html"><![CDATA[Kernel dynamic debugging and taints]]></title>
+    <link href="http://gekben.gitcd.com/blog/2013/03/19/kernel-dynamic-debugging/"/>
+    <updated>2013-03-19T09:41:00+08:00</updated>
+    <id>http://gekben.gitcd.com/blog/2013/03/19/kernel-dynamic-debugging</id>
+    <content type="html"><![CDATA[<p>最近在为自己写的LKM添加调试功能时，发现了一个比printk更好的选择，就是<a href="http://lwn.net/Articles/434833/">dynamic debugging</a>。</p>
+
+<figure class='code'><figcaption><span>list all dynamic_debug enabled items  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#mkdir /debug</span>
+</span><span class='line'><span class="c">#mount -t debugfs debugfs /debug</span>
+</span><span class='line'>// 看下哪些地方使用了dynamic_debug机制
+</span><span class='line'><span class="c">#cat /debug/dynamic_debug/control</span>
+</span><span class='line'><span class="c">#echo &#39; +p&#39; &gt; /sys/kernel/debug/dynamic_debug/control</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这样就能打开所有的dynmaic_debug items，对于Linux kernel source tree里的代码，dynamic_debug是适用的，但自己写的LKM似乎用不了这个机制，于是花了些时间想一探究竟。</p>
+
+<p>来看下pr_debug或者dev_dbg的定义:</p>
+
+<figure class='code'><figcaption><span>/include/linux/printk.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cm">/* If you are writing a driver, please use dev_dbg instead */</span>
+</span><span class='line'><span class="cp">#if defined(DEBUG)</span>
+</span><span class='line'><span class="cp">#define pr_debug(fmt, ...) \</span>
+</span><span class='line'><span class="cp">        printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)</span>
+</span><span class='line'><span class="cp">#elif defined(CONFIG_DYNAMIC_DEBUG)</span>
+</span><span class='line'><span class="cm">/* dynamic_pr_debug() uses pr_fmt() internally so we don&#39;t need it here */</span>
+</span><span class='line'><span class="cp">#define pr_debug(fmt, ...) \</span>
+</span><span class='line'><span class="cp">        dynamic_pr_debug(fmt, ##__VA_ARGS__)</span>
+</span><span class='line'><span class="cp">#else</span>
+</span><span class='line'><span class="cp">#define pr_debug(fmt, ...) \</span>
+</span><span class='line'><span class="cp">        no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)</span>
+</span><span class='line'><span class="cp">#end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!-- more -->
+
+
+<p>可见<code>CONFIG_DYNAMIC_DEBUG</code>是必须开的,<code>zcat /proc/config.gz|grep -i dynamic_debug</code>可查。</p>
+
+<p>做了调试后发现，关键是在加载LKM时被识别为对kernel有taint的模块。</p>
+
+<figure class='code'><figcaption><span>/include/linux/printk.h  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">err</span> <span class="o">=</span> <span class="n">check_module_license_and_versions</span><span class="p">(</span><span class="n">mod</span><span class="p">);</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="c1">// 只对安全的LKM开启dynamic_debug</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">mod</span><span class="o">-&gt;</span><span class="n">taints</span> <span class="o">||</span> <span class="n">mod</span><span class="o">-&gt;</span><span class="n">taints</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1U</span><span class="o">&lt;&lt;</span><span class="n">TAINT_CRAP</span><span class="p">)){</span>
+</span><span class='line'>    <span class="n">dynamic_debug_setup</span><span class="p">(</span><span class="n">info</span><span class="p">.</span><span class="n">debug</span><span class="p">,</span> <span class="n">info</span><span class="p">.</span><span class="n">num_debug</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>写了个最简单的LKM，license是GPL，加载时还是有问题，不知道是不是必须编译进Kernel才可以，等做了实验再更新一下。</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[火星包: rp_filter and martian packet]]></title>
     <link href="http://gekben.gitcd.com/blog/2013/03/18/rp-filter-and-martian-packet/"/>
     <updated>2013-03-18T22:53:00+08:00</updated>
     <id>http://gekben.gitcd.com/blog/2013/03/18/rp-filter-and-martian-packet</id>
-    <content type="html"><![CDATA[<p>经常在&#8217;/var/log/messages&#8217;里发现这种消息，它是对流入的包进行路由检查失败后，发出的警告。</p>
+    <content type="html"><![CDATA[<p>经常在<code>/var/log/messages</code>里发现这种消息，它是对流入的包进行路由检查失败后，发出的警告。</p>
 
 <figure class='code'><figcaption><span>martian source  </span></figcaption>
  <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -225,7 +305,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>&#8216;net.ipv4.conf.all.rp_filter&#8217;是总开关，一开全开。</p>
+<p><code>net.ipv4.conf.all.rp_filter</code>是总开关，一开全开。</p>
 
 <figure class='code'><figcaption><span>sysctl.conf  </span></figcaption>
  <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -245,7 +325,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>是否记录martian的开关，对应于代码里的&#8217;IN_DEV_LOG_MARTIANS(in_dev)&#8217;。</p>
+<p>是否记录martian的开关，对应于代码里的<code>IN_DEV_LOG_MARTIANS(in_dev)</code>。</p>
 
 <p>小结一下，这个错误提示是很常见的，以至于常常被忽略，大多数情况它是做了正确的事情，不过当发现有意外的丢包，可以想想是否是遭遇了火星包，排查方法是：先做tcpdump，发现有traffic(tcpdump不受火星包的影响)，但kernel hook或者app收不到包，应怀疑是martian source导致丢包，用dmesg看下是否有相关提示。</p>
 
